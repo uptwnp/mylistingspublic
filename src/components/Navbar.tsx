@@ -305,9 +305,9 @@ export default function Navbar() {
           <AnimatePresence>
             {!shouldShowCompact && (
               <motion.div
-                initial={{ opacity: 0, scale: 1.05, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="flex justify-center w-full"
               >
