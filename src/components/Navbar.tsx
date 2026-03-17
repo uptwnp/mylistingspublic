@@ -283,17 +283,6 @@ export default function Navbar() {
                           Discussion cart
                         </Link>
                       </div>
-                      <div className="h-px bg-zinc-100 mx-2 my-1" />
-                      <div className="py-2">
-                        <button className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors hover:bg-zinc-50">
-                          <User className="h-4 w-4" />
-                          Account Settings
-                        </button>
-                        <button className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors">
-                          <LogOut className="h-4 w-4" />
-                          Logout
-                        </button>
-                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
