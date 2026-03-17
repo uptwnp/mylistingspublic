@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 
 const CITIES = [
   "Panipat",
+  "Karnal",
   "Pune",
   "Mumbai",
   "Bangalore",

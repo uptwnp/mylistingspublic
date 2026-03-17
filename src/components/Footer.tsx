@@ -1,63 +1,75 @@
 'use client';
 
 import Link from 'next/link';
-import { Building2, Instagram, Twitter, Mail } from 'lucide-react';
+import { Globe, Instagram, Twitter, Mail, Home } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-zinc-100 pt-16 pb-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 md:grid-cols-4 mb-12">
+    <footer className="bg-zinc-50 border-t border-zinc-200 pt-16 pb-8 mt-20">
+      <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
+        <div className="grid gap-12 md:grid-cols-4 mb-20">
           <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <div className="bg-zinc-900 p-1.5 rounded-lg">
-                <Building2 className="h-5 w-5 text-white" />
+            <Link href="/" className="flex items-center gap-2.5 mb-6 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
+                <Home className="h-6 w-6 text-white" />
               </div>
               <span className="text-xl font-black tracking-tighter text-zinc-900 uppercase">
-                MyListing
+                My<span className="text-zinc-400 font-medium">Listing</span>
               </span>
             </Link>
-            <p className="text-zinc-500 text-sm max-w-sm leading-relaxed font-medium">
-              Curating the most exclusive internal property listings. 
-              Direct access to premium inventory, managed with architectural precision.
+            <p className="text-zinc-500 text-sm max-w-sm leading-relaxed font-bold">
+              Direct access to premium inventory, managed with architectural precision. 
+              The most exclusive internal property listings curated for you.
             </p>
           </div>
 
           <div>
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">Discover</h4>
+            <h4 className="text-[11px] font-black text-zinc-900 mb-6 uppercase tracking-widest">Discover</h4>
             <ul className="space-y-4">
-              <li><Link href="/" className="text-sm font-bold text-zinc-600 hover:text-black transition-colors">Featured Estates</Link></li>
-              <li><Link href="/map" className="text-sm font-bold text-zinc-600 hover:text-black transition-colors">Map Search</Link></li>
-              <li><Link href="/discussion-cart" className="text-sm font-bold text-zinc-600 hover:text-black transition-colors">Discussion Cart</Link></li>
+              <li><Link href="/" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Featured Estates</Link></li>
+              <li><Link href="/explore" className="text-sm font-bold text-zinc-500 hover:text-rose-500 transition-colors">Explore Map</Link></li>
+              <li><Link href="/favorites" className="text-sm font-bold text-zinc-500 hover:text-rose-500 transition-colors">Saved Properties</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6">Connect</h4>
-            <div className="flex gap-4">
-              <a href="#" className="p-2 rounded-full bg-zinc-50 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all">
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a href="#" className="p-2 rounded-full bg-zinc-50 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all">
-                <Twitter className="h-4 w-4" />
-              </a>
-              <a href="#" className="p-2 rounded-full bg-zinc-50 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all">
-                <Mail className="h-4 w-4" />
-              </a>
-            </div>
+            <h4 className="text-[11px] font-black text-zinc-900 mb-6 uppercase tracking-widest">Network</h4>
+            <ul className="space-y-4">
+              <li><Link href="#" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Agent Portal</Link></li>
+              <li><Link href="/sell" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors">List Your Property</Link></li>
+              <li><Link href="#" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Partner Program</Link></li>
+            </ul>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-zinc-50 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-            © 2026 MyListing Network. All Rights Reserved.
-          </p>
-          <div className="flex gap-8">
-            <Link href="#" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">Privacy</Link>
-            <Link href="#" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">Terms</Link>
+        <div className="pt-8 border-t border-zinc-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+            <span>© 2026 MyListing Network</span>
+            <div className="flex gap-6">
+              <Link href="#" className="hover:text-zinc-900">Privacy Policy</Link>
+              <Link href="#" className="hover:text-zinc-900">Terms of Service</Link>
+              <Link href="#" className="hover:text-zinc-900">Sitemap</Link>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-8">
+            <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-900 hover:text-zinc-600 transition-colors">
+              <Globe className="h-4 w-4" />
+              English (IN)
+            </button>
+            <div className="flex gap-4">
+              <a href="#" className="text-zinc-400 hover:text-zinc-900 transition-colors">
+                <Twitter className="h-4 w-4" />
+              </a>
+              <a href="#" className="text-zinc-400 hover:text-zinc-900 transition-colors">
+                <Instagram className="h-4 w-4" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
     </footer>
   );
 }
+
+

@@ -3,7 +3,7 @@ export const runtime = 'edge';
 
 import { useDiscussion } from '@/context/DiscussionContext';
 import { Property } from '@/types';
-import { getProperties } from '@/lib/supabase';
+import { getProperties, getPropertiesByIds } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import { Heart, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -22,10 +22,14 @@ export default function FavoritesPage() {
         return;
       }
       
-      const data = await getProperties(0, 100, false);
-      const filtered = (data as Property[]).filter(p => savedIds.includes(p.property_id));
-      setProperties(filtered);
-      setLoading(false);
+      try {
+        const data = await getPropertiesByIds(savedIds.slice(0, 20));
+        setProperties(data as Property[]);
+      } catch (err) {
+        console.error('Failed to fetch favorite properties:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchSavedProperties();
@@ -41,7 +45,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 pt-32 pb-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
         <div className="mb-12">
           <Link href="/" className="mb-4 flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-black">
             <ArrowLeft className="h-4 w-4" /> Back to Discover

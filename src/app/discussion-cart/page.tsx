@@ -3,19 +3,19 @@ export const runtime = 'edge';
 
 import { useDiscussion } from '@/context/DiscussionContext';
 import { Property } from '@/types';
-import { getProperties } from '@/lib/supabase';
+import { getPropertiesByIds } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
-import { Trash2, Phone, Home, ArrowLeft, Loader2, Building2, Calendar, MapPin, CheckCircle2, Share2 } from 'lucide-react';
+import { Trash2, Phone, Home, ArrowLeft, Loader2, Building2, Calendar, MapPin, CheckCircle2, Share2, Pencil, Plus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice, formatPriceRange, formatSizeRange } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import { cn } from '@/lib/utils';
 
 
 export default function DiscussionCartPage() {
-  const { cartItems, removeFromCart, clearCart } = useDiscussion();
+  const { cartItems, inquiries, removeFromCart, clearCart, setInquiryProperty } = useDiscussion();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -42,12 +42,14 @@ export default function DiscussionCartPage() {
         return;
       }
       
-      // For simplicity, we fetch all and filter client side. 
-      // In production, we'd use a .in('property_id', cartItems) query.
-      const data = await getProperties(0, 100, false);
-      const filtered = (data as Property[]).filter(p => cartItems.includes(p.property_id));
-      setProperties(filtered);
-      setLoading(false);
+      try {
+        const data = await getPropertiesByIds(cartItems.slice(0, 20));
+        setProperties(data as Property[]);
+      } catch (err) {
+        console.error('Failed to fetch cart properties:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchCartProperties();
@@ -63,7 +65,7 @@ export default function DiscussionCartPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 pt-32 pb-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
 
 
         {properties.length === 0 ? (
@@ -93,59 +95,91 @@ export default function DiscussionCartPage() {
                 </p>
               </div>
               <AnimatePresence>
-                {properties.map((property) => (
-                  <motion.div
-                    key={property.property_id}
-                    layout
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="flex gap-4 rounded-2xl bg-white p-3 shadow-sm hover:shadow-md transition-shadow group/card"
-                  >
-                    {(() => {
-                      const config = getPropertyConfig(property.type);
-                      const Icon = config.icon;
-                      const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
-                      return (
-                        <Link href={`/property/${property.property_id}`} className="flex flex-1 gap-4 overflow-hidden">
-                          <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl">
-                            {hasImage ? (
-                              <Image 
-                                src={property.image_urls[0]} 
-                                alt={property.description}
-                                fill
-                                className="object-cover transition-transform duration-500 group-hover/card:scale-110"
-                              />
-                            ) : (
-                              <div className={cn("flex h-full w-full items-center justify-center transition-colors", config.bgColor)}>
-                                <Icon className={cn("h-10 w-10 opacity-30", config.color)} />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-1 flex-col justify-center">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-zinc-500">
-                                ID: {property.property_id}
-                              </span>
-                              <span className="text-[10px] font-bold text-zinc-400">{property.area}</span>
-                            </div>
-                            <h3 className="flex items-center gap-2 font-bold text-zinc-900 line-clamp-1 leading-tight group-hover/card:text-blue-600 transition-colors">
-                              <Icon className={cn("h-3 w-3", config.color)} />
-                              {property.type}
-                            </h3>
-                            <p className="text-sm font-black text-black mt-1">{formatPrice(property.price_min)}</p>
-                          </div>
-                        </Link>
-                      );
-                    })()}
-                    <button 
-                      onClick={() => removeFromCart(property.property_id)}
-                      className="p-2 text-zinc-300 hover:text-rose-500 transition-colors self-center"
+                {properties.map((property) => {
+                  const inquiry = inquiries[property.property_id];
+                  return (
+                    <motion.div
+                      key={property.property_id}
+                      layout
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-sm hover:shadow-md transition-shadow group/card"
                     >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </motion.div>
-                ))}
+                      <div className="flex gap-4">
+                        {(() => {
+                          const config = getPropertyConfig(property.type);
+                          const Icon = config.icon;
+                          const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
+                          return (
+                            <Link href={`/property/${property.property_id}`} className="flex flex-1 gap-4 overflow-hidden">
+                              <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl">
+                                {hasImage ? (
+                                  <Image 
+                                    src={property.image_urls[0]} 
+                                    alt={property.description}
+                                    fill
+                                    className="object-cover transition-transform duration-500 group-hover/card:scale-110"
+                                  />
+                                ) : (
+                                  <div className={cn("flex h-full w-full items-center justify-center transition-colors", config.bgColor)}>
+                                    <Icon className={cn("h-10 w-10 opacity-30", config.color)} />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex flex-1 flex-col justify-center">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-zinc-500">
+                                    ID: {property.property_id}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-zinc-400">{property.area}</span>
+                                </div>
+                                <h3 className="flex items-center gap-2 font-bold text-zinc-900 line-clamp-1 leading-tight group-hover/card:text-blue-600 transition-colors">
+                                  <Icon className={cn("h-3 w-3", config.color)} />
+                                  {property.type}
+                                </h3>
+                                <p className="text-sm font-black text-black mt-1">{formatPrice(property.price_min)}</p>
+                              </div>
+                            </Link>
+                          );
+                        })()}
+                        <button 
+                          onClick={() => removeFromCart(property.property_id)}
+                          className="p-2 text-zinc-300 hover:text-rose-500 transition-colors self-center"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
+
+                      {/* Inquiry Question Display */}
+                      <div className="relative mx-3 mt-1 mb-2 rounded-xl bg-blue-50/50 p-4 border border-blue-100/50 group/inquiry">
+                        {inquiry ? (
+                          <>
+                            <button 
+                              onClick={() => setInquiryProperty(property)}
+                              className="absolute top-3 right-3 p-1.5 rounded-lg bg-white shadow-sm border border-blue-100 text-blue-600 opacity-0 group-hover/inquiry:opacity-100 transition-opacity"
+                              title="Edit Inquiry"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <label className="mb-2 block text-[9px] font-black uppercase tracking-[0.2em] text-blue-400">Your Inquiry</label>
+                            <p className="text-sm font-bold text-blue-900 leading-relaxed italic">
+                              "{inquiry}"
+                            </p>
+                          </>
+                        ) : (
+                          <button 
+                            onClick={() => setInquiryProperty(property)}
+                            className="flex w-full items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-600 transition-colors"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            Add Inquiry Question
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
 
@@ -316,18 +350,28 @@ export default function DiscussionCartPage() {
                           const pConfig = getPropertyConfig(p.type);
                           const hasImage = Array.isArray(p.image_urls) && p.image_urls.length > 0;
                           const PIcon = pConfig.icon;
+                          const pInquiry = inquiries[p.property_id];
                           return (
-                            <div key={p.property_id} className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 shadow-sm border border-zinc-100/50">
-                              <div className="h-3 w-3 rounded overflow-hidden">
-                                {hasImage ? (
-                                  <Image src={p.image_urls[0]} alt="" width={12} height={12} className="object-cover" />
-                                ) : (
-                                  <div className={cn("flex h-full w-full items-center justify-center", pConfig.bgColor)}>
-                                    <PIcon className={cn("h-full w-full p-[1px] opacity-40", pConfig.color)} />
-                                  </div>
-                                )}
+                            <div key={p.property_id} className="group relative">
+                              <div className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 shadow-sm border border-zinc-100/50">
+                                <div className="h-3 w-3 rounded overflow-hidden">
+                                  {hasImage ? (
+                                    <Image src={p.image_urls[0]} alt="" width={12} height={12} className="object-cover" />
+                                  ) : (
+                                    <div className={cn("flex h-full w-full items-center justify-center", pConfig.bgColor)}>
+                                      <PIcon className={cn("h-full w-full p-[1px] opacity-40", pConfig.color)} />
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-[9px] font-bold text-zinc-500">#{p.property_id}</span>
                               </div>
-                              <span className="text-[9px] font-bold text-zinc-500">#{p.property_id}</span>
+                              {pInquiry && (
+                                <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block w-48 z-[200]">
+                                  <div className="rounded-lg bg-zinc-900 p-2 text-[9px] font-bold text-white shadow-xl">
+                                    <p className="italic">"{pInquiry}"</p>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           );
                         })}

@@ -1,37 +1,61 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { InquiryModal } from '@/components/InquiryModal';
 
 interface DiscussionContextType {
   cartItems: string[];
   savedIds: string[];
-  addToCart: (id: string) => void;
+  selectedCity: string;
+  setSelectedCity: (city: string) => void;
+  inquiries: Record<string, string>;
+  inquiryProperty: any | null;
+  setInquiryProperty: (property: any | null) => void;
+  updateInquiry: (id: string, question: string) => void;
+  addToCart: (property: any) => void;
   removeFromCart: (id: string) => void;
   toggleSave: (id: string) => void;
   isInCart: (id: string) => boolean;
   isSaved: (id: string) => boolean;
   clearCart: () => void;
+  isFilterModalOpen: boolean;
+  setIsFilterModalOpen: (open: boolean) => void;
+  confirmAddToCart: (id: string, question: string) => void;
 }
 
 const DiscussionContext = createContext<DiscussionContextType | undefined>(undefined);
 
 const CART_KEY = 'dealer_network_discussion_cart';
 const SAVED_KEY = 'dealer_network_saved_properties';
+const CITY_KEY = 'dealer_network_selected_city';
+const INQUIRIES_KEY = 'dealer_network_inquiries';
 
 export function DiscussionProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<string[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
+  const [selectedCity, setSelectedCity] = useState<string>('Panipat');
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [inquiries, setInquiries] = useState<Record<string, string>>({});
+  const [inquiryProperty, setInquiryProperty] = useState<any | null>(null);
 
   // Initialize from localStorage on mount (to avoid SSR mismatch)
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_KEY);
     const savedProps = localStorage.getItem(SAVED_KEY);
+    const savedCity = localStorage.getItem(CITY_KEY);
+    const savedInquiries = localStorage.getItem(INQUIRIES_KEY);
     
     if (savedCart) {
       try { setCartItems(JSON.parse(savedCart)); } catch (e) { console.error(e); }
     }
     if (savedProps) {
       try { setSavedIds(JSON.parse(savedProps)); } catch (e) { console.error(e); }
+    }
+    if (savedCity) {
+      setSelectedCity(savedCity);
+    }
+    if (savedInquiries) {
+      try { setInquiries(JSON.parse(savedInquiries)); } catch (e) { console.error(e); }
     }
 
     // Check for shared cart in URL
@@ -66,14 +90,39 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     }
   }, [savedIds]);
 
-  const addToCart = (id: string) => {
+  useEffect(() => {
+    localStorage.setItem(CITY_KEY, selectedCity);
+  }, [selectedCity]);
+
+  useEffect(() => {
+    localStorage.setItem(INQUIRIES_KEY, JSON.stringify(inquiries));
+  }, [inquiries]);
+
+  const addToCart = (property: any) => {
+    const id = typeof property === 'string' ? property : property.property_id;
+    if (!cartItems.includes(id)) {
+      setInquiryProperty(property);
+    }
+  };
+
+  const confirmAddToCart = (id: string, question: string) => {
     if (!cartItems.includes(id)) {
       setCartItems(prev => [...prev, id]);
     }
+    setInquiries(prev => ({ ...prev, [id]: question }));
+    setInquiryProperty(null);
+  };
+
+  const updateInquiry = (id: string, question: string) => {
+    setInquiries(prev => ({ ...prev, [id]: question }));
   };
 
   const removeFromCart = (id: string) => {
     setCartItems(prev => prev.filter(item => item !== id));
+    setInquiries(prev => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const toggleSave = (id: string) => {
@@ -87,20 +136,33 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
 
   const isInCart = (id: string) => cartItems.includes(id);
   const isSaved = (id: string) => savedIds.includes(id);
-  const clearCart = () => setCartItems([]);
+  const clearCart = () => {
+    setCartItems([]);
+    setInquiries({});
+  };
 
   return (
     <DiscussionContext.Provider value={{
       cartItems,
       savedIds,
+      selectedCity,
+      setSelectedCity,
       addToCart,
       removeFromCart,
       toggleSave,
       isInCart,
       isSaved,
-      clearCart
+      clearCart,
+      isFilterModalOpen,
+      setIsFilterModalOpen,
+      inquiries,
+      inquiryProperty,
+      setInquiryProperty,
+      updateInquiry,
+      confirmAddToCart
     }}>
       {children}
+      <InquiryModal />
     </DiscussionContext.Provider>
   );
 }

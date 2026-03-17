@@ -30,7 +30,7 @@ export default function MapPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getProperties(0, 50, false);
+      const data = await getProperties(0, 20, false);
       setProperties(data as Property[]);
       setLoading(false);
     };

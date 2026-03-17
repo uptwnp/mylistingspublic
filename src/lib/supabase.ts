@@ -5,7 +5,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const CACHE_KEY = 'property_platform_results';
+const CACHE_KEY = 'property_platform_results_v5';
 
 const formatPropertyData = (property: Record<string, unknown>) => ({
   ...property,
@@ -41,23 +41,46 @@ const PUBLIC_FIELDS = `
   approved_on
 `;
 
-export const getProperties = async (page = 0, limit = 20, useCache = false) => {
+export const getProperties = async (
+  page = 0, 
+  limit = 20, 
+  useCache = false, 
+  city?: string, 
+  type?: string,
+  sortBy: string = 'approved_on',
+  sortOrder: 'asc' | 'desc' = 'desc'
+) => {
+  const safeLimit = Math.min(limit, 20);
+  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${sortBy}_${sortOrder}`;
+  
   // Try to get from localStorage first for "Perceived Instant" speed
   if (useCache && typeof window !== 'undefined') {
-    const cached = localStorage.getItem(CACHE_KEY);
+    const cached = localStorage.getItem(cacheKey);
     if (cached && page === 0) {
-      return JSON.parse(cached);
+      return JSON.parse(cached).slice(0, 20);
     }
   }
 
-  const from = page * limit;
-  const to = from + limit - 1;
+  const from = page * safeLimit;
+  const to = from + safeLimit - 1;
 
-  const { data, error } = await supabase
+  let queryBuilder = supabase
     .from('public_properties_view')
-    .select(PUBLIC_FIELDS)
+    .select(PUBLIC_FIELDS);
+
+  if (city && city !== 'All') {
+    // Use a more flexible ilike to catch varied formatting
+    queryBuilder = queryBuilder.ilike('city', `%${city.trim()}%`);
+  }
+
+  if (type && type !== 'All') {
+    queryBuilder = queryBuilder.ilike('type', `%${type.trim()}%`);
+  }
+
+  // Define secondary sort to ensure stable pagination
+  const { data, error } = await queryBuilder
     .range(from, to)
-    .order('approved_on', { ascending: false })
+    .order(sortBy, { ascending: sortOrder === 'asc', nullsFirst: false })
     .order('property_id', { ascending: true });
 
   if (error) {
@@ -65,11 +88,11 @@ export const getProperties = async (page = 0, limit = 20, useCache = false) => {
     return [];
   }
 
-  const formattedData = (data as Record<string, unknown>[])?.map(formatPropertyData);
+  const formattedData = (data as Record<string, unknown>[])?.map(formatPropertyData).slice(0, 20);
 
   // Update cache on initial load - only if enabled
   if (useCache && page === 0 && typeof window !== 'undefined') {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(formattedData));
+    localStorage.setItem(cacheKey, JSON.stringify(formattedData));
   }
 
   return formattedData;
@@ -104,6 +127,35 @@ export const getPropertyById = async (id: string | number) => {
     const error = err as Error;
     console.error('Critical error in getPropertyById:', error.message);
     return null;
+  }
+};
+
+export const getPropertiesByIds = async (ids: string[]) => {
+  if (!ids || ids.length === 0) return [];
+  
+  // Clean IDs - remove empty ones and ensure they are numeric strings, cap at 20 requests
+  const cleanIds = ids.map(id => String(id).trim())
+    .filter(id => /^\d+$/.test(id))
+    .slice(0, 20);
+  
+  if (cleanIds.length === 0) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('public_properties_view')
+      .select(PUBLIC_FIELDS)
+      .in('property_id', cleanIds);
+
+    if (error) {
+      console.error('Error fetching properties by IDs:', error);
+      return [];
+    }
+
+    const formattedData = (data as Record<string, unknown>[])?.map(formatPropertyData) || [];
+    return formattedData.slice(0, 20);
+  } catch (err) {
+    console.error('Critical error in getPropertiesByIds:', err);
+    return [];
   }
 };
 

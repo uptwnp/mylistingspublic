@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
-import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check } from 'lucide-react';
+import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Navigation } from 'lucide-react';
 import { Property } from '@/types';
 import { useDiscussion } from '@/context/DiscussionContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,9 +12,11 @@ interface PropertyCardProps {
   property: Property;
   isExpanded?: boolean;
   onToggle?: () => void;
+  isNearbyFallback?: boolean;
+  showDistance?: boolean;
 }
 
-export function PropertyCard({ property, isExpanded = false, onToggle }: PropertyCardProps) {
+export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyFallback, showDistance }: PropertyCardProps) {
   const router = useRouter();
   const { isInCart, addToCart, removeFromCart, isSaved, toggleSave } = useDiscussion();
 
@@ -98,13 +100,23 @@ export function PropertyCard({ property, isExpanded = false, onToggle }: Propert
             <Ruler className="h-3.5 w-3.5 shrink-0" />
             <span>{formatSizeRange(property.size_min, property.size_max, property.size_unit)}</span>
           </div>
+
+          {showDistance && property.landmark_location_distance !== undefined && property.landmark_location_distance > 0 && (
+            <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-rose-500">
+              <Navigation className="h-2.5 w-2.5" />
+              <span>
+                {property.landmark_location_distance.toFixed(1)} km 
+                {isNearbyFallback ? ' from city center' : ' away'}
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* Quick Actions Column */}
         <motion.div layout className="flex h-20 flex-col items-end justify-between py-0.5 shrink-0">
           <div className="flex items-center gap-2">
             <button
-              onClick={(e) => handleActionClick(e, () => inCart ? removeFromCart(property.property_id) : addToCart(property.property_id))}
+              onClick={(e) => handleActionClick(e, () => inCart ? removeFromCart(property.property_id) : addToCart(property))}
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-90",
                 inCart
@@ -164,13 +176,16 @@ export function PropertyCard({ property, isExpanded = false, onToggle }: Propert
 
               {/* Buttons */}
               <div className="flex gap-2 pt-2">
-                <button
-                  onClick={navigateToDetail}
+                <a
+                  href={`/property/${property.property_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3.5 text-sm font-black text-white shadow-lg transition-all hover:bg-black active:scale-[0.98]"
                 >
                   <ExternalLink className="h-4 w-4" />
                   View Full Property Page
-                </button>
+                </a>
 
                 <button 
                   className={cn(
