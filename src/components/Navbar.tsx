@@ -115,22 +115,27 @@ export default function Navbar() {
 
             {/* Middle Section: Airbnb-style Tabs or Compact Search */}
             <div className="flex-[2] flex justify-center items-center">
-              <>
-                {shouldShowCompact ? (
-                    <div className="w-full max-w-md z-20">
-                    <HeaderSearch 
-                      isScrolled={true} 
-                      {...searchProps} 
-                      onExpand={(segment) => {
-                        setInitialSegment(segment || null);
-                        setIsForceExpanded(true);
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="flex items-center justify-center gap-1 sm:gap-2"
-                  >
+                <AnimatePresence mode="wait">
+                  {shouldShowCompact ? (
+                    <div className="w-full max-w-md z-20" key="compact-search">
+                      <HeaderSearch 
+                        isScrolled={true} 
+                        {...searchProps} 
+                        onExpand={(segment) => {
+                          setInitialSegment(segment || null);
+                          setIsForceExpanded(true);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <motion.div
+                      key="city-tabs"
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 12 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="flex items-center justify-center gap-1 sm:gap-2"
+                    >
                     <button 
                       onClick={() => setSelectedCity("Panipat")}
                       className={cn(
@@ -212,9 +217,9 @@ export default function Navbar() {
                         )}
                       </AnimatePresence>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
-              </>
+              </AnimatePresence>
             </div>
 
             {/* Right Section: Actions */}
