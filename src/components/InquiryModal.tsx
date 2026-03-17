@@ -6,8 +6,10 @@ import { cn, formatPrice } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useDiscussion } from '@/context/DiscussionContext';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export function InquiryModal() {
+  const router = useRouter();
   const { inquiryProperty, setInquiryProperty, confirmAddToCart, inquiries, isInCart } = useDiscussion();
   const [question, setQuestion] = useState('');
 
@@ -23,6 +25,7 @@ export function InquiryModal() {
     if (inquiryProperty) {
       const id = typeof inquiryProperty === 'string' ? inquiryProperty : inquiryProperty.property_id;
       confirmAddToCart(id, question);
+      router.push('/discussion-cart');
     }
   };
 

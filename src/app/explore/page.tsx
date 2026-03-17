@@ -323,10 +323,16 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      {/* Mobile Toggle Button */}
+      {/* View Toggle Button */}
       <button 
-        onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
-        className="fixed bottom-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-transform active:scale-95 lg:hidden"
+        onClick={() => {
+          if (viewMode === 'map') setViewMode('split');
+          else setViewMode(window.innerWidth < 1024 ? 'map' : 'split');
+        }}
+        className={cn(
+          "fixed bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105 active:scale-95",
+          (viewMode === 'split' || viewMode === 'map') ? 'lg:hidden' : 'flex'
+        )}
       >
         {viewMode === 'map' ? (
           <>

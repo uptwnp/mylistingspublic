@@ -7,7 +7,7 @@ import { getPropertyById } from '@/lib/supabase';
 import { Property } from '@/types';
 import { useDiscussion } from '@/context/DiscussionContext';
 import { useRef } from 'react';
-import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Navigation, Map as MapIcon } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Navigation, Map as MapIcon, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,6 +34,8 @@ export default function PropertyDetailPage() {
   const { isInCart, addToCart, removeFromCart, isSaved, toggleSave } = useDiscussion();
   const [similarProperties, setSimilarProperties] = useState<Property[]>([]);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
 
   useEffect(() => {
     // Attempt to get location for distance display
@@ -83,6 +85,23 @@ export default function PropertyDetailPage() {
     if (!dateStr) return '';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const openGallery = (index: number) => {
+    setActivePhotoIndex(index);
+    setIsGalleryOpen(true);
+  };
+
+  const nextPhoto = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!property) return;
+    setActivePhotoIndex((prev) => (prev + 1) % property.image_urls.length);
+  };
+
+  const prevPhoto = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!property) return;
+    setActivePhotoIndex((prev) => (prev - 1 + property.image_urls.length) % property.image_urls.length);
   };
 
   if (loading) {
@@ -136,39 +155,78 @@ export default function PropertyDetailPage() {
           
           {/* COLUMN 1: Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            {/* Photo Gallery Grid */}
-            <div className="relative overflow-hidden rounded-2xl aspect-[16/9] md:aspect-auto md:h-[500px]">
+            {/* Photo Gallery Area */}
+            <div className="relative overflow-hidden rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border border-zinc-100">
+               {/* Request Photo/Video Button - Always show on top right overlay */}
+               <button 
+                  onClick={() => setIsPhotoModalOpen(true)}
+                  className="absolute top-6 right-6 z-10 flex items-center gap-2 rounded-xl bg-white/95 backdrop-blur-md px-4 py-2.5 text-xs font-black shadow-xl transition-all hover:bg-white active:scale-95 border border-zinc-100 text-zinc-900 group"
+                >
+                  <ShoppingCart className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900" />
+                  Request Photos & Videos
+                </button>
+
               {hasImage ? (
-                <div className="grid grid-cols-2 grid-rows-2 h-full gap-2 md:grid-cols-4 lg:gap-3">
-                  <div className="relative col-span-2 row-span-2 bg-zinc-100 overflow-hidden cursor-pointer group">
+                property.image_urls.length === 1 ? (
+                  // Single Photo Full View
+                  <div 
+                    onClick={() => openGallery(0)}
+                    className="relative h-full w-full bg-zinc-100 cursor-pointer group"
+                  >
                     <Image
                       src={property.image_urls[0]}
                       alt={property.description || 'Property Image'}
                       fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      unoptimized
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                       priority
                     />
                   </div>
-                  {property.image_urls.slice(1, 5).map((url, i) => (
-                    <div key={i} className="relative hidden md:block bg-zinc-100 overflow-hidden cursor-pointer group">
+                ) : (
+                  // Multi Photo Grid (Airbnb Style)
+                  <div className="grid grid-cols-2 grid-rows-2 h-full gap-2 md:grid-cols-4 lg:gap-3">
+                    <div 
+                      onClick={() => openGallery(0)}
+                      className="relative col-span-2 row-span-2 bg-zinc-100 overflow-hidden cursor-pointer group"
+                    >
                       <Image
-                        src={url}
-                        alt={`Property image ${i + 2}`}
+                        src={property.image_urls[0]}
+                        alt={property.description || 'Property Image'}
                         fill
+                        unoptimized
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        priority
                       />
                     </div>
-                  ))}
-                  {property.image_urls.length < 5 && Array.from({ length: 5 - property.image_urls.length }).map((_, i) => (
-                    <div key={`empty-${i}`} className="hidden md:flex items-center justify-center bg-zinc-50 border border-zinc-100">
-                       <Icon className="h-12 w-12 text-zinc-200" />
-                    </div>
-                  ))}
-                  <button className="absolute bottom-6 right-6 flex items-center gap-2 rounded-lg border border-black bg-white px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:bg-zinc-50 active:scale-95">
-                    <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true" focusable="false"><path d="M5 2a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-6 6a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-6 6a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"></path></svg>
-                    Show all photos
-                  </button>
-                </div>
+                    {property.image_urls.slice(1, 5).map((url, i) => (
+                      <div 
+                        key={i} 
+                        onClick={() => openGallery(i + 1)}
+                        className="relative hidden md:block bg-zinc-100 overflow-hidden cursor-pointer group"
+                      >
+                        <Image
+                          src={url}
+                          alt={`Property image ${i + 2}`}
+                          unoptimized
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                    ))}
+                    {property.image_urls.length < 5 && Array.from({ length: 5 - property.image_urls.length }).map((_, i) => (
+                      <div key={`empty-${i}`} className="hidden md:flex items-center justify-center bg-zinc-50/50 border border-zinc-100/50">
+                        <Icon className="h-12 w-12 text-zinc-100" />
+                      </div>
+                    ))}
+                    <button 
+                      onClick={() => openGallery(0)}
+                      className="absolute bottom-6 left-6 flex items-center gap-2 rounded-lg border border-black/10 bg-black/5 backdrop-blur-md px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-black/20 active:scale-95"
+                    >
+                      <svg viewBox="0 0 16 16" className="h-4 w-4 fill-white" aria-hidden="true" focusable="false"><path d="M5 2a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-6 6a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-6 6a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"></path></svg>
+                      Show all {property.image_urls.length} photos
+                    </button>
+                  </div>
+                )
               ) : (
                 <div className={cn("flex h-full w-full flex-col items-center justify-center gap-6", config.bgColor)}>
                    <div className="flex flex-col items-center">
@@ -178,13 +236,7 @@ export default function PropertyDetailPage() {
                       <p className={cn("mt-2 text-sm font-bold opacity-30", config.color)}>No Property Photos Available</p>
                     </div>
                    </div>
-                   <button 
-                     onClick={() => setIsPhotoModalOpen(true)}
-                     className="flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold shadow-xl transition-all hover:scale-105 active:scale-95 border border-zinc-100"
-                   >
-                     <ShoppingCart className="h-4 w-4" />
-                     Request Photo/Video
-                   </button>
+                   <div className="h-10" /> {/* Spacer for the overlay button */}
                 </div>
               )}
             </div>
@@ -333,12 +385,18 @@ export default function PropertyDetailPage() {
                   {inCart ? 'Remove from Discussion' : 'Add to Discussion'}
                 </button>
                 
-                <Link 
-                  href="/discussion-cart"
+                <button 
+                  onClick={() => {
+                    if (inCart) {
+                      router.push('/discussion-cart');
+                    } else {
+                      addToCart(property);
+                    }
+                  }}
                   className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-4 font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98]"
                 >
                   Discuss Now
-                </Link>
+                </button>
               </div>
 
               <div className="h-px bg-zinc-100" />
@@ -433,6 +491,101 @@ export default function PropertyDetailPage() {
                   100% Refundable Guarantee
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Fullscreen Photo Gallery Lightbox */}
+      <AnimatePresence>
+        {isGalleryOpen && property && (
+          <div className="fixed inset-0 z-[200] flex flex-col bg-black">
+            {/* Header / Top Bar */}
+            <motion.div 
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              className="absolute top-0 left-0 right-0 z-[210] flex items-center justify-between p-6 pointer-events-none"
+            >
+              <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full pointer-events-auto">
+                <span className="text-white text-xs font-black uppercase tracking-widest">
+                  {activePhotoIndex + 1} / {property.image_urls.length}
+                </span>
+              </div>
+              <button 
+                onClick={() => setIsGalleryOpen(false)}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-90 pointer-events-auto"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </motion.div>
+
+            {/* Main Image View */}
+            <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activePhotoIndex}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="relative h-full w-full max-w-5xl"
+                >
+                  <Image
+                    src={property.image_urls[activePhotoIndex]}
+                    alt={`Property Photo ${activePhotoIndex + 1}`}
+                    fill
+                    unoptimized
+                    className="object-contain"
+                    priority
+                  />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Navigation Arrows */}
+              {property.image_urls.length > 1 && (
+                <>
+                  <button 
+                    onClick={prevPhoto}
+                    className="absolute left-6 z-[210] flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-90"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button 
+                    onClick={nextPhoto}
+                    className="absolute right-6 z-[210] flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-90"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Thumbnail Strip (Bottom) */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
+              className="mt-auto flex justify-center gap-2 overflow-x-auto p-8 no-scrollbar"
+            >
+              {property.image_urls.map((url, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActivePhotoIndex(i)}
+                  className={cn(
+                    "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all active:scale-95",
+                    activePhotoIndex === i ? "border-white scale-110 shadow-lg" : "border-transparent opacity-40 hover:opacity-100"
+                  )}
+                >
+                  <Image
+                    src={url}
+                    alt={`Thumb ${i + 1}`}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                </button>
+              ))}
             </motion.div>
           </div>
         )}

@@ -17,7 +17,18 @@ const formatPropertyData = (property: Record<string, unknown>) => ({
   highlights: typeof property.highlights === 'string'
     ? property.highlights.split(',').map((h: string) => h.trim()).filter(Boolean)
     : Array.isArray(property.highlights) ? property.highlights : [],
-  image_urls: Array.isArray(property.image_urls) ? property.image_urls : []
+  image_urls: (typeof property.image_urls === 'string' 
+    ? property.image_urls.split(',').map((url: string) => url.trim()).filter(Boolean)
+    : Array.isArray(property.image_urls) ? property.image_urls : []
+  ).map((url: string) => {
+    if (url.includes('r2.cloudflarestorage.com')) {
+      // Convert internal R2 URL to public working format
+      // Example: https://c60696ba6ea91f21fe51c590227fc61d.r2.cloudflarestorage.com/properties/images/...
+      // To: https://pub-9e00030e294c40efa96642db5ba7f437.r2.dev/images/...
+      return url.replace('c60696ba6ea91f21fe51c590227fc61d.r2.cloudflarestorage.com/properties', 'pub-9e00030e294c40efa96642db5ba7f437.r2.dev');
+    }
+    return url;
+  })
 });
 
 const PUBLIC_FIELDS = `
