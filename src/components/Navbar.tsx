@@ -297,20 +297,28 @@ export default function Navbar() {
           </div>
 
           {/* Bottom Row: Large Search */}
-          {!shouldShowCompact && (
-            <div className="flex justify-center w-full">
-              <div
-                className="mt-8 pb-4 w-full max-w-3xl z-10"
-                ref={searchContainerRef}
+          <AnimatePresence>
+            {!shouldShowCompact && (
+              <motion.div
+                initial={{ opacity: 0, scale: 1.05, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="flex justify-center w-full"
               >
-                <div className="flex flex-col items-center">
-                  <br />
-                  <br />
-                  <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
+                <div
+                  className="mt-8 pb-4 w-full max-w-3xl z-10"
+                  ref={searchContainerRef}
+                >
+                  <div className="flex flex-col items-center">
+                    <br />
+                    <br />
+                    <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </nav>
 
