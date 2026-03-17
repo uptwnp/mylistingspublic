@@ -5,9 +5,3 @@ compatibility_date = "2024-11-18"
 [vars]
 # Add vars here if needed, but project env vars are better set in GUI
 NODE_VERSION = "22"
-
-[[kv_namespaces]]
-# For edge runtime features if needed
-
-[observability]
-enabled = true
