@@ -88,7 +88,8 @@ export function HeaderSearch({
     <div ref={searchRef} className="relative w-full max-w-3xl mx-auto flex justify-center">
       <>
         {!isScrolled ? (
-          <div
+          <motion.div
+            layout
             className={cn(
               "relative flex w-full items-center rounded-full border border-zinc-200 bg-white shadow-xl h-16",
               activeSegment ? "bg-zinc-50 border-zinc-300" : "hover:border-zinc-300"
@@ -260,11 +261,12 @@ export function HeaderSearch({
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
         ) : (
           <div className="flex items-center gap-3">
-            <button
+            <motion.button
               key="compact"
+              layout
               onClick={() => {
                 if (onExpand) {
                   onExpand();
@@ -302,7 +304,7 @@ export function HeaderSearch({
               >
                 <Search className="h-4 w-4" strokeWidth={3} />
               </div>
-            </button>
+            </motion.button>
 
             {isExplorePage && (
               <motion.button

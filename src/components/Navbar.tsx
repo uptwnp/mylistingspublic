@@ -117,16 +117,20 @@ export default function Navbar() {
             <div className="flex-[2] flex justify-center items-center">
               <>
                 {shouldShowCompact ? (
-                    <div className="w-full max-w-md">
+                    <motion.div 
+                      layoutId="header-search"
+                      className="w-full max-w-md"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    >
                       <HeaderSearch 
                         isScrolled={true} 
                         {...searchProps} 
                         onExpand={(segment) => {
-                        setInitialSegment(segment || null);
-                        setIsForceExpanded(true);
-                      }}
-                    />
-                  </div>
+                          setInitialSegment(segment || null);
+                          setIsForceExpanded(true);
+                        }}
+                      />
+                    </motion.div>
                 ) : (
                   <div
                     className="flex items-center justify-center gap-1 sm:gap-2"
@@ -302,16 +306,18 @@ export default function Navbar() {
           {/* Bottom Row: Large Search (Visible only when not scrolled) */}
           <AnimatePresence>
             {!shouldShowCompact && (
-              <div
-                className="mt-8 pb-4"
+              <motion.div
+                layoutId="header-search"
+                className="mt-8 pb-4 w-full flex flex-col items-center"
                 ref={searchContainerRef}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
-                <div className="flex flex-col items-center">
+                <div className="w-full max-w-3xl">
                   <br />
                   <br />
                   <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
                 </div>
-              </div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
