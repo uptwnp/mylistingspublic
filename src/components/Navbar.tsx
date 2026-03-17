@@ -306,18 +306,21 @@ export default function Navbar() {
 
           {/* Bottom Row: Large Search */}
           {!shouldShowCompact && (
-            <motion.div
-              layoutId="header-search"
-              className="mt-8 pb-4 w-full flex flex-col items-center z-10"
-              ref={searchContainerRef}
-              transition={{ type: "spring", stiffness: 300, damping: 32 }}
-            >
-              <div className="w-full max-w-3xl">
-                <br />
-                <br />
-                <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
-              </div>
-            </motion.div>
+            <div className="flex justify-center w-full">
+              <motion.div
+                layoutId="header-search"
+                className="mt-8 pb-4 w-full max-w-3xl z-10"
+                style={{ originX: 0.5, originY: 0 }}
+                ref={searchContainerRef}
+                transition={{ type: "spring", stiffness: 300, damping: 32 }}
+              >
+                <div className="flex flex-col items-center">
+                  <br />
+                  <br />
+                  <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
+                </div>
+              </motion.div>
+            </div>
           )}
         </div>
       </nav>
