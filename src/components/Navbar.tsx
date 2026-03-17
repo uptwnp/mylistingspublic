@@ -117,22 +117,23 @@ export default function Navbar() {
             <div className="flex-[2] flex justify-center items-center">
               <>
                 {shouldShowCompact ? (
-                    <motion.div 
-                      layoutId="header-search"
-                      className="w-full max-w-md"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    >
-                      <HeaderSearch 
-                        isScrolled={true} 
-                        {...searchProps} 
-                        onExpand={(segment) => {
-                          setInitialSegment(segment || null);
-                          setIsForceExpanded(true);
-                        }}
-                      />
-                    </motion.div>
+                  <motion.div 
+                    layoutId="header-search"
+                    className="w-full max-w-md z-20"
+                    transition={{ type: "spring", stiffness: 300, damping: 32 }}
+                  >
+                    <HeaderSearch 
+                      isScrolled={true} 
+                      {...searchProps} 
+                      onExpand={(segment) => {
+                        setInitialSegment(segment || null);
+                        setIsForceExpanded(true);
+                      }}
+                    />
+                  </motion.div>
                 ) : (
-                  <div
+                  <motion.div
+                    layout
                     className="flex items-center justify-center gap-1 sm:gap-2"
                   >
                     <button 
@@ -219,7 +220,7 @@ export default function Navbar() {
                         )}
                       </AnimatePresence>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </>
             </div>
@@ -303,23 +304,21 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Bottom Row: Large Search (Visible only when not scrolled) */}
-          <AnimatePresence>
-            {!shouldShowCompact && (
-              <motion.div
-                layoutId="header-search"
-                className="mt-8 pb-4 w-full flex flex-col items-center"
-                ref={searchContainerRef}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              >
-                <div className="w-full max-w-3xl">
-                  <br />
-                  <br />
-                  <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Bottom Row: Large Search */}
+          {!shouldShowCompact && (
+            <motion.div
+              layoutId="header-search"
+              className="mt-8 pb-4 w-full flex flex-col items-center z-10"
+              ref={searchContainerRef}
+              transition={{ type: "spring", stiffness: 300, damping: 32 }}
+            >
+              <div className="w-full max-w-3xl">
+                <br />
+                <br />
+                <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
+              </div>
+            </motion.div>
+          )}
         </div>
       </nav>
 
