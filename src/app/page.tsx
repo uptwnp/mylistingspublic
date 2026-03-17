@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { PropertyGrid } from "@/components/PropertyGrid";
 import { HomeSearch } from "@/components/HomeSearch";
 import { Search, MapPin, Calculator } from "lucide-react";

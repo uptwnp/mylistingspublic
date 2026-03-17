@@ -1,4 +1,5 @@
 'use client';
+export const runtime = 'edge';
 
 import { useDiscussion } from '@/context/DiscussionContext';
 import { Property } from '@/types';

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
+
+export const runtime = 'edge';
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
