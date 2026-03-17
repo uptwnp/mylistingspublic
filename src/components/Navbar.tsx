@@ -115,7 +115,7 @@ export default function Navbar() {
 
             {/* Middle Section: Airbnb-style Tabs or Compact Search */}
             <div className="flex-[2] flex justify-center items-center">
-              <AnimatePresence mode="wait">
+              <>
                 {shouldShowCompact ? (
                     <div className="w-full max-w-md">
                       <HeaderSearch 
@@ -128,11 +128,7 @@ export default function Navbar() {
                     />
                   </div>
                 ) : (
-                  <motion.div
-                    key="city-tabs"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                  <div
                     className="flex items-center justify-center gap-1 sm:gap-2"
                   >
                     <button 
@@ -219,9 +215,9 @@ export default function Navbar() {
                         )}
                       </AnimatePresence>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              </>
             </div>
 
             {/* Right Section: Actions */}

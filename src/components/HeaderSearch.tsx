@@ -86,7 +86,7 @@ export function HeaderSearch({
 
   return (
     <div ref={searchRef} className="relative w-full max-w-3xl mx-auto flex justify-center">
-      <AnimatePresence mode="wait">
+      <>
         {!isScrolled ? (
           <div
             className={cn(
@@ -263,12 +263,8 @@ export function HeaderSearch({
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <motion.button
+            <button
               key="compact"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
               onClick={() => {
                 if (onExpand) {
                   onExpand();
@@ -302,16 +298,14 @@ export function HeaderSearch({
 
               <div 
                 onClick={(e) => { e.stopPropagation(); handleSearch(); }}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm cursor-pointer hover:bg-rose-600 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm cursor-pointer hover:bg-rose-600 active:scale-95 transition-all"
               >
                 <Search className="h-4 w-4" strokeWidth={3} />
               </div>
-            </motion.button>
+            </button>
 
             {isExplorePage && (
               <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onOpenFilters}
@@ -322,7 +316,7 @@ export function HeaderSearch({
             )}
           </div>
         )}
-      </AnimatePresence>
+      </>
     </div>
   );
 }
