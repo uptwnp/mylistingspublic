@@ -117,11 +117,7 @@ export default function Navbar() {
             <div className="flex-[2] flex justify-center items-center">
               <>
                 {shouldShowCompact ? (
-                  <motion.div 
-                    layoutId="header-search"
-                    className="w-full max-w-md z-20"
-                    transition={{ type: "spring", stiffness: 300, damping: 32 }}
-                  >
+                    <div className="w-full max-w-md z-20">
                     <HeaderSearch 
                       isScrolled={true} 
                       {...searchProps} 
@@ -130,10 +126,9 @@ export default function Navbar() {
                         setIsForceExpanded(true);
                       }}
                     />
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div
-                    layout
+                  <div
                     className="flex items-center justify-center gap-1 sm:gap-2"
                   >
                     <button 
@@ -146,8 +141,7 @@ export default function Navbar() {
                       <Building2 className={cn("h-5 w-5 transition-transform group-hover:scale-110", selectedCity === "Panipat" ? "text-zinc-900" : "text-zinc-300")} />
                       <span className="text-[10px] font-black uppercase tracking-[0.1em]">Panipat</span>
                       {selectedCity === "Panipat" && (
-                        <motion.div 
-                          layoutId="activeCityTab"
+                        <div 
                           className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
                         />
                       )}
@@ -162,8 +156,7 @@ export default function Navbar() {
                       <Trees className={cn("h-5 w-5 transition-transform group-hover:scale-110", selectedCity === "Karnal" ? "text-zinc-900" : "text-zinc-300")} />
                       <span className="text-[10px] font-black uppercase tracking-[0.1em]">Karnal</span>
                       {selectedCity === "Karnal" && (
-                        <motion.div 
-                          layoutId="activeCityTab"
+                        <div 
                           className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
                         />
                       )}
@@ -187,8 +180,7 @@ export default function Navbar() {
                           )} />
                         </div>
                         {OTHER_CITIES.includes(selectedCity) && (
-                          <motion.div 
-                            layoutId="activeCityTab"
+                          <div 
                             className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
                           />
                         )}
@@ -220,7 +212,7 @@ export default function Navbar() {
                         )}
                       </AnimatePresence>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
               </>
             </div>
@@ -307,19 +299,16 @@ export default function Navbar() {
           {/* Bottom Row: Large Search */}
           {!shouldShowCompact && (
             <div className="flex justify-center w-full">
-              <motion.div
-                layoutId="header-search"
+              <div
                 className="mt-8 pb-4 w-full max-w-3xl z-10"
-                style={{ originX: 0.5, originY: 0 }}
                 ref={searchContainerRef}
-                transition={{ type: "spring", stiffness: 300, damping: 32 }}
               >
                 <div className="flex flex-col items-center">
                   <br />
                   <br />
                   <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
                 </div>
-              </motion.div>
+              </div>
             </div>
           )}
         </div>

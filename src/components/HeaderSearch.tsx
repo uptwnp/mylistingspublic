@@ -88,8 +88,7 @@ export function HeaderSearch({
     <div ref={searchRef} className="relative w-full max-w-3xl mx-auto flex justify-center">
       <>
         {!isScrolled ? (
-          <motion.div
-            layout
+          <div
             className={cn(
               "relative flex w-full items-center rounded-full border border-zinc-200 bg-white shadow-xl h-16",
               activeSegment ? "bg-zinc-50 border-zinc-300" : "hover:border-zinc-300"
@@ -161,112 +160,95 @@ export function HeaderSearch({
                   )}
                 >
                   <Search className="h-5 w-5" strokeWidth={2.5} />
-                  <AnimatePresence mode="wait">
-                    {activeSegment && (
-                      <motion.span 
-                        initial={{ opacity: 0, width: 0 }} 
-                        animate={{ opacity: 1, width: 'auto' }}
-                        exit={{ opacity: 0, width: 0 }}
-                        className="font-black text-xs uppercase tracking-widest overflow-hidden whitespace-nowrap"
-                      >
-                        Search
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
+                  {activeSegment && (
+                    <span 
+                      className="font-black text-xs uppercase tracking-widest overflow-hidden whitespace-nowrap"
+                    >
+                      Search
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Dropdowns */}
-            <AnimatePresence>
-              {activeSegment === 'location' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                  className="absolute left-0 top-[calc(100%+12px)] z-50 w-full max-w-sm rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
-                >
-                   <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Popular Areas</h3>
-                   <div className="grid grid-cols-1 gap-1 max-h-64 overflow-y-auto">
-                     {SUGGESTIONS.map((s) => (
-                       <button 
-                        key={s} 
-                        onClick={() => { setQuery(s); setActiveSegment('budget'); }}
-                        className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[14px] font-bold text-zinc-700 hover:bg-zinc-50 transition-all group"
-                       >
-                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 group-hover:bg-zinc-200 transition-colors">
-                            <MapPin className="h-5 w-5 text-zinc-500" />
-                         </div>
-                         <span>{s}</span>
-                       </button>
-                     ))}
-                   </div>
-                </motion.div>
-              )}
+            {activeSegment === 'location' && (
+              <div
+                className="absolute left-0 top-[calc(100%+12px)] z-50 w-full max-w-sm rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
+              >
+                 <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Popular Areas</h3>
+                 <div className="grid grid-cols-1 gap-1 max-h-64 overflow-y-auto">
+                   {SUGGESTIONS.map((s) => (
+                     <button 
+                      key={s} 
+                      onClick={() => { setQuery(s); setActiveSegment('budget'); }}
+                      className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[14px] font-bold text-zinc-700 hover:bg-zinc-50 transition-all group"
+                     >
+                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 group-hover:bg-zinc-200 transition-colors">
+                          <MapPin className="h-5 w-5 text-zinc-500" />
+                       </div>
+                       <span>{s}</span>
+                     </button>
+                   ))}
+                 </div>
+              </div>
+            )}
 
-              {activeSegment === 'budget' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                  className="absolute left-1/3 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
-                >
-                  <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Select Budget</h3>
-                  <div className="space-y-1">
-                    {BUDGET_OPTIONS.map((opt) => (
-                      <button 
-                        key={opt.label}
-                        onClick={() => { setBudget(opt); setActiveSegment('type'); }}
-                        className={cn(
-                          "flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-[14px] font-bold transition-all",
-                          budget.label === opt.label ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
-                        )}
-                      >
-                        <Wallet className={cn("h-4 w-4", budget.label === opt.label ? "text-zinc-300" : "text-zinc-400")} />
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+            {activeSegment === 'budget' && (
+              <div
+                className="absolute left-1/3 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
+              >
+                <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Select Budget</h3>
+                <div className="space-y-1">
+                  {BUDGET_OPTIONS.map((opt) => (
+                    <button 
+                      key={opt.label}
+                      onClick={() => { setBudget(opt); setActiveSegment('type'); }}
+                      className={cn(
+                        "flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-[14px] font-bold transition-all",
+                        budget.label === opt.label ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
+                      )}
+                    >
+                      <Wallet className={cn("h-4 w-4", budget.label === opt.label ? "text-zinc-300" : "text-zinc-400")} />
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-              {activeSegment === 'type' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                  className="absolute right-0 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
-                >
-                  <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Property Category</h3>
-                  <div className="space-y-1">
-                    {PROPERTY_TYPES.map((type) => (
-                      <button 
-                        key={type}
-                        onClick={() => { setPropertyType(type); setActiveSegment(null); }}
-                        className={cn(
-                          "flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-[14px] font-bold transition-all",
-                          propertyType === type ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
-                        )}
-                      >
-                        <div className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
-                          propertyType === type ? "bg-white/10" : "bg-zinc-100 group-hover:bg-zinc-200"
-                        )}>
-                          {type.toLowerCase().includes("plot") ? <Trees className="h-4 w-4" /> : <HomeIcon className="h-4 w-4" />}
-                        </div>
-                        <span className="font-bold">{type}</span>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+            {activeSegment === 'type' && (
+              <div
+                className="absolute right-0 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
+              >
+                <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Property Category</h3>
+                <div className="space-y-1">
+                  {PROPERTY_TYPES.map((type) => (
+                    <button 
+                      key={type}
+                      onClick={() => { setPropertyType(type); setActiveSegment(null); }}
+                      className={cn(
+                        "flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-[14px] font-bold transition-all",
+                        propertyType === type ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                        propertyType === type ? "bg-white/10" : "bg-zinc-100 group-hover:bg-zinc-200"
+                      )}>
+                        {type.toLowerCase().includes("plot") ? <Trees className="h-4 w-4" /> : <HomeIcon className="h-4 w-4" />}
+                      </div>
+                      <span className="font-bold">{type}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="flex items-center gap-3">
-            <motion.button
+            <button
               key="compact"
-              layout
               onClick={() => {
                 if (onExpand) {
                   onExpand();
@@ -304,17 +286,15 @@ export function HeaderSearch({
               >
                 <Search className="h-4 w-4" strokeWidth={3} />
               </div>
-            </motion.button>
+            </button>
 
             {isExplorePage && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={onOpenFilters}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md hover:shadow-lg transition-all"
               >
                 <SlidersHorizontal className="h-4 w-4" />
-              </motion.button>
+              </button>
             )}
           </div>
         )}
