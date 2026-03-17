@@ -117,22 +117,16 @@ export default function Navbar() {
             <div className="flex-[2] flex justify-center items-center">
               <AnimatePresence mode="wait">
                 {shouldShowCompact ? (
-                  <motion.div
-                    key="compact-search"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="w-full max-w-md"
-                  >
-                    <HeaderSearch 
-                      isScrolled={true} 
-                      {...searchProps} 
-                      onExpand={(segment) => {
+                    <div className="w-full max-w-md">
+                      <HeaderSearch 
+                        isScrolled={true} 
+                        {...searchProps} 
+                        onExpand={(segment) => {
                         setInitialSegment(segment || null);
                         setIsForceExpanded(true);
                       }}
                     />
-                  </motion.div>
+                  </div>
                 ) : (
                   <motion.div
                     key="city-tabs"
@@ -312,10 +306,7 @@ export default function Navbar() {
           {/* Bottom Row: Large Search (Visible only when not scrolled) */}
           <AnimatePresence>
             {!shouldShowCompact && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20, height: 0, marginTop: 0 }}
+              <div
                 className="mt-8 pb-4"
                 ref={searchContainerRef}
               >
@@ -324,7 +315,7 @@ export default function Navbar() {
                   <br />
                   <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
                 </div>
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </div>

@@ -88,12 +88,7 @@ export function HeaderSearch({
     <div ref={searchRef} className="relative w-full max-w-3xl mx-auto flex justify-center">
       <AnimatePresence mode="wait">
         {!isScrolled ? (
-          <motion.div
-            key="expanded"
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+          <div
             className={cn(
               "relative flex w-full items-center rounded-full border border-zinc-200 bg-white shadow-xl h-16",
               activeSegment ? "bg-zinc-50 border-zinc-300" : "hover:border-zinc-300"
@@ -265,7 +260,7 @@ export function HeaderSearch({
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             <motion.button
