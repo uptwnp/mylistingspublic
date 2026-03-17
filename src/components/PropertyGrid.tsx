@@ -5,8 +5,9 @@ import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from './PropertyCard';
 import { RefreshCcw, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useCallback } from 'react';
+import { useDiscussion } from '@/context/DiscussionContext';
 
 export function PropertyGrid() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -17,7 +18,7 @@ export function PropertyGrid() {
   const [hasMore, setHasMore] = useState(true);
   const LIMIT = 24;
 
-  const fetchData = async (isInitial = true, useCache = false) => {
+  const fetchData = useCallback(async (isInitial = true, useCache = false) => {
     if (isInitial) {
       if (!useCache) setRefreshing(true);
       else setLoading(true);
@@ -54,7 +55,7 @@ export function PropertyGrid() {
       setRefreshing(false);
       setLoadingMore(false);
     }
-  };
+  }, [page]);
 
   const [selectedType, setSelectedType] = useState('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -74,8 +75,8 @@ export function PropertyGrid() {
       });
 
   useEffect(() => {
-    fetchData(true, false);
-  }, []);
+    fetchData(true, true);
+  }, [fetchData]);
 
   const handleRefresh = () => {
     fetchData(true, false);

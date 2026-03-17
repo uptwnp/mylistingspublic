@@ -1,13 +1,11 @@
 import { 
   Home, 
   Building2, 
-  Building, 
   Map, 
   Store, 
   Briefcase, 
   ShoppingBag, 
   Warehouse,
-  Layout,
   HelpCircle,
   LucideIcon
 } from 'lucide-react';

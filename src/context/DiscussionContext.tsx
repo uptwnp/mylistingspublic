@@ -22,35 +22,8 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
   const [cartItems, setCartItems] = useState<string[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
 
-  // Load from localStorage and handle shared cart on mount
+  // Initialize from localStorage on mount (to avoid SSR mismatch)
   useEffect(() => {
-    // Check for shared cart in URL
-    if (typeof window !== 'undefined') {
-      const searchParams = new URLSearchParams(window.location.search);
-      const sharedCart = searchParams.get('cart');
-      
-      if (sharedCart) {
-        try {
-          const ids = sharedCart.split(',').filter(id => id.trim() !== '');
-          if (ids.length > 0) {
-            setCartItems(ids);
-            // Remove the cart param from URL to prevent accidental overrides on refresh
-            const newRelativePathQuery = window.location.pathname;
-            window.history.replaceState(null, '', newRelativePathQuery);
-            
-            // Load saved properties as usual
-            const savedProps = localStorage.getItem(SAVED_KEY);
-            if (savedProps) {
-              try { setSavedIds(JSON.parse(savedProps)); } catch (e) { console.error(e); }
-            }
-            return; 
-          }
-        } catch (e) {
-          console.error('Failed to parse shared cart', e);
-        }
-      }
-    }
-
     const savedCart = localStorage.getItem(CART_KEY);
     const savedProps = localStorage.getItem(SAVED_KEY);
     
@@ -60,15 +33,37 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     if (savedProps) {
       try { setSavedIds(JSON.parse(savedProps)); } catch (e) { console.error(e); }
     }
+
+    // Check for shared cart in URL
+    const searchParams = new URLSearchParams(window.location.search);
+    const sharedCart = searchParams.get('cart');
+    
+    if (sharedCart) {
+      try {
+        const ids = sharedCart.split(',').filter(id => id.trim() !== '');
+        if (ids.length > 0) {
+          setCartItems(ids);
+          // Remove the cart param from URL to prevent accidental overrides on refresh
+          const newRelativePathQuery = window.location.pathname;
+          window.history.replaceState(null, '', newRelativePathQuery);
+        }
+      } catch (e) {
+        console.error('Failed to parse shared cart', e);
+      }
+    }
   }, []);
 
   // Update localStorage when state changes
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(cartItems));
+    if (cartItems.length > 0 || localStorage.getItem(CART_KEY)) {
+      localStorage.setItem(CART_KEY, JSON.stringify(cartItems));
+    }
   }, [cartItems]);
 
   useEffect(() => {
-    localStorage.setItem(SAVED_KEY, JSON.stringify(savedIds));
+    if (savedIds.length > 0 || localStorage.getItem(SAVED_KEY)) {
+      localStorage.setItem(SAVED_KEY, JSON.stringify(savedIds));
+    }
   }, [savedIds]);
 
   const addToCart = (id: string) => {

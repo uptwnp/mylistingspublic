@@ -7,10 +7,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const CACHE_KEY = 'property_platform_results';
 
-const formatPropertyData = (property: any) => ({
+const formatPropertyData = (property: Record<string, unknown>) => ({
   ...property,
-  public_id: String(property.public_id),
-  property_id: String(property.property_id),
+  public_id: String(property.public_id ?? ''),
+  property_id: String(property.property_id ?? ''),
   tags: typeof property.tags === 'string' 
     ? property.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
     : Array.isArray(property.tags) ? property.tags : [],
@@ -65,7 +65,7 @@ export const getProperties = async (page = 0, limit = 20, useCache = false) => {
     return [];
   }
 
-  const formattedData = data?.map(formatPropertyData);
+  const formattedData = (data as Record<string, unknown>[])?.map(formatPropertyData);
 
   // Update cache on initial load - only if enabled
   if (useCache && page === 0 && typeof window !== 'undefined') {
@@ -99,9 +99,10 @@ export const getPropertyById = async (id: string | number) => {
       return null;
     }
 
-    return (data && data.length > 0) ? formatPropertyData(data[0]) : null;
-  } catch (err: any) {
-    console.error('Critical error in getPropertyById:', err.message);
+    return (data && data.length > 0) ? formatPropertyData(data[0] as Record<string, unknown>) : null;
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error('Critical error in getPropertyById:', error.message);
     return null;
   }
 };
