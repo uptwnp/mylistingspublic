@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
 import { getAreas } from '@/lib/supabase';
 import { useShortlist } from '@/context/ShortlistContext';
+import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 
 
 export const BUDGET_OPTIONS = [
@@ -60,7 +62,8 @@ export function HeaderSearch({
 }: HeaderSearchProps) {
   const [activeSegment, setActiveSegment] = useState<string | null>(initialSegment);
   const [allAreas, setAllAreas] = useState<string[]>([]);
-  const { setUserLocation } = useShortlist();
+  const { setUserLocation, sortField, sortOrder, setSortField, setSortOrder, userLocation } = useShortlist();
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -407,17 +410,88 @@ export function HeaderSearch({
               </button>
 
               {isExplorePage && onOpenFilters && (
-                <button
-                  onClick={onOpenFilters}
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md hover:shadow-lg transition-all"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  {additionalFiltersCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-bold text-white border border-white">
-                      {additionalFiltersCount}
-                    </span>
-                  )}
-                </button>
+                <div className="flex items-center gap-2 relative">
+                  <button
+                    onClick={onOpenFilters}
+                    className="relative flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md hover:shadow-lg transition-all"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                    {additionalFiltersCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-bold text-white border border-white">
+                        {additionalFiltersCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <div className="relative">
+                    <button 
+                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white h-10 px-3 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 shadow-md hover:shadow-lg"
+                    >
+                      {(() => {
+                        const allSortCategories = [...SORT_CATEGORIES, ...NEARBY_SORT_CATEGORY];
+                        const activeCategory = allSortCategories.find(c => c.field === sortField) || SORT_CATEGORIES[0];
+                        const DirectionIcon = sortOrder === 'desc' ? ArrowDown : ArrowUp;
+                        return (
+                          <>
+                            <activeCategory.icon className="h-4 w-4 text-zinc-700" />
+                            <span className="hidden lg:inline">{activeCategory.label}</span>
+                            <DirectionIcon className={cn("h-3.5 w-3.5 text-zinc-400 transition-transform", isSortOpen && "rotate-180")} />
+                          </>
+                        );
+                      })()}
+                    </button>
+
+                    <AnimatePresence>
+                      {isSortOpen && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-40 bg-transparent" 
+                            onClick={() => setIsSortOpen(false)} 
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                            className="absolute right-0 top-[calc(100%+8px)] z-50 w-48 overflow-hidden rounded-2xl border border-zinc-100 bg-white p-1.5 shadow-2xl shadow-zinc-200/50"
+                          >
+                            {[...SORT_CATEGORIES, ...(query === 'Near Me' || userLocation ? NEARBY_SORT_CATEGORY : [])].map((cat) => {
+                              const isActive = sortField === cat.field;
+                              const currentOrder = isActive ? sortOrder : cat.defaultOrder;
+                              const DirectionIcon = currentOrder === 'desc' ? ArrowDown : ArrowUp;
+                              return (
+                                <button
+                                  key={cat.id}
+                                  onClick={() => {
+                                    if (isActive && cat.canToggle) {
+                                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                                    } else {
+                                      setSortField(cat.field);
+                                      setSortOrder(cat.defaultOrder);
+                                    }
+                                    setIsSortOpen(false);
+                                  }}
+                                  className={cn(
+                                    "flex w-full justify-between items-center rounded-xl px-3 py-2.5 text-left ty-caption font-bold transition-all",
+                                    isActive 
+                                      ? "bg-zinc-900 text-white" 
+                                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <cat.icon className={cn("h-4 w-4", isActive ? "text-white/70" : "text-zinc-400")} />
+                                    {cat.label}
+                                  </div>
+                                  {isActive && <DirectionIcon className="h-3.5 w-3.5" />}
+                                </button>
+                              );
+                            })}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
               )}
             </div>
 

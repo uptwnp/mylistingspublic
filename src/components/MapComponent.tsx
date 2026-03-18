@@ -133,13 +133,13 @@ interface MapComponentProps {
 }
 
 // Component to handle map center and zoom changes only when selected property changes
-function MapController({ selectedProperty, zoomLevel }: { selectedProperty: Property | null; zoomLevel: number }) {
+function MapController({ selectedProperty, zoomLevel, properties }: { selectedProperty: Property | null; zoomLevel: number; properties: Property[] }) {
   const map = useMap();
   const prevPropertyIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (selectedProperty && selectedProperty.property_id !== prevPropertyIdRef.current) {
-      const coords = getPropertyCoords(selectedProperty);
+      const coords = getPropertyCoords(selectedProperty, properties);
       map.flyTo(coords, zoomLevel, { 
         animate: true, 
         duration: 1.5,
@@ -151,7 +151,7 @@ function MapController({ selectedProperty, zoomLevel }: { selectedProperty: Prop
       // map.flyTo([29.3909, 76.9635], 13);
       prevPropertyIdRef.current = null;
     }
-  }, [selectedProperty, zoomLevel, map]);
+  }, [selectedProperty, zoomLevel, map, properties]);
 
   return null;
 }
@@ -194,7 +194,7 @@ function InvalidateSize({ trigger }: { trigger?: any }) {
 }
 
 // getCoords helper is now getPropertyCoords in utils.ts
-const getCoords = (property: Property): [number, number] => getPropertyCoords(property);
+const getCoords = (property: Property, allProps?: Property[]): [number, number] => getPropertyCoords(property, allProps);
 
 function MapControls({ 
   isSatellite, 
@@ -315,24 +315,24 @@ export default function MapComponent({
     return null;
   }
   const center: [number, number] = selectedProperty 
-    ? getCoords(selectedProperty)
+    ? getCoords(selectedProperty, properties)
     : [29.3909, 76.9635]; // Panipat center
 
-  const propertyCoords = selectedProperty ? getCoords(selectedProperty) : null;
+  const propertyCoords = selectedProperty ? getCoords(selectedProperty, properties) : null;
   const userCoords: [number, number] | null = userLocation ? [userLocation.lat, userLocation.lng] : null;
   const curvedPath = (userCoords && propertyCoords) ? getCurvedPath(userCoords, propertyCoords) : null;
 
   return (
     <div className="relative h-full w-full">
       <MapContainer 
-        center={selectedProperty ? getCoords(selectedProperty) : [29.3909, 76.9635]} 
+        center={selectedProperty ? getCoords(selectedProperty, properties) : [29.3909, 76.9635]} 
         zoom={13} 
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
         <MapEvents />
         <InvalidateSize trigger={properties} />
-        <MapController selectedProperty={selectedProperty} zoomLevel={15} />
+        <MapController selectedProperty={selectedProperty} zoomLevel={15} properties={properties} />
         <TileLayer
           attribution={isSatellite 
             ? '&copy; <a href="https://www.esri.com/">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
@@ -381,7 +381,7 @@ export default function MapComponent({
         {properties.map((property) => (
           <Marker 
             key={property.property_id} 
-            position={getCoords(property)}
+            position={getCoords(property, properties)}
             icon={createCustomIcon(property, selectedProperty?.property_id === property.property_id, zoom)}
             zIndexOffset={selectedProperty?.property_id === property.property_id ? 1000 : 0}
             eventHandlers={{

@@ -11,20 +11,9 @@ import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { calculateDistance, getPropertyCoords } from '@/lib/utils';
-import { Navigation } from 'lucide-react';
+import { Navigation, ArrowDown, ArrowUp } from 'lucide-react';
 
-export const runtime = 'edge';
-
-const SORT_OPTIONS = [
-  { field: 'approved_on', order: 'desc' as const, label: 'Latest on Top', icon: Clock },
-  { field: 'price_min', order: 'asc' as const, label: 'Price: Low to High', icon: Tag },
-  { field: 'price_min', order: 'desc' as const, label: 'Price: High to Low', icon: Tag },
-  { field: 'size_min', order: 'desc' as const, label: 'Size: Large to Small', icon: Ruler },
-];
-
-const NEARBY_SORT_OPTIONS = [
-  { field: 'distance', order: 'asc' as const, label: 'Nearby First', icon: Navigation },
-];
+import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 
 // Dynamically import MapComponent to prevent SSR issues
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
@@ -57,23 +46,33 @@ function ExploreContent() {
   const [page, setPage] = useState(0);
   const searchParams = useSearchParams();
   const areaParam = searchParams.get('area');
-  
-  const [sortOption, setSortOption] = useState(() => {
-    if (areaParam === 'Near Me') return NEARBY_SORT_OPTIONS[0];
-    return SORT_OPTIONS[0];
-  });
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const itemsPerPage = 20;
 
   const { 
     shortlistItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
     setActiveSelectionSheet, setKeywords, setMinSize, setMaxSize, 
-    setSelectedHighlights, clearFilters, userLocation, setUserLocation
+    setSelectedHighlights, clearFilters, userLocation, setUserLocation,
+    sortField, sortOrder, setSortField, setSortOrder
   } = useShortlist();
+
+  // Re-derive active category from context strings:
+  const allSortCategories = [...SORT_CATEGORIES, ...NEARBY_SORT_CATEGORY];
+  const activeCategory = allSortCategories.find(c => c.field === sortField) || SORT_CATEGORIES[0];
+
+  useEffect(() => {
+    // If we entered 'Near me' for the first time and sort isn't updated
+    if (areaParam === 'Near Me' && sortField === 'approved_on') {
+      setSortField('distance');
+      setSortOrder('asc');
+    }
+  }, [areaParam]);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const itemsPerPage = 20;
+
+
 
   // Request location if nearby is selected
   useEffect(() => {
-    if ((areaParam === 'Near Me' || sortOption.field === 'distance') && !userLocation) {
+    if ((areaParam === 'Near Me' || sortField === 'distance') && !userLocation) {
       const cityCenters: Record<string, {lat: number, lng: number}> = {
         'Panipat': { lat: 29.3909, lng: 76.9635 },
         'Karnal': { lat: 29.6857, lng: 76.9907 }
@@ -82,8 +81,9 @@ function ExploreContent() {
       const setFallback = () => {
         const coords = cityCenters[selectedCity] || cityCenters['Panipat'];
         setUserLocation({ ...coords, isFallback: true });
-        if (areaParam === 'Near Me' && sortOption.field !== 'distance') {
-          setSortOption(NEARBY_SORT_OPTIONS[0]);
+        if (areaParam === 'Near Me' && sortField !== 'distance') {
+          setSortField('distance');
+          setSortOrder('asc');
         }
       };
 
@@ -96,8 +96,9 @@ function ExploreContent() {
               isFallback: false
             });
             
-            if (areaParam === 'Near Me' && sortOption.field !== 'distance') {
-              setSortOption(NEARBY_SORT_OPTIONS[0]);
+            if (areaParam === 'Near Me' && sortField !== 'distance') {
+              setSortField('distance');
+              setSortOrder('asc');
             }
           },
           (error) => {
@@ -110,7 +111,7 @@ function ExploreContent() {
         setFallback();
       }
     }
-  }, [areaParam, sortOption.field, userLocation, selectedCity]);
+  }, [areaParam, sortField, userLocation, selectedCity]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,8 +133,8 @@ function ExploreContent() {
         false, 
         city === 'All' ? undefined : city,
         type || undefined,
-        sortOption.field === 'distance' ? 'approved_on' : sortOption.field,
-        sortOption.order,
+        sortField === 'distance' ? 'approved_on' : sortField,
+        sortOrder,
         area || undefined,
         budget || undefined,
         minSize || undefined,
@@ -145,21 +146,21 @@ function ExploreContent() {
       let finalData = [...(data as Property[])];
 
       // Client-side distance sorting and calculation if needed
-      if ((sortOption.field === 'distance' || areaParam === 'Near Me')) {
+      if ((sortField === 'distance' || areaParam === 'Near Me')) {
         if (userLocation) {
           finalData.sort((a, b) => {
-            const [latA, lngA] = getPropertyCoords(a);
-            const [latB, lngB] = getPropertyCoords(b);
+            const [latA, lngA] = getPropertyCoords(a, finalData);
+            const [latB, lngB] = getPropertyCoords(b, finalData);
             
             const distA = calculateDistance(userLocation.lat, userLocation.lng, latA, lngA);
             const distB = calculateDistance(userLocation.lat, userLocation.lng, latB, lngB);
             
-            return sortOption.order === 'asc' ? distA - distB : distB - distA;
+            return sortOrder === 'asc' ? distA - distB : distB - distA;
           });
 
           // Add real calculated distance property to cards
           finalData = finalData.map(p => {
-            const [pLat, pLng] = getPropertyCoords(p);
+            const [pLat, pLng] = getPropertyCoords(p, finalData);
             return {
               ...p,
               landmark_location_distance: calculateDistance(
@@ -187,10 +188,10 @@ function ExploreContent() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     fetchData();
-  }, [page, selectedCity, sortOption, userLocation, searchParams]);
+  }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pt-24 sm:pt-28">
+    <div className="flex min-h-screen flex-col bg-white pt-20 sm:pt-24">
       <div className="mx-auto max-w-[1440px] w-full px-4 sm:px-6 lg:px-12 flex-1 flex flex-col">
         {/* Main Content Area */}
         <div className="relative flex flex-1 gap-8 lg:gap-8">
@@ -204,7 +205,7 @@ function ExploreContent() {
               viewMode === 'list' ? 'w-full' : 'hidden'
             )}>
             {/* Section Header */}
-            <div className="pt-6 sm:pt-8 pb-2">
+            <div className="pt-2 sm:pt-4 pb-2">
               {/* Mobile-only Filter Summary Chips */}
               <div className="flex sm:hidden mb-4 items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
                 <button 
@@ -254,11 +255,102 @@ function ExploreContent() {
                     ) : null;
                   })()}
                 </button>
+
+                {/* Mobile Sort Dropdown (Small) */}
+                <div className="relative shrink-0 flex items-center">
+                  <button 
+                    onClick={() => setIsSortOpen(!isSortOpen)}
+                    className="flex h-8 items-center gap-1.5 rounded-full bg-white border border-zinc-200 px-3 shadow-sm active:scale-95 transition-all text-zinc-700"
+                  >
+                    {(() => {
+                      const allCats = [...SORT_CATEGORIES, ...NEARBY_SORT_CATEGORY];
+                      const activeCat = allCats.find(c => c.field === sortField) || SORT_CATEGORIES[0];
+                      const DirectionIcon = sortOrder === 'desc' ? ArrowDown : ArrowUp;
+                      return (
+                        <>
+                          <activeCat.icon className="h-3.5 w-3.5" />
+                          <span className="text-[10px] font-bold">
+                            {activeCat.label}
+                          </span>
+                          <DirectionIcon className={cn("h-3 w-3 text-zinc-400 transition-transform", isSortOpen && "rotate-180")} />
+                        </>
+                      );
+                    })()}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isSortOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40 bg-transparent" 
+                          onClick={() => setIsSortOpen(false)} 
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="absolute left-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-2xl border border-zinc-100 bg-white p-1.5 shadow-2xl shadow-zinc-200/50 origin-top-left"
+                        >
+                          {[...SORT_CATEGORIES, ...(areaParam === 'Near Me' || userLocation ? NEARBY_SORT_CATEGORY : [])].map((cat) => {
+                            const isActive = sortField === cat.field;
+                            const currentOrder = isActive ? sortOrder : cat.defaultOrder;
+                            const DirectionIcon = currentOrder === 'desc' ? ArrowDown : ArrowUp;
+                            return (
+                              <button
+                                key={cat.id}
+                                onClick={() => {
+                                  if (isActive && cat.canToggle) {
+                                    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                                  } else {
+                                    setSortField(cat.field);
+                                    setSortOrder(cat.defaultOrder);
+                                  }
+                                  setIsSortOpen(false);
+                                  setPage(0);
+                                }}
+                                className={cn(
+                                  "flex w-full justify-between items-center rounded-xl px-3 py-2.5 text-left text-[11px] font-bold transition-all",
+                                  isActive 
+                                    ? "bg-zinc-900 text-white" 
+                                    : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                                )}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <cat.icon className={cn("h-3.5 w-3.5", isActive ? "text-white/70" : "text-zinc-400")} />
+                                  {cat.label}
+                                </div>
+                                {isActive && <DirectionIcon className="h-3.5 w-3.5" />}
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">
-                  <h1 className="ty-title font-bold tracking-tight text-zinc-900">Explore Properties</h1>
+                  <h1 className="ty-title font-bold tracking-tight text-zinc-900 capitalize">
+                    {(() => {
+                      const type = searchParams.get('type');
+                      const area = searchParams.get('area');
+                      const displayType = type && type !== 'All' ? type : '';
+                      const displayArea = area && area !== 'All' ? area : '';
+
+                      if (displayType && displayArea) {
+                        if (displayArea.toLowerCase() === 'near me') return `${displayType} Near Me`;
+                        return `${displayType} in ${displayArea}`;
+                      }
+                      if (displayType) return `${displayType}`;
+                      if (displayArea) {
+                        if (displayArea.toLowerCase() === 'near me') return `Properties Near Me`;
+                        return `Properties in ${displayArea}`;
+                      }
+                      return "Explore Properties";
+                    })()}
+                  </h1>
                   <div className="flex items-center gap-2">
                     <span className="ty-micro font-bold text-zinc-400 leading-none">
                       {properties.length} Results Found
@@ -281,56 +373,7 @@ function ExploreContent() {
                     </button>
                   )}
 
-                  {/* Sort By Dropdown */}
-                  <div className="relative">
-                    <button 
-                      onClick={() => setIsSortOpen(!isSortOpen)}
-                      className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
-                    >
-                    <div className="flex items-center gap-2">
-                      <ArrowUpDown className="h-3.5 w-3.5" />
-                      <span>{sortOption.label}</span>
-                    </div>
-                    <ChevronLeft className="h-3 w-3 rotate-270" />
-                  </button>
 
-                  <AnimatePresence>
-                    {isSortOpen && (
-                      <>
-                        <div 
-                          className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent" 
-                          onClick={() => setIsSortOpen(false)} 
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute right-0 left-0 sm:left-auto top-full z-50 mt-2 w-auto sm:w-56 overflow-hidden rounded-2xl border border-zinc-100 bg-white p-1.5 shadow-2xl shadow-zinc-200/50"
-                        >
-                          {[...SORT_OPTIONS, ...(areaParam === 'Near Me' || userLocation ? NEARBY_SORT_OPTIONS : [])].map((option) => (
-                            <button
-                              key={`${option.label}-${option.order}`}
-                              onClick={() => {
-                                setSortOption(option);
-                                setIsSortOpen(false);
-                                setPage(0);
-                              }}
-                              className={cn(
-                                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ty-caption font-bold transition-all",
-                                sortOption.label === option.label 
-                                  ? "bg-zinc-900 text-white" 
-                                  : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                              )}
-                            >
-                              <option.icon className={cn("h-4 w-4", sortOption.label === option.label ? "text-white/70" : "text-zinc-400")} />
-                              {option.label}
-                            </button>
-                          ))}
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
               </div>
             </div>
           </div>
@@ -351,7 +394,7 @@ function ExploreContent() {
                       isExpanded={selectedProperty?.property_id === property.property_id}
                       onToggle={() => setSelectedProperty(selectedProperty?.property_id === property.property_id ? null : property)}
                       isNearMeFallback={userLocation?.isFallback}
-                      showDistance={areaParam === 'Near Me' || sortOption.field === 'distance'}
+                      showDistance={areaParam === 'Near Me' || sortField === 'distance'}
                     />
                   </div>
                 ))
@@ -440,7 +483,7 @@ function ExploreContent() {
             "sticky top-20 h-[calc(100vh-80px)] transition-all duration-300",
             viewMode === 'split' ? 'hidden lg:flex lg:flex-1' : 
             viewMode === 'map' ? 'w-full flex' : 'hidden',
-            "items-center justify-center pt-8 pb-5"
+            "items-center justify-center pt-2 lg:pt-4 pb-5"
           )}>
             <div className="relative h-full w-full overflow-hidden sm:rounded-3xl border border-zinc-200 shadow-sm group">
               {/* Overlay Buttons */}
@@ -476,7 +519,7 @@ function ExploreContent() {
                 selectedProperty={selectedProperty}
                 onSelectProperty={setSelectedProperty}
                 userLocation={userLocation}
-                showDistance={areaParam === 'Near Me' || sortOption.field === 'distance'}
+                showDistance={areaParam === 'Near Me' || sortField === 'distance'}
               />
 
             </div>

@@ -32,6 +32,10 @@ interface ShortlistContextType {
   selectedHighlights: string[];
   setSelectedHighlights: (h: string[]) => void;
   clearFilters: () => void;
+  sortField: string;
+  setSortField: (f: string) => void;
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (o: 'asc' | 'desc') => void;
   
   inquiries: Record<string, InquiryData>;
   inquiryProperty: any | null;
@@ -79,6 +83,8 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [minSize, setMinSize] = useState('');
   const [maxSize, setMaxSize] = useState('');
   const [selectedHighlights, setSelectedHighlights] = useState<string[]>([]);
+  const [sortField, setSortField] = useState('approved_on');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | 'area' | null>(null);
@@ -281,6 +287,10 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       selectedHighlights,
       setSelectedHighlights,
       clearFilters,
+      sortField,
+      setSortField,
+      sortOrder,
+      setSortOrder,
       addToShortlist,
       removeFromShortlist,
       toggleSave,

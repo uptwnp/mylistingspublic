@@ -129,7 +129,7 @@ function PropertyDetailContent() {
   const config = getPropertyConfig(property.type);
   const Icon = config.icon;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
-  const [lat, lng] = getPropertyCoords(property);
+  const [lat, lng] = getPropertyCoords(property, similarProperties);
 
   return (
     <div className="min-h-screen bg-white pb-32">
