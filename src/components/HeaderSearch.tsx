@@ -122,8 +122,8 @@ export function HeaderSearch({
             {/* LARGE SEARCH - PC VERSION (HIDDEN ON MOBILE) */}
             <div
               className={cn(
-                "hidden sm:flex relative items-center rounded-full border border-zinc-200/80 bg-white shadow-2xl h-18 p-0",
-                activeSegment ? "bg-zinc-50/10" : "hover:bg-zinc-50/30"
+                "hidden sm:flex relative items-center rounded-full border border-zinc-200 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-18 p-0",
+                activeSegment ? "bg-white ring-1 ring-zinc-200/50" : "hover:bg-white"
               )}
             >
               {/* PC: Area Section */}
@@ -395,7 +395,13 @@ export function HeaderSearch({
                 <div className="flex items-center px-4 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); onExpand?.('type'); }}>
                   <span className="ty-caption font-bold text-zinc-400 truncate tracking-tight">{propertyType === "Any Type" ? "Any Type" : propertyType}</span>
                 </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white ml-2">
+                <div 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    handleSearch(); 
+                  }}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white ml-2 transition-transform active:scale-90 hover:bg-rose-600"
+                >
                   <Search className="h-4 w-4" strokeWidth={3} />
                 </div>
               </button>
@@ -416,13 +422,25 @@ export function HeaderSearch({
             </div>
 
             {/* Mobile Compact: Keep minimal as requested previously */}
-            <button
-              onClick={() => onExpand?.()}
+            <div
               className="sm:hidden flex items-center gap-3 rounded-full border border-zinc-200 bg-white py-2 px-4 shadow-md"
             >
-              <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
-              <span className="ty-caption font-bold text-zinc-900">{query ? `${query}, ${city}` : city}</span>
-            </button>
+              <div 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  handleSearch(); 
+                }}
+                className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-90 transition-transform cursor-pointer"
+              >
+                <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
+              </div>
+              <button 
+                onClick={() => onExpand?.()}
+                className="flex-1 text-left ty-caption font-bold text-zinc-900 truncate"
+              >
+                {query ? `${query}, ${city}` : city}
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

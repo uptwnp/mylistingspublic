@@ -197,10 +197,10 @@ export default function Navbar() {
   return (
     <>
       <nav className={cn(
-        "fixed top-0 z-50 w-full transition-all duration-300",
+        "fixed top-0 z-50 w-full transition-all duration-700 ease-in-out",
         shouldShowCompact 
-          ? "border-b border-zinc-200 bg-white/95 backdrop-blur-xl py-3 shadow-sm" 
-          : "bg-white py-4 sm:py-6"
+          ? "border-b border-zinc-200/50 bg-[#fafafa]/80 backdrop-blur-3xl py-3 shadow-sm" 
+          : "bg-white/40 backdrop-blur-xl py-4 sm:py-6"
       )}>
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
           {/* Top Row: Logo, Center (Tabs/Search), and Actions */}
@@ -222,15 +222,25 @@ export default function Navbar() {
               {/* Mobile Search Pill - Visible on scroll or subpages */}
               {shouldShowCompact && (
                 <div className="sm:hidden flex-1 px-2">
-                  <button
-                    onClick={() => setIsMobileSearchOpen(true)}
+                  <div
                     className="flex w-full items-center gap-3 rounded-full border border-zinc-200 bg-white px-4 py-2.5 shadow-md shadow-zinc-200/50 hover:shadow-lg transition-all"
                   >
-                    <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
-                    <span className="ty-caption font-black text-zinc-900 truncate tracking-tight">
+                    <div 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        handleApplyFilters(); 
+                      }}
+                      className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-90 transition-transform cursor-pointer"
+                    >
+                      <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
+                    </div>
+                    <button 
+                      onClick={() => setIsMobileSearchOpen(true)}
+                      className="flex-1 text-left ty-caption font-black text-zinc-900 truncate tracking-tight"
+                    >
                       {query ? `${query}, ${selectedCity}` : selectedCity}
-                    </span>
-                  </button>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -321,9 +331,9 @@ export default function Navbar() {
                             className="absolute left-1/2 top-full z-[70] mt-4 w-48 -translate-x-1/2 overflow-hidden rounded-3xl border border-zinc-100 bg-white p-1 shadow-2xl"
                           >
                             {OTHER_CITIES.map((city) => (
-                              <button
-                                library-key={city}
-                                onClick={() => {
+                                <button
+                                  key={city}
+                                  onClick={() => {
                                   setSelectedCity(city);
                                   setIsOtherCityDropdownOpen(false);
                                 }}
