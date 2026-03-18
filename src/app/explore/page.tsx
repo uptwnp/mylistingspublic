@@ -1,5 +1,5 @@
 'use client';
-export const runtime = 'edge';
+
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -155,7 +155,7 @@ export default function ExplorePage() {
   }, [page, selectedCity, sortOption, userLocation, areaParam]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pt-20">
+    <div className="flex min-h-screen flex-col bg-white pt-24 sm:pt-28">
       <div className="mx-auto max-w-[1440px] w-full px-4 sm:px-6 lg:px-12 flex-1 flex flex-col">
         {/* Main Content Area */}
         <div className="relative flex flex-1 gap-8 lg:gap-8">

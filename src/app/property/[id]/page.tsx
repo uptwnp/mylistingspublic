@@ -134,7 +134,7 @@ export default function PropertyDetailPage() {
   return (
     <div className="min-h-screen bg-white pb-32">
       {/* Top Section: Only for Heading on Desktop, everything for Mobile */}
-      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 pt-24 sm:pt-32 pb-4 sm:pb-6 lg:px-12">
+      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 pt-28 sm:pt-32 pb-4 sm:pb-6 lg:px-12">
         <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 sm:mb-4">
           <Link href={`/explore?city=${property.city}`} className="hover:text-zinc-900 transition-colors">
             {property.city}

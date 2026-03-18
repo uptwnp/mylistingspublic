@@ -187,7 +187,7 @@ export function HeaderSearch({
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute sm:left-0 left-0 right-0 sm:right-auto top-[calc(100%+12px)] sm:top-[calc(100%+12px)] z-50 w-full sm:max-w-sm rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl fixed sm:absolute sm:mt-0 mt-4 mx-4 sm:mx-0"
+                      className="absolute left-0 right-0 sm:left-0 sm:right-auto top-[calc(100%+12px)] z-50 w-full sm:max-w-sm rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl mt-4 mx-auto max-w-[calc(100vw-32px)] sm:mx-0 sm:mt-0"
                     >
                        <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Popular Areas</h3>
                        <div className="grid grid-cols-1 gap-1 max-h-64 overflow-y-auto pr-2">
@@ -212,7 +212,7 @@ export function HeaderSearch({
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute sm:left-1/3 left-0 right-0 sm:right-auto top-[calc(100%+12px)] sm:top-[calc(100%+12px)] z-50 w-full sm:w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl fixed sm:absolute sm:mt-0 mt-4 mx-4 sm:mx-0"
+                      className="absolute left-0 right-0 sm:left-1/3 sm:right-auto top-[calc(100%+12px)] z-50 w-full sm:w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl mt-4 mx-auto max-w-[calc(100vw-32px)] sm:mx-0 sm:mt-0"
                     >
                       <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Select Budget</h3>
                       <div className="space-y-1">
@@ -238,7 +238,7 @@ export function HeaderSearch({
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute sm:right-0 left-0 right-0 sm:left-auto top-[calc(100%+12px)] sm:top-[calc(100%+12px)] z-50 w-full sm:w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl fixed sm:absolute sm:mt-0 mt-4 mx-4 sm:mx-0"
+                      className="absolute left-0 right-0 sm:right-0 sm:left-auto top-[calc(100%+12px)] z-50 w-full sm:w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl mt-4 mx-auto max-w-[calc(100vw-32px)] sm:mx-0 sm:mt-0"
                     >
                       <h3 className="mb-4 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Property Category</h3>
                       <div className="space-y-1">

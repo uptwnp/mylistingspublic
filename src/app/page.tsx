@@ -1,6 +1,6 @@
 'use client';
 
-export const runtime = 'edge';
+
 import { PropertyGrid } from "@/components/PropertyGrid";
 import { PropertySection } from "@/components/PropertySection";
 import { useDiscussion } from "@/context/DiscussionContext";
@@ -11,9 +11,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* Spacer for fixed Navbar */}
-      <div className="h-[430px] sm:h-80" />
+      <div className="h-[520px] sm:h-[400px] lg:h-80" />
 
-      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12 pb-32 mt-6 sm:mt-48 space-y-12 sm:space-y-24">
+      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12 pb-32 mt-12 sm:mt-16 space-y-12 sm:space-y-24">
         <PropertySection 
           title={`Residential Plots for sale in ${selectedCity}`} 
           city={selectedCity}

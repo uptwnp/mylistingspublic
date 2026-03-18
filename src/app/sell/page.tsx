@@ -107,7 +107,7 @@ export default function SellPropertyPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-zinc-50/50" />
         
-        <div className="relative mx-auto flex h-full max-w-[1440px] flex-col items-center justify-center px-6 text-center lg:px-12 pt-20">
+        <div className="relative mx-auto flex h-full max-w-[1440px] flex-col items-center justify-center px-6 text-center lg:px-12 pt-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

@@ -301,7 +301,7 @@ export default function Navbar() {
                 className="flex items-center justify-center w-full"
               >
                 <div
-                  className="mt-6 sm:mt-12 pb-6 sm:pb-8 w-full max-w-3xl z-10"
+                  className="mt-6 sm:mt-12 pb-6 sm:pb-8 w-full max-w-3xl z-20"
                   ref={searchContainerRef}
                 >
                   {/* Hero Title (Mobile Only) */}
