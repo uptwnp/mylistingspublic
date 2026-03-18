@@ -1,13 +1,12 @@
 'use client';
 
-
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { getPropertyById } from '@/lib/supabase';
 import { Property } from '@/types';
 import { useDiscussion } from '@/context/DiscussionContext';
 import { useRef } from 'react';
-import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Navigation, Map as MapIcon, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Navigation, Map as MapIcon, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,30 +21,11 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   loading: () => <div className="h-full w-full animate-pulse bg-zinc-100 flex items-center justify-center font-bold text-zinc-400">Loading Map...</div>
 });
 
+export const runtime = 'edge';
 
-
-export default function PropertyDetailPage() {
-  const searchParams = useSearchParams();
+function PropertyDetailContent() {
+  const { id } = useParams();
   const router = useRouter();
-  
-  // Robust ID detection for static exports
-  const [detectedId, setDetectedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // 1. Try search param (?id=...)
-    let id = searchParams.get('id');
-    
-    // 2. Fallback to path parsing (/property/123)
-    if (!id && typeof window !== 'undefined') {
-      const pathParts = window.location.pathname.split('/');
-      id = pathParts[pathParts.length - 1];
-    }
-    
-    if (id && id !== 'property') {
-      setDetectedId(id);
-    }
-  }, [searchParams]);
-
   const mapSectionRef = useRef<HTMLDivElement>(null);
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,11 +54,12 @@ export default function PropertyDetailPage() {
 
   useEffect(() => {
     const fetchProperty = async () => {
-      if (!detectedId) return;
+      if (!id) return;
       setLoading(true);
       
       try {
-        const data = await getPropertyById(detectedId) as Property | null;
+        const cleanId = Array.isArray(id) ? id[0] : id;
+        const data = await getPropertyById(cleanId) as Property | null;
         if (data) {
           setProperty(data);
           // Fetch similar properties
@@ -93,7 +74,7 @@ export default function PropertyDetailPage() {
     };
 
     fetchProperty();
-  }, [detectedId]);
+  }, [id]);
 
   const scrollToMap = () => {
     mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -147,7 +128,6 @@ export default function PropertyDetailPage() {
   const config = getPropertyConfig(property.type);
   const Icon = config.icon;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
-
 
   return (
     <div className="min-h-screen bg-white pb-32">
@@ -639,5 +619,17 @@ export default function PropertyDetailPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function PropertyDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <Loader2 className="h-10 w-10 animate-spin text-zinc-900" />
+      </div>
+    }>
+      <PropertyDetailContent />
+    </Suspense>
   );
 }

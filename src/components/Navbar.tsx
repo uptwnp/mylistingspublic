@@ -21,6 +21,7 @@ export default function Navbar() {
   const menuRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const otherCityDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileOtherCityDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === '/';
@@ -51,7 +52,8 @@ export default function Navbar() {
         setIsForceExpanded(false);
         setInitialSegment(null);
       }
-      if (otherCityDropdownRef.current && !otherCityDropdownRef.current.contains(event.target as Node)) {
+      if (otherCityDropdownRef.current && !otherCityDropdownRef.current.contains(event.target as Node) && 
+          mobileOtherCityDropdownRef.current && !mobileOtherCityDropdownRef.current.contains(event.target as Node)) {
         setIsOtherCityDropdownOpen(false);
       }
     };
@@ -134,7 +136,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="hidden sm:flex items-center justify-center gap-1 overflow-x-auto no-scrollbar max-w-[calc(100vw-140px)] px-2 sm:max-w-none sm:px-0"
+                      className="hidden sm:flex items-center justify-center gap-1 max-w-[calc(100vw-140px)] px-2 sm:max-w-none sm:px-0"
                     >
                     <button 
                       onClick={() => setSelectedCity("Panipat")}
@@ -318,10 +320,53 @@ export default function Navbar() {
                   <div className="flex sm:hidden items-center justify-center gap-2 mb-6 px-4">
                     {["Panipat", "Karnal", "Other"].map((city) => {
                       const isActive = (city === "Other" && OTHER_CITIES.includes(selectedCity)) || selectedCity === city;
+                      if (city === "Other") {
+                        return (
+                          <div key={city} className="relative" ref={mobileOtherCityDropdownRef}>
+                            <button
+                              onClick={() => setIsOtherCityDropdownOpen(!isOtherCityDropdownOpen)}
+                              className={cn(
+                                "px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                                isActive 
+                                  ? "bg-zinc-900 text-white shadow-lg" 
+                                  : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+                              )}
+                            >
+                              {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
+                            </button>
+                            <AnimatePresence>
+                              {isOtherCityDropdownOpen && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  className="absolute left-1/2 bottom-full z-[100] mb-3 w-48 -translate-x-1/2 overflow-hidden rounded-[24px] border border-zinc-100 bg-white p-1 shadow-2xl"
+                                >
+                                  {OTHER_CITIES.map((c) => (
+                                    <button
+                                      key={c}
+                                      onClick={() => {
+                                        setSelectedCity(c);
+                                        setIsOtherCityDropdownOpen(false);
+                                      }}
+                                      className={cn(
+                                        "flex w-full items-center px-4 py-3 text-left text-[11px] font-black uppercase tracking-tight transition-colors hover:bg-zinc-50 rounded-2xl",
+                                        selectedCity === c ? "text-rose-500 bg-rose-50/50" : "text-zinc-600"
+                                      )}
+                                    >
+                                      {c}
+                                    </button>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      }
                       return (
                         <button
                           key={city}
-                          onClick={() => city === "Other" ? setIsOtherCityDropdownOpen(true) : setSelectedCity(city)}
+                          onClick={() => setSelectedCity(city)}
                           className={cn(
                             "px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
                             isActive 
@@ -329,7 +374,7 @@ export default function Navbar() {
                               : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
                           )}
                         >
-                          {city === "Other" && OTHER_CITIES.includes(selectedCity) ? selectedCity : city}
+                          {city}
                         </button>
                       );
                     })}

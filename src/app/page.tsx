@@ -1,6 +1,8 @@
 'use client';
 
 
+export const runtime = 'edge';
+
 import { PropertyGrid } from "@/components/PropertyGrid";
 import { PropertySection } from "@/components/PropertySection";
 import { useDiscussion } from "@/context/DiscussionContext";

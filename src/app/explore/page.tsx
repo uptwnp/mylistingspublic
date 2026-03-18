@@ -1,7 +1,6 @@
 'use client';
 
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
@@ -13,6 +12,8 @@ import { useDiscussion } from '@/context/DiscussionContext';
 import { useSearchParams } from 'next/navigation';
 import { calculateDistance } from '@/lib/utils';
 import { Navigation } from 'lucide-react';
+
+export const runtime = 'edge';
 
 const SORT_OPTIONS = [
   { field: 'approved_on', order: 'desc' as const, label: 'Newest First', icon: Clock },
@@ -37,7 +38,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ),
 });
 
-export default function ExplorePage() {
+function ExploreContent() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
@@ -359,5 +360,17 @@ export default function ExplorePage() {
         )}
       </button>
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <Loader2 className="h-10 w-10 animate-spin text-zinc-900" />
+      </div>
+    }>
+      <ExploreContent />
+    </Suspense>
   );
 }
