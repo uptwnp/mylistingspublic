@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
 const AMENITIES = [
-  "Main Road", "Corner Plot", "Park Facing", "Gated Community", "Sun Facing", "East Facing", "Sewage", "Electricity"
+  "Approved", "Corner", "East Facing", "West Face", "Park Facing", "Main Road", "On Road", "Parking", "Fresh Built", "Luxury Builtup", "Urgent Sale", "Very High Rental"
 ];
 
 interface FilterModalProps {

@@ -1,26 +1,32 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Wallet, Home as HomeIcon, Trees, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
+import { Search, MapPin, Wallet, Home as HomeIcon, Trees, ChevronDown, SlidersHorizontal, X, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
+import { getAreas } from '@/lib/supabase';
 
 const SUGGESTIONS = [
-  "Nearby", "Sector 18", "Tdi City", "Ansal", "Sector 13-17", "Sector 25", "Model Town", "Sanjay Colony", "Industrial Area"
+  "TDI City", "Sector 13-17", "Sector 18", "Sector 25", "Ansal", "Sector 12", "Eldeco Estate", "Model Town", "Yamuna Enclave"
 ];
 
 const BUDGET_OPTIONS = [
   { label: "Any Budget", value: 0 },
-  { label: "Under 50 Lakh", value: 50 },
-  { label: "Under 1 Cr", value: 100 },
-  { label: "Under 5 Cr", value: 500 },
-  { label: "Under 10 Cr", value: 1000 },
-  { label: "Above 10 Cr", value: 1001 },
+  { label: "Under 40 Lakh", value: 40 },
+  { label: "40 to 80 Lakh", value: 80 },
+  { label: "80 Lakh to 1.2 Cr", value: 120 },
+  { label: "1.2 Cr to 1.6 Cr", value: 160 },
+  { label: "1.6 to 2.5 Cr", value: 250 },
+  { label: "2.5 Cr to 5 Cr", value: 500 },
+  { label: "5 Cr to 10 Cr", value: 1000 },
+  { label: "10 Cr to 50 cr", value: 5000 },
+  { label: "50 Cr to 100 cr", value: 10000 },
+  { label: "100 Cr+", value: 10001 },
 ];
 
 const PROPERTY_TYPES = [
-  "Residential Plot", "Resi. House", "Shop", "Office", "Villa", "Apartment", "Commercial Plot"
+  "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Factory", "Godown"
 ];
 
 interface HeaderSearchProps {
@@ -53,11 +59,20 @@ export function HeaderSearch({
   initialSegment = null
 }: HeaderSearchProps) {
   const [activeSegment, setActiveSegment] = useState<string | null>(initialSegment);
+  const [allAreas, setAllAreas] = useState<string[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const isExplorePage = pathname === '/explore';
+
+  useEffect(() => {
+    async function loadAreas() {
+      const areas = await getAreas(city);
+      setAllAreas(areas);
+    }
+    loadAreas();
+  }, [city]);
 
   useEffect(() => {
     if (activeSegment === 'location' && inputRef.current) {
@@ -194,20 +209,58 @@ export function HeaderSearch({
                   <div className="w-full max-w-2xl bg-white rounded-[32px] border border-zinc-100 shadow-2xl p-6">
                     {activeSegment === 'location' && (
                       <div>
-                        <h3 className="mb-4 px-4 ty-label text-zinc-400 text-center">Popular Areas</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          {SUGGESTIONS.map((s) => (
+                        <h3 className="mb-4 px-4 ty-label text-zinc-400 text-center">
+                          {query ? 'Available Areas' : 'Popular Areas'}
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                          {(!query || 'nearby'.includes(query.toLowerCase())) && (
                             <button 
-                              key={s} 
-                              onClick={() => { setQuery(s); setActiveSegment('budget'); }}
-                              className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-zinc-700 hover:bg-zinc-50 transition-all text-left"
+                              onClick={() => { 
+                                if ('geolocation' in navigator) {
+                                  navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                                }
+                                setQuery('Nearby'); 
+                                setActiveSegment('budget'); 
+                              }}
+                              className="col-span-2 flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-emerald-600 hover:bg-emerald-50 transition-all group w-full text-left bg-emerald-50/20 mb-1 border-2 border-emerald-100"
                             >
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 group-hover:bg-zinc-200">
-                                 <MapPin className="h-5 w-5 text-zinc-500" />
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-100 group-hover:bg-emerald-600 transition-colors">
+                                <Navigation className="h-5 w-5" strokeWidth={3} />
                               </div>
-                              <span>{s}</span>
+                              <div className="flex flex-col">
+                                <span className="truncate">Nearby Properties</span>
+                                <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Use current location</span>
+                              </div>
                             </button>
-                          ))}
+                          )}
+                          {(() => {
+                            const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
+                            const showDefault = !query || isExactMatch;
+                            
+                            const filtered = allAreas
+                              .filter(a => a.toLowerCase().includes(query.toLowerCase()))
+                              .slice(0, 10);
+
+                            return (showDefault ? SUGGESTIONS : filtered).map((s) => (
+                              <button 
+                                key={s} 
+                                onClick={() => { setQuery(s); setActiveSegment('budget'); }}
+                                className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-zinc-700 hover:bg-zinc-50 transition-all text-left group"
+                              >
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 group-hover:bg-zinc-200">
+                                   <MapPin className="h-5 w-5 text-zinc-500" />
+                                </div>
+                                <span className="truncate">{s}</span>
+                              </button>
+                            ));
+                          })()}
+                          {(!query || allAreas.some(a => a.toLowerCase() === query.toLowerCase())) ? null : (
+                            allAreas.filter(a => a.toLowerCase().includes(query.toLowerCase())).length === 0 && (
+                              <div className="col-span-2 p-8 text-center ty-caption text-zinc-400">
+                                No matching areas found in {city}
+                              </div>
+                            )
+                          )}
                         </div>
                       </div>
                     )}

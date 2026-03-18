@@ -21,8 +21,8 @@ interface DiscussionContextType {
   clearCart: () => void;
   isFilterModalOpen: boolean;
   setIsFilterModalOpen: (open: boolean) => void;
-  activeSelectionSheet: 'budget' | 'type' | null;
-  setActiveSelectionSheet: (type: 'budget' | 'type' | null) => void;
+  activeSelectionSheet: 'budget' | 'type' | 'area' | null;
+  setActiveSelectionSheet: (type: 'budget' | 'type' | 'area' | null) => void;
   confirmAddToCart: (id: string, question: string) => void;
   isMobileSearchOpen: boolean;
   setIsMobileSearchOpen: (open: boolean) => void;
@@ -40,7 +40,7 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('Panipat');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | null>(null);
+  const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | 'area' | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [inquiries, setInquiries] = useState<Record<string, string>>({});
   const [inquiryProperty, setInquiryProperty] = useState<any | null>(null);

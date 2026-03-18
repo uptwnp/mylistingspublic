@@ -5,11 +5,11 @@ import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
-import { Loader2, SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ArrowUpDown, Clock, Tag, Ruler, ChevronDown } from 'lucide-react';
+import { Loader2, SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ArrowUpDown, Clock, Tag, Ruler, ChevronDown, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useDiscussion } from '@/context/DiscussionContext';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { calculateDistance } from '@/lib/utils';
 import { Navigation } from 'lucide-react';
 
@@ -39,6 +39,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
 });
 
 function ExploreContent() {
+  const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,15 +108,30 @@ function ExploreContent() {
     const fetchData = async () => {
       setLoading(true);
       
-      // Fetch data with existing filters
+      const city = searchParams.get('city') || selectedCity;
+      const area = searchParams.get('area');
+      const budget = searchParams.get('budget');
+      const type = searchParams.get('type');
+      const minSize = searchParams.get('minSize');
+      const maxSize = searchParams.get('maxSize');
+      const highlights = searchParams.get('highlights');
+      const keywords = searchParams.get('keywords');
+
+      // Fetch data with all filters
       const data = await getProperties(
         page, 
         itemsPerPage, 
         false, 
-        selectedCity === 'All' ? undefined : selectedCity,
-        undefined,
+        city === 'All' ? undefined : city,
+        type || undefined,
         sortOption.field === 'distance' ? 'approved_on' : sortOption.field,
-        sortOption.order
+        sortOption.order,
+        area || undefined,
+        budget || undefined,
+        minSize || undefined,
+        maxSize || undefined,
+        highlights || undefined,
+        keywords || undefined
       );
       
       let finalData = [...(data as Property[])];
@@ -153,7 +169,7 @@ function ExploreContent() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     fetchData();
-  }, [page, selectedCity, sortOption, userLocation, areaParam]);
+  }, [page, selectedCity, sortOption, userLocation, searchParams]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white pt-24 sm:pt-28">
@@ -173,6 +189,15 @@ function ExploreContent() {
             <div className="pt-6 sm:pt-8 pb-2">
               {/* Mobile-only Filter Summary Chips */}
               <div className="flex sm:hidden mb-4 items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <button 
+                  onClick={() => setActiveSelectionSheet('area')}
+                  className="flex shrink-0 items-center gap-2 rounded-full bg-zinc-50 border border-zinc-100 px-4 py-2 shadow-sm active:scale-95 transition-all"
+                >
+                  <span className="text-[9px] font-bold text-zinc-900 uppercase tracking-widest">{searchParams.get('area') || "Any Area"}</span>
+                  <div className="h-2.5 w-px bg-zinc-200" />
+                  <ChevronDown className="h-3 w-3 text-zinc-400" />
+                </button>
+
                 <button 
                   onClick={() => setActiveSelectionSheet('budget')}
                   className="flex shrink-0 items-center gap-2 rounded-full bg-zinc-50 border border-zinc-100 px-4 py-2 shadow-sm active:scale-95 transition-all"
@@ -274,7 +299,7 @@ function ExploreContent() {
                 Array(6).fill(0).map((_, i) => (
                   <PropertyCardSkeleton key={i} />
                 ))
-              ) : (
+              ) : properties.length > 0 ? (
                 properties.map((property) => (
                   <div key={property.property_id}>
                     <PropertyCard 
@@ -286,6 +311,22 @@ function ExploreContent() {
                     />
                   </div>
                 ))
+              ) : (
+                <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-zinc-50 text-zinc-300">
+                    <Search className="h-10 w-10" />
+                  </div>
+                  <h3 className="mb-2 ty-title font-bold text-zinc-900">No properties found</h3>
+                  <p className="mb-8 max-w-[280px] ty-body text-zinc-500">
+                    We couldn't find any properties matching your current filters. Try adjusting them.
+                  </p>
+                  <button 
+                    onClick={() => router.push('/explore')}
+                    className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-95"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
               )}
             </div>
 

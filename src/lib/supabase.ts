@@ -61,12 +61,18 @@ export async function getProperties(
   city?: string, 
   type?: string,
   sortField: string = 'approved_on',
-  sortOrder: 'asc' | 'desc' = 'desc'
+  sortOrder: 'asc' | 'desc' = 'desc',
+  area?: string,
+  budget?: string,
+  minSize?: string,
+  maxSize?: string,
+  highlights?: string,
+  keywords?: string
 ) {
   if (!supabase) return [];
 
-  const safeLimit = Math.min(limit, 20);
-  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${sortField}_${sortOrder}_${page}`;
+  const safeLimit = Math.min(limit, 50);
+  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${page}`;
   
   // Try to get from localStorage first for "Perceived Instant" speed
   if (useCache && typeof window !== 'undefined' && page === 0) {
@@ -95,8 +101,65 @@ export async function getProperties(
       query = query.ilike('city', `%${city.trim()}%`);
     }
 
-    if (type && type !== 'All') {
+    if (type && type !== 'All' && type !== 'Any Type') {
       query = query.ilike('type', `%${type.trim()}%`);
+    }
+
+    if (area && area !== 'All' && area !== 'Nearby') {
+      query = query.ilike('area', `%${area.trim()}%`);
+    }
+
+    if (budget && budget !== 'Any Budget') {
+      // Prices in DB are in Lakhs: 1 = 1 Lakh, 100 = 1 Cr
+      // Overlap logic: p_min <= u_max AND p_max >= u_min
+      
+      if (budget === 'Under 40 Lakh') {
+        query = query.lte('price_min', 40);
+      } else if (budget === '40 to 80 Lakh') {
+        query = query.lte('price_min', 80).gte('price_max', 40);
+      } else if (budget === '80 Lakh to 1.2 Cr') {
+        query = query.lte('price_min', 120).gte('price_max', 80);
+      } else if (budget === '1.2 Cr to 1.6 Cr') {
+        query = query.lte('price_min', 160).gte('price_max', 120);
+      } else if (budget === '1.6 to 2.5 Cr') {
+        query = query.lte('price_min', 250).gte('price_max', 160);
+      } else if (budget === '2.5 Cr to 5 Cr') {
+        query = query.lte('price_min', 500).gte('price_max', 250);
+      } else if (budget === '5 Cr to 10 Cr') {
+        query = query.lte('price_min', 1000).gte('price_max', 500);
+      } else if (budget === '10 Cr to 50 cr') {
+        query = query.lte('price_min', 5000).gte('price_max', 1000);
+      } else if (budget === '50 Cr to 100 cr') {
+        query = query.lte('price_min', 10000).gte('price_max', 5000);
+      } else if (budget === '100 Cr+') {
+        query = query.gte('price_max', 10000);
+      }
+    }
+
+    if (minSize) {
+      const sizeVal = parseFloat(minSize);
+      if (!isNaN(sizeVal)) query = query.gte('size_min', sizeVal);
+    }
+
+    if (maxSize) {
+      const sizeVal = parseFloat(maxSize);
+      if (!isNaN(sizeVal)) query = query.lte('size_max', sizeVal);
+    }
+
+    if (highlights) {
+      const highlightList = highlights.split(',').map(h => h.trim()).filter(Boolean);
+      if (highlightList.length > 0) {
+        // Since Supabase REST API doesn't support 'contains' well for CSV strings, we use ilike for each if needed, 
+        // but often highlights are stored as text arrays or JSONB. 
+        // Assuming they are comma-separated text based on formatPropertyData.
+        highlightList.forEach(h => {
+          query = query.ilike('highlights', `%${h}%`);
+        });
+      }
+    }
+
+    if (keywords) {
+      query = query.or(`description.ilike.%${keywords}%,tags.ilike.%${keywords}%,area.ilike.%${keywords}%`);
     }
 
     const { data, error } = await query

@@ -1,35 +1,41 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, Home as HomeIcon, Trees, Store } from 'lucide-react';
+import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const BUDGET_OPTIONS = [
   { label: "Any Budget", value: 0 },
-  { label: "Under 50 Lakh", value: 50 },
-  { label: "Under 1 Cr", value: 100 },
-  { label: "Under 5 Cr", value: 500 },
-  { label: "Under 10 Cr", value: 1000 },
-  { label: "Above 10 Cr", value: 1001 },
+  { label: "Under 40 Lakh", value: 40 },
+  { label: "40 to 80 Lakh", value: 80 },
+  { label: "80 Lakh to 1.2 Cr", value: 120 },
+  { label: "1.2 Cr to 1.6 Cr", value: 160 },
+  { label: "1.6 to 2.5 Cr", value: 250 },
+  { label: "2.5 Cr to 5 Cr", value: 500 },
+  { label: "5 Cr to 10 Cr", value: 1000 },
+  { label: "10 Cr to 50 cr", value: 5000 },
+  { label: "50 Cr to 100 cr", value: 10000 },
+  { label: "100 Cr+", value: 10001 },
 ];
 
 const PROPERTY_TYPES = [
   { label: "Plots", value: "Residential Plot", icon: Trees },
-  { label: "Houses", value: "Resi. House", icon: HomeIcon },
-  { label: "Shops", value: "Shop", icon: Store },
-  { label: "Villa", value: "Villa", icon: HomeIcon },
-  { label: "Office", value: "Office", icon: Building2 },
-  { label: "Apartment", value: "Apartment", icon: Building2 },
+  { label: "Houses", value: "Residential House", icon: HomeIcon },
+  { label: "Shop", value: "Shop", icon: Store },
+  { label: "Factory", value: "Factory", icon: Building2 },
+  { label: "Commercial", value: "Commercial Built-up", icon: Building2 },
+  { label: "Industrial", value: "Industrial Land", icon: Trees },
+  { label: "Agriculture", value: "Agriculture Land", icon: Trees },
 ];
-import { Building2 } from 'lucide-react';
 
 interface SelectionBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  type: 'budget' | 'propertyType';
+  type: 'budget' | 'propertyType' | 'area';
   selectedValue: any;
   onSelect: (value: any) => void;
+  data?: string[]; 
 }
 
 export function SelectionBottomSheet({
@@ -38,7 +44,8 @@ export function SelectionBottomSheet({
   title,
   type,
   selectedValue,
-  onSelect
+  onSelect,
+  data: areaData = []
 }: SelectionBottomSheetProps) {
   return (
     <AnimatePresence>
@@ -80,7 +87,7 @@ export function SelectionBottomSheet({
 
               {/* Body */}
               <div className="flex-1 overflow-y-auto p-6 pb-12">
-                {type === 'budget' ? (
+                {type === 'budget' && (
                   <div className="grid grid-cols-1 gap-3">
                     {BUDGET_OPTIONS.map((opt) => (
                       <button
@@ -116,7 +123,9 @@ export function SelectionBottomSheet({
                       </button>
                     ))}
                   </div>
-                ) : (
+                )}
+
+                {type === 'propertyType' && (
                   <div className="grid grid-cols-2 gap-3">
                     {PROPERTY_TYPES.map((cat) => {
                       const Icon = cat.icon;
@@ -147,6 +156,95 @@ export function SelectionBottomSheet({
                         </button>
                       );
                     })}
+                  </div>
+                )}
+
+                {type === 'area' && (
+                  <div className="flex flex-col gap-6">
+                    {/* Search Area Input */}
+                    <div className="relative px-1">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+                      <input 
+                        type="text"
+                        placeholder="Search areas..."
+                        className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-12 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
+                        onChange={(e) => {
+                          // Simple local filtering for the list
+                          const val = e.target.value.toLowerCase();
+                          const el = document.getElementById('area-list');
+                          if (el) {
+                            const buttons = el.getElementsByTagName('button');
+                            for (let i = 0; i < buttons.length; i++) {
+                              const text = buttons[i].innerText.toLowerCase();
+                              buttons[i].style.display = text.includes(val) ? 'flex' : 'none';
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <div id="area-list" className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto pr-1 custom-scrollbar">
+                      <button
+                        onClick={() => {
+                          if ('geolocation' in navigator) {
+                            navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                          }
+                          onSelect('Nearby');
+                          onClose();
+                        }}
+                        className={cn(
+                          "flex items-center gap-4 w-full rounded-2xl border-2 px-5 py-4 text-left transition-all mb-2",
+                          selectedValue === 'Nearby' 
+                            ? "border-zinc-900 bg-zinc-50" 
+                            : "border-emerald-100 bg-emerald-50/30 active:border-emerald-300"
+                        )}
+                      >
+                        <div className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+                          selectedValue === 'Nearby' ? "bg-zinc-900 text-white" : "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
+                        )}>
+                          <Navigation className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className={cn("text-base font-bold", selectedValue === 'Nearby' ? "text-zinc-900" : "text-emerald-700")}>
+                            Nearby Properties
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-wider">Use Current Location</span>
+                        </div>
+                      </button>
+
+                      {areaData.length > 0 ? (
+                        areaData.map((area) => (
+                          <button
+                            key={area}
+                            onClick={() => {
+                              onSelect(area);
+                              onClose();
+                            }}
+                            className={cn(
+                              "flex items-center gap-4 w-full rounded-2xl border-2 px-5 py-4 text-left transition-all",
+                              selectedValue === area 
+                                ? "border-zinc-900 bg-zinc-50" 
+                                : "border-zinc-100 active:border-zinc-300"
+                            )}
+                          >
+                            <div className={cn(
+                              "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+                              selectedValue === area ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-400"
+                            )}>
+                              <MapPin className="h-5 w-5" />
+                            </div>
+                            <span className={cn("text-base font-bold", selectedValue === area ? "text-zinc-900" : "text-zinc-500")}>
+                              {area}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="text-center py-12 text-zinc-400">
+                          No areas found for this city.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

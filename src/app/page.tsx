@@ -3,7 +3,7 @@
 export const runtime = 'edge';
 
 import { Search } from 'lucide-react';
-import { PropertyGrid } from "@/components/PropertyGrid";
+
 import { PropertySection } from "@/components/PropertySection";
 import { useDiscussion } from "@/context/DiscussionContext";
 
@@ -66,15 +66,7 @@ export default function Home() {
           type="Commercial" 
         />
 
-        <div className="pt-24 border-t border-zinc-100">
-          <div className="mb-12">
-            <h2 className="ty-display font-black tracking-tight text-zinc-900">
-              More Listings in {selectedCity}
-            </h2>
-            <p className="ty-caption text-zinc-500 mt-1">Explore the complete catalog of properties.</p>
-          </div>
-          <PropertyGrid />
-        </div>
+
       </section>
     </div>
   );

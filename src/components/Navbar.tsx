@@ -27,9 +27,19 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === '/';
+  const [allAreas, setAllAreas] = useState<string[]>([]);
   const OTHER_CITIES = [
-    "Pune", "Mumbai", "Bangalore", "Delhi NCR", "Hyderabad"
+    "Sonipat", "Delhi NCR", "Gurgaon", "Noida", "Rohtak"
   ];
+
+  useEffect(() => {
+    async function loadAreas() {
+      const { getAreas } = await import('@/lib/supabase');
+      const areas = await getAreas(selectedCity);
+      setAllAreas(areas);
+    }
+    loadAreas();
+  }, [selectedCity]);
   const shouldShowCompact = (isScrolled || !isHomePage) && !isForceExpanded;
 
   // Search state
@@ -54,8 +64,10 @@ export default function Navbar() {
         setIsForceExpanded(false);
         setInitialSegment(null);
       }
-      if (otherCityDropdownRef.current && !otherCityDropdownRef.current.contains(event.target as Node) && 
-          mobileOtherCityDropdownRef.current && !mobileOtherCityDropdownRef.current.contains(event.target as Node)) {
+      const clickedOutsideOtherCity = (!otherCityDropdownRef.current || !otherCityDropdownRef.current.contains(event.target as Node)) && 
+                                      (!mobileOtherCityDropdownRef.current || !mobileOtherCityDropdownRef.current.contains(event.target as Node));
+      
+      if (clickedOutsideOtherCity) {
         setIsOtherCityDropdownOpen(false);
       }
     };
@@ -88,7 +100,7 @@ export default function Navbar() {
     if (pathname === '/explore') {
       handleApplyFilters();
     }
-  }, [budget, propertyType, handleApplyFilters, pathname]);
+  }, [budget, propertyType, query, handleApplyFilters, pathname]);
 
   const searchProps = {
     city: selectedCity,
@@ -376,19 +388,56 @@ export default function Navbar() {
                 {["Panipat", "Karnal", "Other"].map((city) => {
                   const isActive = (city === "Other" && OTHER_CITIES.includes(selectedCity)) || selectedCity === city;
                   return (
-                    <button
-                      key={city}
-                      onClick={() => setSelectedCity(city === "Other" ? "Delhi NCR" : city)}
-                      className={cn(
-                        "relative ty-caption font-black uppercase tracking-widest transition-colors pb-1.5",
-                        isActive ? "text-zinc-900" : "text-zinc-400"
+                    <div key={city} className="relative" ref={city === "Other" ? mobileOtherCityDropdownRef : null}>
+                      <button
+                        onClick={() => {
+                          if (city === "Other") {
+                            setIsOtherCityDropdownOpen(!isOtherCityDropdownOpen);
+                          } else {
+                            setSelectedCity(city);
+                            setIsOtherCityDropdownOpen(false);
+                          }
+                        }}
+                        className={cn(
+                          "relative ty-caption font-black uppercase tracking-widest transition-colors pb-1.5",
+                          isActive ? "text-zinc-900" : "text-zinc-400"
+                        )}
+                      >
+                        {city === "Other" && OTHER_CITIES.includes(selectedCity) ? selectedCity : city}
+                        {isActive && (
+                          <motion.div layoutId="mobileOverlayCityActive" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-rose-500 rounded-full" />
+                        )}
+                      </button>
+
+                      {city === "Other" && (
+                        <AnimatePresence>
+                          {isOtherCityDropdownOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                              className="absolute left-1/2 top-full z-[1001] mt-2 w-40 -translate-x-1/2 overflow-hidden rounded-2xl border border-zinc-100 bg-white p-1 shadow-2xl"
+                            >
+                              {OTHER_CITIES.map((otherCity) => (
+                                <button
+                                  key={otherCity}
+                                  onClick={() => {
+                                    setSelectedCity(otherCity);
+                                    setIsOtherCityDropdownOpen(false);
+                                  }}
+                                  className={cn(
+                                    "flex w-full items-center px-4 py-2 text-left text-[10px] font-black uppercase tracking-wider transition-colors hover:bg-zinc-50 rounded-xl",
+                                    selectedCity === otherCity ? "text-rose-500 bg-rose-50/50" : "text-zinc-600"
+                                  )}
+                                >
+                                  {otherCity}
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       )}
-                    >
-                      {city}
-                      {isActive && (
-                        <motion.div layoutId="mobileOverlayCityActive" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-rose-500 rounded-full" />
-                      )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -399,37 +448,22 @@ export default function Navbar() {
             <div className="flex-1 overflow-y-auto px-6 py-6 bg-zinc-50/50">
               <div className="flex flex-col gap-4">
                 {/* Where Card */}
-                <div className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40">
-                  <h2 className="ty-title font-bold text-zinc-900 mb-6">Where to?</h2>
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
-                    <input 
-                      type="text"
-                      placeholder="Search areas..."
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      className="w-full h-12 rounded-2xl border border-zinc-200 pl-12 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-all placeholder:text-zinc-300"
-                      autoFocus
-                    />
+                <button 
+                  onClick={() => setActiveSelectionSheet('area')}
+                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="ty-title font-bold text-zinc-900">Where to?</h2>
+                    <MapPin className="h-6 w-6 text-zinc-400" />
                   </div>
-                  {/* Fast Localities Suggestions */}
-                  <div className="mt-6 flex flex-wrap gap-2">
-                     {["Sector 18", "Tdi City", "Ansal", "Sector 25"].map((area) => (
-                       <button
-                         key={area}
-                         onClick={() => setQuery(area)}
-                         className={cn(
-                           "px-4 py-2 rounded-xl text-[11px] font-bold transition-all",
-                           query === area 
-                             ? "bg-zinc-900 text-white" 
-                             : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                         )}
-                       >
-                         {area}
-                       </button>
-                     ))}
+                  <div className="flex items-center gap-2">
+                    <span className={cn("text-base font-bold", !query ? "text-zinc-400" : "text-zinc-900")}>
+                      {query || "Search areas..."}
+                    </span>
+                    <div className="h-4 w-px bg-zinc-200" />
+                    <ChevronDown className="h-4 w-4 text-zinc-400" />
                   </div>
-                </div>
+                </button>
 
                 {/* Budget Card - OPTIONS SHOWN VIA BOTTOM SHEET */}
                 <button 
@@ -526,6 +560,16 @@ export default function Navbar() {
         type="propertyType"
         selectedValue={propertyType}
         onSelect={setPropertyType}
+      />
+
+      <SelectionBottomSheet
+        isOpen={activeSelectionSheet === 'area'}
+        onClose={() => setActiveSelectionSheet(null)}
+        title="Where to?"
+        type="area"
+        selectedValue={query}
+        onSelect={setQuery}
+        data={allAreas}
       />
 
       {/* Fixed Bottom Category Filters (Mobile Only) */}
