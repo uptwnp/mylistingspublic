@@ -6,8 +6,8 @@ import { useDiscussion } from '@/context/DiscussionContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { usePathname, useRouter } from 'next/navigation';
-import { HeaderSearch } from './HeaderSearch';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { HeaderSearch, BUDGET_OPTIONS } from './HeaderSearch';
 import { FilterModal } from './FilterModal';
 import { SelectionBottomSheet } from './SelectionBottomSheet';
 import { useCallback } from 'react';
@@ -25,6 +25,7 @@ export default function Navbar() {
   const otherCityDropdownRef = useRef<HTMLDivElement>(null);
   const mobileOtherCityDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const isHomePage = pathname === '/';
   const [allAreas, setAllAreas] = useState<string[]>([]);
@@ -95,12 +96,68 @@ export default function Navbar() {
     router.push(`/explore?${params.toString()}`);
   }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, pathname]);
 
+  // Sync search state from URL
+  useEffect(() => {
+    // Only sync if we're on the /explore page or it's a direct URL hit
+    // This prevents clearing state when navigating back to Home
+    
+    const area = searchParams.get('area') || '';
+    if (area !== query) setQuery(area);
+
+    const budgetLabel = searchParams.get('budget') || 'Any Budget';
+    const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === budgetLabel) || BUDGET_OPTIONS[0];
+    if (foundBudget.label !== budget.label) setBudget(foundBudget);
+
+    const type = searchParams.get('type') || 'Any Type';
+    if (type !== propertyType) setPropertyType(type);
+
+    const kw = searchParams.get('keywords') || '';
+    if (kw !== keywords) setKeywords(kw);
+
+    const min = searchParams.get('minSize') || '';
+    if (min !== minSize) setMinSize(min);
+
+    const max = searchParams.get('maxSize') || '';
+    if (max !== maxSize) setMaxSize(max);
+
+    const hParams = searchParams.get('highlights') || '';
+    const hArray = hParams ? hParams.split(',') : [];
+    if (JSON.stringify(hArray) !== JSON.stringify(selectedHighlights)) {
+      setSelectedHighlights(hArray);
+    }
+    
+    const city = searchParams.get('city');
+    if (city && city !== selectedCity) {
+      setSelectedCity(city);
+    }
+  }, [searchParams]);
+
   // Auto-apply when on Explore page
   useEffect(() => {
     if (pathname === '/explore') {
-      handleApplyFilters();
+      // Avoid recursive updates: only push if state changed from URL
+      const areaInUrl = searchParams.get('area') || '';
+      const budgetInUrl = searchParams.get('budget') || 'Any Budget';
+      const typeInUrl = searchParams.get('type') || 'Any Type';
+      const keywordsInUrl = searchParams.get('keywords') || '';
+      const minSizeInUrl = searchParams.get('minSize') || '';
+      const maxSizeInUrl = searchParams.get('maxSize') || '';
+      const highlightsInUrl = searchParams.get('highlights') || '';
+      
+      const isDifferent = 
+        query !== areaInUrl || 
+        budget.label !== budgetInUrl || 
+        propertyType !== typeInUrl ||
+        keywords !== keywordsInUrl ||
+        minSize !== minSizeInUrl ||
+        maxSize !== maxSizeInUrl ||
+        selectedHighlights.join(',') !== highlightsInUrl;
+        
+      if (isDifferent) {
+        handleApplyFilters();
+      }
     }
-  }, [budget, propertyType, query, handleApplyFilters, pathname]);
+  }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname]);
 
   const searchProps = {
     city: selectedCity,

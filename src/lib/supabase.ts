@@ -9,50 +9,65 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
   : null as any;
 
 const CACHE_KEY = 'property_platform_results_v5';
+const AREAS_CACHE_KEY = 'property_platform_areas_v1';
+const CITIES_CACHE_KEY = 'property_platform_cities_v1';
+const CACHE_TTL = 3600000; // 1 hour
 
-const formatPropertyData = (property: Record<string, unknown>) => ({
-  ...property,
-  public_id: String(property.public_id ?? ''),
-  property_id: String(property.property_id ?? ''),
-  tags: typeof property.tags === 'string' 
-    ? property.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-    : Array.isArray(property.tags) ? property.tags : [],
-  highlights: typeof property.highlights === 'string'
-    ? property.highlights.split(',').map((h: string) => h.trim()).filter(Boolean)
-    : Array.isArray(property.highlights) ? property.highlights : [],
-  image_urls: (typeof property.image_urls === 'string' 
-    ? property.image_urls.split(',').map((url: string) => url.trim()).filter(Boolean)
-    : Array.isArray(property.image_urls) ? property.image_urls : []
-  ).map((url: string) => {
-    if (url.includes('r2.cloudflarestorage.com')) {
-      // Convert internal R2 URL to public working format
-      return url.replace('c60696ba6ea91f21fe51c590227fc61d.r2.cloudflarestorage.com/properties', 'pub-9e00030e294c40efa96642db5ba7f437.r2.dev');
+// Simple in-memory deduplication for pending requests
+const pendingRequests: Record<string, Promise<any> | undefined> = {};
+
+async function dedupeRequest<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  const existing = pendingRequests[key];
+  if (existing) return existing as Promise<T>;
+  
+  const promise = fetcher().finally(() => {
+    pendingRequests[key] = undefined;
+  });
+  
+  pendingRequests[key] = promise;
+  return promise;
+}
+
+
+const formatPropertyData = (property: Record<string, unknown>) => {
+  const formatted = {
+    ...property,
+    public_id: String(property.public_id ?? ''),
+    property_id: String(property.property_id ?? ''),
+    tags: typeof property.tags === 'string' 
+      ? property.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+      : Array.isArray(property.tags) ? property.tags : [],
+    highlights: typeof property.highlights === 'string'
+      ? property.highlights.split(',').map((h: string) => h.trim()).filter(Boolean)
+      : Array.isArray(property.highlights) ? property.highlights : [],
+    image_urls: (typeof property.image_urls === 'string' 
+      ? property.image_urls.split(',').map((url: string) => url.trim()).filter(Boolean)
+      : Array.isArray(property.image_urls) ? property.image_urls : []
+    ).map((url: string) => {
+      if (url.includes('r2.cloudflarestorage.com')) {
+        return url.replace('c60696ba6ea91f21fe51c590227fc61d.r2.cloudflarestorage.com/properties', 'pub-9e00030e294c40efa96642db5ba7f437.r2.dev');
+      }
+      return url;
+    })
+  } as any;
+
+  // Extract latitude and longitude from landmark_location if it's in "lat,lng" format
+  if (property.landmark_location && typeof property.landmark_location === 'string') {
+    const parts = property.landmark_location.split(',');
+    if (parts.length === 2) {
+      const lat = parseFloat(parts[0].trim());
+      const lng = parseFloat(parts[1].trim());
+      if (!isNaN(lat) && !isNaN(lng)) {
+        formatted.latitude = lat;
+        formatted.longitude = lng;
+      }
     }
-    return url;
-  })
-});
+  }
+  
+  return formatted;
+};
 
-const PUBLIC_FIELDS = `
-  public_id,
-  property_id,
-  city,
-  area,
-  type,
-  description,
-  size_min,
-  size_max,
-  size_unit,
-  price_min,
-  price_max,
-  tags,
-  highlights,
-  image_urls,
-  is_photos_public,
-  landmark_location,
-  landmark_location_distance,
-  approved_on,
-  status
-`;
+const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,tags,highlights,image_urls,is_photos_public,landmark_location,landmark_location_distance,approved_on,status';
 
 export async function getProperties(
   page = 0, 
@@ -262,38 +277,85 @@ export async function getTrendingProperties(limit = 6) {
 
 export async function getCities() {
   if (!supabase) return ['Panipat', 'Karnal'];
-  try {
-    const { data, error } = await supabase
-      .from('public_properties_view')
-      .select('city');
-    
-    if (error) return ['Panipat', 'Karnal'];
-    
-    const cities = Array.from(new Set((data as any[]).map(d => d.city))).filter(Boolean);
-    return cities.length > 0 ? cities : ['Panipat', 'Karnal'];
-  } catch (err) {
-    return ['Panipat', 'Karnal'];
-  }
+  
+  return dedupeRequest('cities', async () => {
+    // Try cache first
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(CITIES_CACHE_KEY);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_TTL) return data;
+        } catch (e) {
+          localStorage.removeItem(CITIES_CACHE_KEY);
+        }
+      }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('public_properties_view')
+        .select('city');
+      
+      if (error) throw error;
+      
+      const cities = Array.from(new Set((data as any[]).map(d => d.city))).filter(Boolean);
+      const result = cities.length > 0 ? cities : ['Panipat', 'Karnal'];
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(CITIES_CACHE_KEY, JSON.stringify({ data: result, timestamp: Date.now() }));
+      }
+
+      return result;
+    } catch (err) {
+      console.error('Error in getCities:', err);
+      return ['Panipat', 'Karnal'];
+    }
+  });
 }
 
 export async function getAreas(city?: string) {
   if (!supabase) return [];
-  try {
-    let query = supabase
-      .from('public_properties_view')
-      .select('area');
-
-    if (city && city !== 'All') {
-      query = query.ilike('city', `%${city.trim()}%`);
+  const cacheKey = `${AREAS_CACHE_KEY}_${city || 'All'}`;
+  
+  return dedupeRequest(cacheKey, async () => {
+    // Try cache first
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_TTL) return data;
+        } catch (e) {
+          localStorage.removeItem(cacheKey);
+        }
+      }
     }
 
-    const { data, error } = await query;
-    if (error) return [];
-    
-    return Array.from(new Set((data as any[]).map(d => d.area))).filter(Boolean);
-  } catch (err) {
-    return [];
-  }
+    try {
+      let query = supabase
+        .from('public_properties_view')
+        .select('area');
+
+      if (city && city !== 'All') {
+        query = query.ilike('city', `%${city.trim()}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      const areas = Array.from(new Set((data as any[]).map(d => d.area))).filter(Boolean);
+
+      if (typeof window !== 'undefined' && areas.length > 0) {
+        localStorage.setItem(cacheKey, JSON.stringify({ data: areas, timestamp: Date.now() }));
+      }
+      
+      return areas;
+    } catch (err) {
+      console.error('Error in getAreas:', err);
+      return [];
+    }
+  });
 }
 
 export async function submitInquiry(inquiryData: any) {

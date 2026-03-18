@@ -76,39 +76,59 @@ export function HomeSearch() {
       )}>
         
         {/* Location Section */}
-        <button 
+        <div 
           onClick={(e) => { e.stopPropagation(); setActiveSegment('location'); }}
           className={cn(
-            "flex-[1.4] flex flex-col items-start px-8 py-4 rounded-full transition-all text-left",
+            "flex-[1.4] flex flex-col items-start px-8 py-4 rounded-full transition-all text-left cursor-pointer group",
             activeSegment === 'location' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
           <span className="ty-label text-zinc-900 mb-0.5">Location</span>
-          <input 
-            type="text"
-            placeholder="Search destinations"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setActiveSegment('location')}
-            className="w-full bg-transparent ty-caption font-semibold text-zinc-500 outline-none placeholder:text-zinc-400"
-          />
-        </button>
+          <div className="flex items-center w-full min-w-0">
+            <input 
+              type="text"
+              placeholder="Search destinations"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setActiveSegment('location')}
+              className="w-full bg-transparent ty-caption font-semibold text-zinc-500 outline-none placeholder:text-zinc-400 min-w-0"
+            />
+            {activeSegment === 'location' && query && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); setQuery(''); }}
+                className="ml-2 p-1 rounded-full hover:bg-zinc-200 transition-colors shrink-0"
+              >
+                <X className="h-3 w-3 text-zinc-400" />
+              </button>
+            )}
+          </div>
+        </div>
 
         {!activeSegment && <div className="h-8 w-px bg-zinc-200 shrink-0" />}
 
         {/* Budget Section */}
-        <button 
+        <div 
           onClick={(e) => { e.stopPropagation(); setActiveSegment('budget'); }}
           className={cn(
-            "flex-1 flex flex-col items-start px-8 py-4 rounded-full transition-all text-left",
+            "flex-1 flex flex-col items-start px-8 py-4 rounded-full transition-all text-left cursor-pointer group",
             activeSegment === 'budget' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
           <span className="ty-label text-zinc-900 mb-0.5">Budget</span>
-          <span className="ty-caption font-semibold text-zinc-400 truncate w-full">
-            {budget.value === 0 ? "Any Budget" : budget.label}
-          </span>
-        </button>
+          <div className="flex items-center w-full min-w-0">
+            <span className="ty-caption font-semibold text-zinc-400 truncate w-full">
+              {budget.value === 0 ? "Any Budget" : budget.label}
+            </span>
+            {activeSegment === 'budget' && budget.value > 0 && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); setBudget(BUDGET_OPTIONS[0]); }}
+                className="ml-2 p-1 rounded-full hover:bg-zinc-200 transition-colors shrink-0"
+              >
+                <X className="h-3 w-3 text-zinc-400" />
+              </button>
+            )}
+          </div>
+        </div>
 
         {!activeSegment && <div className="h-8 w-px bg-zinc-200 shrink-0" />}
 
@@ -119,13 +139,23 @@ export function HomeSearch() {
             activeSegment === 'type' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
-          <button 
+          <div 
             onClick={(e) => { e.stopPropagation(); setActiveSegment('type'); }}
-            className="flex flex-col items-start px-8 py-4 text-left w-full h-full"
+            className="flex flex-col items-start px-8 py-4 text-left w-full h-full cursor-pointer group"
           >
             <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Property Type</span>
-            <span className="ty-caption font-semibold text-zinc-400">{propertyType === "Any Type" ? "Add guests" : propertyType}</span>
-          </button>
+            <div className="flex items-center w-full min-w-0">
+              <span className="ty-caption font-semibold text-zinc-400 truncate w-full">{propertyType === "Any Type" ? "Add guests" : propertyType}</span>
+              {activeSegment === 'type' && propertyType !== "Any Type" && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setPropertyType("Any Type"); }}
+                  className="ml-2 p-1 rounded-full hover:bg-zinc-200 transition-colors shrink-0"
+                >
+                  <X className="h-3 w-3 text-zinc-400" />
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* Search Button */}
           <button 

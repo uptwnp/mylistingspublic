@@ -10,7 +10,7 @@ import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, 
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice, formatPriceRange, formatSizeRange, cn, calculateDistance } from '@/lib/utils';
+import { formatPrice, formatPriceRange, formatSizeRange, cn, calculateDistance, getPropertyCoords } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard } from '@/components/PropertyCard';
@@ -128,6 +128,7 @@ function PropertyDetailContent() {
   const config = getPropertyConfig(property.type);
   const Icon = config.icon;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
+  const [lat, lng] = getPropertyCoords(property);
 
   return (
     <div className="min-h-screen bg-white pb-32">
@@ -339,13 +340,42 @@ function PropertyDetailContent() {
                       selectedProperty={property}
                       onSelectProperty={() => {}}
                       userLocation={userLocation}
+                      showDistance={true}
+                      disableCard={true}
                   />
               </div>
-              {property.landmark_location && (
-                  <p className="text-sm text-zinc-500 font-medium">
-                      Landmark: {property.landmark_location} {property.landmark_location_distance ? `(${property.landmark_location_distance} km away)` : ''}
-                  </p>
-              )}
+              <div className="flex flex-wrap items-center gap-3">
+                {property.landmark_location && (
+                    <div className="flex items-center gap-2 rounded-xl bg-zinc-50 px-4 py-2.5 border border-zinc-100">
+                        <MapPin className="h-4 w-4 text-zinc-400" />
+                        <span className="ty-caption font-bold text-zinc-600">
+                            {property.landmark_location} 
+                            {property.landmark_location_distance ? (
+                                <span className="ml-1 text-zinc-400 font-medium">({property.landmark_location_distance} km away)</span>
+                            ) : null}
+                        </span>
+                    </div>
+                )}
+                
+                {userLocation && (
+                  <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 border border-emerald-100">
+                    <Navigation className="h-4 w-4 text-emerald-600" />
+                    <span className="ty-caption font-bold text-emerald-700">
+                      {calculateDistance(userLocation.lat, userLocation.lng, lat, lng).toFixed(1)} km from you
+                    </span>
+                  </div>
+                )}
+
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 border border-blue-100 text-blue-600 hover:bg-blue-100 transition-colors"
+                >
+                  <Navigation className="h-4 w-4" />
+                  <span className="ty-caption font-bold">Open in Google Maps</span>
+                </a>
+              </div>
               <p className="ty-caption text-zinc-400 italic leading-relaxed">
                 * The location shown on the map is an approximate area for privacy reasons. The exact property location will be shared during the site visit or upon verification.
               </p>

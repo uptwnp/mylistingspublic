@@ -175,9 +175,17 @@ export function SelectionBottomSheet({
                         type="text"
                         placeholder="Search areas..."
                         value={searchQuery}
-                        className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-12 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
+                        className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-12 pr-12 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
+                      {searchQuery && (
+                        <button 
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-zinc-200 transition-colors"
+                        >
+                          <X className="h-4 w-4 text-zinc-400" />
+                        </button>
+                      )}
                     </div>
 
                     <div id="area-list" className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto pr-1 custom-scrollbar">

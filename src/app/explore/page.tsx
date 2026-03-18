@@ -16,7 +16,7 @@ import { Navigation } from 'lucide-react';
 export const runtime = 'edge';
 
 const SORT_OPTIONS = [
-  { field: 'approved_on', order: 'desc' as const, label: 'Newest First', icon: Clock },
+  { field: 'approved_on', order: 'desc' as const, label: 'Latest on Top', icon: Clock },
   { field: 'price_min', order: 'asc' as const, label: 'Price: Low to High', icon: Tag },
   { field: 'price_min', order: 'desc' as const, label: 'Price: High to Low', icon: Tag },
   { field: 'size_min', order: 'desc' as const, label: 'Size: Large to Small', icon: Ruler },
@@ -248,15 +248,26 @@ function ExploreContent() {
                   </div>
                 </div>
 
-                {/* Sort By Dropdown */}
-                <div className="relative">
-                  <button 
-                    onClick={() => setIsSortOpen(!isSortOpen)}
-                    className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
-                  >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  {viewMode === 'list' && (
+                    <button 
+                      onClick={() => setViewMode(window.innerWidth >= 1024 ? 'split' : 'map')}
+                      className="hidden lg:flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
+                    >
+                      <MapIcon className="h-3.5 w-3.5" />
+                      <span>Show Map</span>
+                    </button>
+                  )}
+
+                  {/* Sort By Dropdown */}
+                  <div className="relative">
+                    <button 
+                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
+                    >
                     <div className="flex items-center gap-2">
                       <ArrowUpDown className="h-3.5 w-3.5" />
-                      <span>Sort: {sortOption.label}</span>
+                      <span>{sortOption.label}</span>
                     </div>
                     <ChevronLeft className="h-3 w-3 rotate-270" />
                   </button>
@@ -300,6 +311,7 @@ function ExploreContent() {
                 </div>
               </div>
             </div>
+          </div>
             
             <div className={cn(
               "grid w-full gap-4 py-4 sm:py-6 items-start",
@@ -330,12 +342,42 @@ function ExploreContent() {
                   <p className="mb-8 max-w-[280px] ty-body text-zinc-500">
                     We couldn't find any properties matching your current filters. Try adjusting them.
                   </p>
-                  <button 
-                    onClick={() => router.push('/explore')}
-                    className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-95"
-                  >
-                    Clear all filters
-                  </button>
+                  
+                  {(() => {
+                    const additionalParams = ['minSize', 'maxSize', 'highlights', 'keywords'];
+                    const hasAdditional = additionalParams.some(k => {
+                      const v = searchParams.get(k);
+                      return v !== null && v !== '' && v !== 'undefined';
+                    });
+
+                    return (
+                      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                        {hasAdditional && (
+                          <button 
+                            onClick={() => {
+                              const params = new URLSearchParams(searchParams.toString());
+                              additionalParams.forEach(p => params.delete(p));
+                              router.push(`/explore?${params.toString()}`);
+                            }}
+                            className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-95"
+                          >
+                            Clear additional filters
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => router.push('/explore')}
+                          className={cn(
+                            "rounded-full px-8 py-3 ty-caption font-bold transition-all active:scale-95",
+                            hasAdditional 
+                              ? "border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50"
+                              : "bg-zinc-900 text-white hover:bg-black"
+                          )}
+                        >
+                          Clear all filters
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -411,38 +453,9 @@ function ExploreContent() {
                 selectedProperty={selectedProperty}
                 onSelectProperty={setSelectedProperty}
                 userLocation={userLocation}
+                showDistance={areaParam === 'Near Me' || sortOption.field === 'distance'}
               />
 
-              {/* Floating Card for Map View (Mobile & Map-only mode) */}
-              <AnimatePresence>
-                {selectedProperty && viewMode === 'map' && (
-                  <motion.div 
-                    initial={{ y: 20, opacity: 0, scale: 0.95 }}
-                    animate={{ y: 0, opacity: 1, scale: 1 }}
-                    exit={{ y: 20, opacity: 0, scale: 0.95 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="absolute bottom-6 left-1/2 z-[1001] w-[calc(100%-32px)] max-w-lg -translate-x-1/2 md:bottom-10"
-                  >
-                    <div className="group relative overflow-hidden rounded-[28px] bg-white/95 p-1 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] backdrop-blur-xl border border-white/50">
-                      <button 
-                        onClick={() => setSelectedProperty(null)}
-                        className="absolute right-3 top-3 z-[1002] flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900/5 text-zinc-400 backdrop-blur-md transition-all hover:bg-zinc-900 hover:text-white active:scale-90"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
-                      
-                      <div className="pointer-events-auto">
-                        <PropertyCard 
-                          property={selectedProperty} 
-                          isExpanded={false}
-                          onToggle={() => {}} 
-                          showDistance={areaParam === 'Near Me' || sortOption.field === 'distance'}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -451,11 +464,15 @@ function ExploreContent() {
       {/* View Toggle Button */}
       <button 
         onClick={() => {
-          if (viewMode === 'map') setViewMode('list');
-          else setViewMode('map');
+          if (viewMode === 'list') {
+            setViewMode(window.innerWidth >= 1024 ? 'split' : 'map');
+          } else {
+            setViewMode('list');
+          }
         }}
         className={cn(
-          "fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105 active:scale-95 lg:hidden"
+          "fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105 active:scale-95",
+          viewMode === 'split' && "lg:hidden"
         )}
       >
         {viewMode === 'map' ? (

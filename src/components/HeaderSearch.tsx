@@ -11,7 +11,7 @@ const SUGGESTIONS = [
   "TDI City", "Sector 13-17", "Sector 18", "Sector 25", "Ansal", "Sector 12", "Eldeco Estate", "Model Town", "Yamuna Enclave"
 ];
 
-const BUDGET_OPTIONS = [
+export const BUDGET_OPTIONS = [
   { label: "Any Budget", value: 0 },
   { label: "Under 40 Lakh", value: 40 },
   { label: "40 to 80 Lakh", value: 80 },
@@ -25,7 +25,7 @@ const BUDGET_OPTIONS = [
   { label: "100 Cr+", value: 10001 },
 ];
 
-const PROPERTY_TYPES = [
+export const PROPERTY_TYPES = [
   "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Factory", "Godown"
 ];
 
@@ -121,60 +121,90 @@ export function HeaderSearch({
               )}
             >
               {/* PC: Area Section */}
-              <button 
+              <div 
                 onClick={(e) => { e.stopPropagation(); setActiveSegment('location'); }}
                 className={cn(
-                  "flex flex-col items-start px-10 py-2 text-left w-[35%] h-full justify-center rounded-full transition-all group",
+                  "relative flex flex-col items-start px-10 py-2 text-left w-[35%] h-full justify-center rounded-full transition-all group cursor-pointer",
                   activeSegment === 'location' && "bg-white shadow-xl ring-1 ring-zinc-200"
                 )}
               >
                 <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Where to?</span>
-                <input 
-                  ref={inputRef}
-                  type="text" 
-                  placeholder="Search areas..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="w-full bg-transparent ty-body font-bold text-zinc-900 outline-none placeholder:text-zinc-400"
-                />
-              </button>
+                <div className="flex items-center w-full min-w-0">
+                  <input 
+                    ref={inputRef}
+                    type="text" 
+                    placeholder="Search areas..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-full bg-transparent ty-body font-bold text-zinc-900 outline-none placeholder:text-zinc-400 min-w-0"
+                  />
+                  {activeSegment === 'location' && query && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setQuery(''); }}
+                      className="ml-2 p-1.5 rounded-full hover:bg-zinc-100 transition-colors shrink-0"
+                    >
+                      <X className="h-3.5 w-3.5 text-zinc-600" />
+                    </button>
+                  )}
+                </div>
+              </div>
 
               <div className="h-10 w-px bg-zinc-200 shrink-0" />
 
               {/* PC: Budget Section */}
-              <button 
+              <div 
                 onClick={(e) => { e.stopPropagation(); setActiveSegment('budget'); }}
                 className={cn(
-                  "flex flex-col items-start px-10 py-2 text-left w-[30%] h-full justify-center rounded-full transition-all group",
+                  "relative flex flex-col items-start px-10 py-2 text-left w-[30%] h-full justify-center rounded-full transition-all group cursor-pointer",
                   activeSegment === 'budget' && "bg-white shadow-xl ring-1 ring-zinc-200"
                 )}
               >
                 <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Your Budget</span>
-                <span className={cn("ty-body font-bold truncate w-full group-hover:text-zinc-900 transition-colors", budget.value === 0 ? "text-zinc-300" : "text-zinc-900")}>
-                  {budget.value === 0 ? "Select budget" : budget.label}
-                </span>
-              </button>
+                <div className="flex items-center w-full min-w-0">
+                  <span className={cn("ty-body font-bold truncate w-full group-hover:text-zinc-900 transition-colors", budget.value === 0 ? "text-zinc-300" : "text-zinc-900")}>
+                    {budget.value === 0 ? "Select budget" : budget.label}
+                  </span>
+                  {activeSegment === 'budget' && budget.value > 0 && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setBudget(BUDGET_OPTIONS[0]); }}
+                      className="ml-2 p-1.5 rounded-full hover:bg-zinc-100 transition-colors shrink-0"
+                    >
+                      <X className="h-3.5 w-3.5 text-zinc-600" />
+                    </button>
+                  )}
+                </div>
+              </div>
 
               <div className="h-10 w-px bg-zinc-200 shrink-0" />
 
               {/* PC: Property Type & Search Section */}
               <div 
                 className={cn(
-                  "flex flex-1 items-center justify-between w-[35%] h-full rounded-full transition-all pl-10 pr-2",
+                  "flex flex-1 items-center justify-between w-[35%] h-full rounded-full transition-all pl-10 pr-2 group cursor-pointer",
                   activeSegment === 'type' && "bg-white shadow-xl ring-1 ring-zinc-200"
                 )}
                 onClick={(e) => { e.stopPropagation(); setActiveSegment('type'); }}
               >
-                <div className="flex flex-col items-start min-w-0 overflow-hidden cursor-pointer">
+                <div className="flex flex-col items-start min-w-0 overflow-hidden flex-1">
                   <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Property Type</span>
-                  <span className={cn("ty-body font-bold truncate w-full group-hover:text-zinc-900 transition-colors", propertyType === "Any Type" ? "text-zinc-300" : "text-zinc-900")}>
-                    {propertyType === "Any Type" ? "What are you looking for?" : propertyType}
-                  </span>
+                  <div className="flex items-center w-full min-w-0">
+                    <span className={cn("ty-body font-bold truncate w-full group-hover:text-zinc-900 transition-colors", propertyType === "Any Type" ? "text-zinc-300" : "text-zinc-900")}>
+                      {propertyType === "Any Type" ? "What are you looking for?" : propertyType}
+                    </span>
+                    {activeSegment === 'type' && propertyType !== "Any Type" && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setPropertyType("Any Type"); }}
+                        className="ml-2 p-1.5 rounded-full hover:bg-zinc-100 transition-colors shrink-0"
+                      >
+                        <X className="h-3.5 w-3.5 text-zinc-600" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleSearch(); }}
-                  className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white transition-all shadow-lg hover:bg-rose-600 active:scale-95"
+                  className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white transition-all shadow-lg hover:bg-rose-600 active:scale-95 ml-2"
                 >
                   <Search className="h-6 w-6" strokeWidth={3} />
                 </button>
