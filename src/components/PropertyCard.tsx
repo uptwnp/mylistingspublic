@@ -185,7 +185,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 py-2.5 ty-caption font-bold text-white shadow-lg transition-all hover:bg-black active:scale-[0.98]"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  View Full Property Page
+                  View Details
                 </a>
 
                 <button 
