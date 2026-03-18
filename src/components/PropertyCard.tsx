@@ -12,11 +12,11 @@ interface PropertyCardProps {
   property: Property;
   isExpanded?: boolean;
   onToggle?: () => void;
-  isNearbyFallback?: boolean;
+  isNearMeFallback?: boolean;
   showDistance?: boolean;
 }
 
-export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyFallback, showDistance }: PropertyCardProps) {
+export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeFallback, showDistance }: PropertyCardProps) {
   const router = useRouter();
   const { isInCart, addToCart, removeFromCart, isSaved, toggleSave } = useDiscussion();
 
@@ -112,7 +112,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
               <Navigation className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
               <span>
                 {property.landmark_location_distance.toFixed(1)} km 
-                {isNearbyFallback ? ' from city center' : ' away'}
+                {isNearMeFallback ? ' from city center' : ' away'}
               </span>
             </div>
           )}

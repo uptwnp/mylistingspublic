@@ -105,7 +105,7 @@ export async function getProperties(
       query = query.ilike('type', `%${type.trim()}%`);
     }
 
-    if (area && area !== 'All' && area !== 'Nearby') {
+    if (area && area !== 'All' && area !== 'Near Me') {
       query = query.ilike('area', `%${area.trim()}%`);
     }
 

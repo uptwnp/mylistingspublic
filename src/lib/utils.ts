@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Property } from '@/types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -41,6 +42,24 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const d = R * c; // Distance in km
   return d;
+}
+
+export function getPropertyCoords(property: Partial<Property>): [number, number] {
+  if (property.latitude && property.longitude) {
+    return [property.latitude, property.longitude];
+  }
+
+  // Fallback: Panipat/Karnal area
+  const baseLat = property.city?.toLowerCase() === 'karnal' ? 29.6857 : 29.3909;
+  const baseLng = property.city?.toLowerCase() === 'karnal' ? 76.9907 : 76.9635;
+
+  // Generate a predictable offset based on area name
+  const areaName = property.area || 'unknown';
+  const hash = areaName.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+  const latOffset = (hash % 100) / 1000;
+  const lngOffset = ((hash * 13) % 100) / 1000;
+
+  return [baseLat + latOffset, baseLng + lngOffset];
 }
 
 function deg2rad(deg: number) {

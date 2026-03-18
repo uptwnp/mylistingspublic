@@ -15,7 +15,7 @@ export type Property = {
   image_urls: string[];
   is_photos_public: boolean;
   landmark_location: string;
-  landmark_location_distance: number;
+  landmark_location_distance?: number;
   latitude?: number;
   longitude?: number;
   status: string;

@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useDiscussion } from '@/context/DiscussionContext';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { calculateDistance } from '@/lib/utils';
+import { calculateDistance, getPropertyCoords } from '@/lib/utils';
 import { Navigation } from 'lucide-react';
 
 export const runtime = 'edge';
@@ -65,7 +65,7 @@ function ExploreContent() {
 
   // Request location if nearby is selected
   useEffect(() => {
-    if ((areaParam === 'Nearby' || sortOption.field === 'distance') && !userLocation) {
+    if ((areaParam === 'Near Me' || sortOption.field === 'distance') && !userLocation) {
       const cityCenters: Record<string, {lat: number, lng: number}> = {
         'Panipat': { lat: 29.3909, lng: 76.9635 },
         'Karnal': { lat: 29.6857, lng: 76.9907 }
@@ -74,7 +74,7 @@ function ExploreContent() {
       const setFallback = () => {
         const coords = cityCenters[selectedCity] || cityCenters['Panipat'];
         setUserLocation({ ...coords, isFallback: true });
-        if (areaParam === 'Nearby' && sortOption.field !== 'distance') {
+        if (areaParam === 'Near Me' && sortOption.field !== 'distance') {
           setSortOption(NEARBY_SORT_OPTIONS[0]);
         }
       };
@@ -88,7 +88,7 @@ function ExploreContent() {
               isFallback: false
             });
             
-            if (areaParam === 'Nearby' && sortOption.field !== 'distance') {
+            if (areaParam === 'Near Me' && sortOption.field !== 'distance') {
               setSortOption(NEARBY_SORT_OPTIONS[0]);
             }
           },
@@ -136,30 +136,40 @@ function ExploreContent() {
       
       let finalData = [...(data as Property[])];
 
-      // Client-side distance sorting if needed
-      if ((sortOption.field === 'distance' || areaParam === 'Nearby') && userLocation) {
-        finalData.sort((a, b) => {
-          const latA = a.latitude || 29.3909; // Default to Panipat center
-          const lngA = a.longitude || 76.9635;
-          const latB = b.latitude || 29.3909;
-          const lngB = b.longitude || 76.9635;
-          
-          const distA = calculateDistance(userLocation.lat, userLocation.lng, latA, lngA);
-          const distB = calculateDistance(userLocation.lat, userLocation.lng, latB, lngB);
-          
-          return sortOption.order === 'asc' ? distA - distB : distB - distA;
-        });
+      // Client-side distance sorting and calculation if needed
+      if ((sortOption.field === 'distance' || areaParam === 'Near Me')) {
+        if (userLocation) {
+          finalData.sort((a, b) => {
+            const [latA, lngA] = getPropertyCoords(a);
+            const [latB, lngB] = getPropertyCoords(b);
+            
+            const distA = calculateDistance(userLocation.lat, userLocation.lng, latA, lngA);
+            const distB = calculateDistance(userLocation.lat, userLocation.lng, latB, lngB);
+            
+            return sortOption.order === 'asc' ? distA - distB : distB - distA;
+          });
 
-        // Add distance property to cards if we have location
-        finalData = finalData.map(p => ({
-          ...p,
-          landmark_location_distance: calculateDistance(
-            userLocation.lat, 
-            userLocation.lng, 
-            p.latitude || 29.3909, 
-            p.longitude || 76.9635
-          )
-        }));
+          // Add real calculated distance property to cards
+          finalData = finalData.map(p => {
+            const [pLat, pLng] = getPropertyCoords(p);
+            return {
+              ...p,
+              landmark_location_distance: calculateDistance(
+                userLocation.lat, 
+                userLocation.lng, 
+                pLat,
+                pLng
+              )
+            };
+          });
+        } else {
+          // If we're in nearby mode but don't have user location yet, 
+          // clear the landmark distance so we don't show legacy/wrong DB values
+          finalData = finalData.map(p => ({
+            ...p,
+            landmark_location_distance: undefined
+          }));
+        }
       }
 
       setProperties(finalData);
@@ -264,7 +274,7 @@ function ExploreContent() {
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
                           className="absolute right-0 left-0 sm:left-auto top-full z-50 mt-2 w-auto sm:w-56 overflow-hidden rounded-2xl border border-zinc-100 bg-white p-1.5 shadow-2xl shadow-zinc-200/50"
                         >
-                          {[...SORT_OPTIONS, ...(areaParam === 'Nearby' || userLocation ? NEARBY_SORT_OPTIONS : [])].map((option) => (
+                          {[...SORT_OPTIONS, ...(areaParam === 'Near Me' || userLocation ? NEARBY_SORT_OPTIONS : [])].map((option) => (
                             <button
                               key={`${option.label}-${option.order}`}
                               onClick={() => {
@@ -306,8 +316,8 @@ function ExploreContent() {
                       property={property} 
                       isExpanded={selectedProperty?.property_id === property.property_id}
                       onToggle={() => setSelectedProperty(selectedProperty?.property_id === property.property_id ? null : property)}
-                      isNearbyFallback={userLocation?.isFallback}
-                      showDistance={areaParam === 'Nearby' || sortOption.field === 'distance'}
+                      isNearMeFallback={userLocation?.isFallback}
+                      showDistance={areaParam === 'Near Me' || sortOption.field === 'distance'}
                     />
                   </div>
                 ))
@@ -400,7 +410,39 @@ function ExploreContent() {
                 properties={properties} 
                 selectedProperty={selectedProperty}
                 onSelectProperty={setSelectedProperty}
+                userLocation={userLocation}
               />
+
+              {/* Floating Card for Map View (Mobile & Map-only mode) */}
+              <AnimatePresence>
+                {selectedProperty && viewMode === 'map' && (
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0, scale: 0.95 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: 20, opacity: 0, scale: 0.95 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="absolute bottom-6 left-1/2 z-[1001] w-[calc(100%-32px)] max-w-lg -translate-x-1/2 md:bottom-10"
+                  >
+                    <div className="group relative overflow-hidden rounded-[28px] bg-white/95 p-1 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] backdrop-blur-xl border border-white/50">
+                      <button 
+                        onClick={() => setSelectedProperty(null)}
+                        className="absolute right-3 top-3 z-[1002] flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900/5 text-zinc-400 backdrop-blur-md transition-all hover:bg-zinc-900 hover:text-white active:scale-90"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                      
+                      <div className="pointer-events-auto">
+                        <PropertyCard 
+                          property={selectedProperty} 
+                          isExpanded={false}
+                          onToggle={() => {}} 
+                          showDistance={areaParam === 'Near Me' || sortOption.field === 'distance'}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

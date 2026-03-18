@@ -164,29 +164,38 @@ export function HomeSearch() {
                   {query ? 'Available Areas' : 'Popular Areas'}
                 </h3>
                 <div className="grid grid-cols-1 gap-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                  {(!query || 'nearby'.includes(query.toLowerCase())) && (
-                    <button 
-                      onClick={() => { 
-                        if ('geolocation' in navigator) {
-                          navigator.geolocation.getCurrentPosition(() => {}, () => {});
-                        }
-                        setQuery('Nearby'); 
-                        setActiveSegment('budget'); 
-                      }}
-                      className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-emerald-600 hover:bg-emerald-50 transition-all group w-full text-left bg-emerald-50/20 mb-1"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-100 group-hover:bg-emerald-600 transition-colors">
-                        <Navigation className="h-5 w-5" strokeWidth={3} />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="truncate">Nearby Properties</span>
-                        <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Use current location</span>
-                      </div>
-                    </button>
-                  )}
                   {(() => {
+                    const isNearMe = query.toLowerCase() === 'near me';
                     const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
-                    const showDefault = !query || isExactMatch;
+                    const showNearby = !query || isExactMatch || 'near me'.includes(query.toLowerCase());
+                    
+                    if (!showNearby) return null;
+
+                    return (
+                      <button 
+                        onClick={() => { 
+                          if ('geolocation' in navigator) {
+                            navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                          }
+                          setQuery('Near Me'); 
+                          setActiveSegment('budget'); 
+                        }}
+                        className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-emerald-600 hover:bg-emerald-50 transition-all group w-full text-left bg-emerald-50/20 mb-1"
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-100 group-hover:bg-emerald-600 transition-colors">
+                          <Navigation className="h-5 w-5" strokeWidth={3} />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="truncate">Near Me</span>
+                          <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Use current location</span>
+                        </div>
+                      </button>
+                    );
+                  })()}
+                  {(() => {
+                    const isNearMe = query.toLowerCase() === 'near me';
+                    const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
+                    const showDefault = !query || isExactMatch || isNearMe;
                     
                     const filtered = allAreas
                       .filter(a => a.toLowerCase().includes(query.toLowerCase()))

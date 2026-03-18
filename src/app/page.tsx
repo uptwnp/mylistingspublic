@@ -34,7 +34,7 @@ export default function Home() {
             <div className="flex flex-col min-w-0">
               <span className="ty-body font-bold text-zinc-900 uppercase tracking-tighter">Start your search</span>
               <span className="ty-caption font-bold text-zinc-400 truncate tracking-tight">
-                {`Nearby, ${selectedCity}`}
+                {`Near Me, ${selectedCity}`}
               </span>
             </div>
           </button>

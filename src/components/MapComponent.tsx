@@ -5,59 +5,78 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Plus, Minus, Satellite, Map as MapIcon, Navigation } from 'lucide-react';
+import { Plus, Minus, Satellite, Map as MapIcon, Navigation, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check } from 'lucide-react';
 import { Property } from '@/types';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, getPropertyCoords, cn, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import { renderToStaticMarkup } from 'react-dom/server';
 import Link from 'next/link';
 import { Polyline } from 'react-leaflet';
+import { useDiscussion } from '@/context/DiscussionContext';
 
-// Custom marker generator
 const createCustomIcon = (property: Property, isSelected: boolean) => {
   const config = getPropertyConfig(property.type);
   const IconComponent = config.icon;
-  
-  // Get Tailwind color values (approximate for the SVG)
-  const colorMap: Record<string, string> = {
-    'text-blue-600': '#2563eb',
-    'text-emerald-600': '#059669',
-    'text-orange-600': '#ea580c',
-    'text-amber-600': '#d97706',
-    'text-purple-600': '#9333ea',
-    'text-zinc-700': '#3f3f46',
-    'text-rose-600': '#e11d48',
-    'text-indigo-600': '#4f46e5',
-    'text-slate-600': '#475569',
-    'text-cyan-600': '#0891b2',
-    'text-zinc-400': '#a1a1aa'
-  };
-
-  const color = colorMap[config.color] || '#000000';
 
   const html = renderToStaticMarkup(
-    <div style={{
-      display: 'flex',
+    <div style={{ 
+      position: 'relative', 
+      display: 'inline-flex', 
+      flexDirection: 'column', 
       alignItems: 'center',
-      justifyContent: 'center',
-      width: '40px',
-      height: '40px',
-      backgroundColor: isSelected ? color : 'white',
-      borderRadius: '50%',
-      border: `2px solid ${color}`,
-      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-      color: isSelected ? 'white' : color,
-      transition: 'all 0.3s ease'
+      filter: isSelected ? 'drop-shadow(0 12px 24px rgba(0,0,0,0.15))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
+      transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+      transform: isSelected ? 'scale(1.1) translateY(-4px)' : 'scale(1)',
     }}>
-      <IconComponent size={20} strokeWidth={2.5} />
+      {/* Pin Body */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '36px',
+        height: '36px',
+        backgroundColor: isSelected ? '#09090b' : 'white',
+        borderRadius: '50%',
+        border: '2px solid white',
+        color: isSelected ? 'white' : '#09090b',
+        cursor: 'pointer',
+        zIndex: 2,
+        position: 'relative',
+        boxShadow: isSelected ? 'none' : 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: isSelected ? 'rgba(255,255,255,0.15)' : config.bgColor.replace('bg-', '').replace('text-', ''),
+          borderRadius: '50%',
+          width: '24px',
+          height: '24px',
+        }}>
+          <IconComponent size={14} strokeWidth={3} className={isSelected ? 'text-white' : config.color} />
+        </div>
+      </div>
+
+      {/* Integrated Tail (Perfectly Connected) */}
+      <div style={{
+        width: '14px',
+        height: '14px',
+        backgroundColor: isSelected ? '#09090b' : 'white',
+        borderRight: '2px solid white',
+        borderBottom: '2px solid white',
+        transform: 'rotate(45deg)',
+        marginTop: '-10px',
+        zIndex: 1,
+        borderRadius: '0 0 3px 0'
+      }} />
     </div>
   );
 
   return L.divIcon({
     html,
     className: 'custom-property-marker',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    iconSize: [40, 56],
+    iconAnchor: [20, 52],
   });
 };
 
@@ -118,26 +137,18 @@ function InvalidateSize({ trigger }: { trigger?: any }) {
   return null;
 }
 
-// Helper to generate deterministic lat/lng if missing
-const getCoords = (property: Property): [number, number] => {
-  if (property.latitude && property.longitude) {
-    return [property.latitude, property.longitude];
-  }
+// getCoords helper is now getPropertyCoords in utils.ts
+const getCoords = (property: Property): [number, number] => getPropertyCoords(property);
 
-  // Fallback: Panipat/Karnal area
-  const baseLat = property.city?.toLowerCase() === 'karnal' ? 29.6857 : 29.3909;
-  const baseLng = property.city?.toLowerCase() === 'karnal' ? 76.9907 : 76.9635;
-
-  // Generate a predictable offset based on area name
-  const areaName = property.area || 'unknown';
-  const hash = areaName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const latOffset = (hash % 100) / 1000;
-  const lngOffset = ((hash * 13) % 100) / 1000;
-
-  return [baseLat + latOffset, baseLng + lngOffset];
-};
-
-function MapControls({ isSatellite, setIsSatellite }: { isSatellite: boolean; setIsSatellite: (v: boolean) => void }) {
+function MapControls({ 
+  isSatellite, 
+  setIsSatellite,
+  hasSelectedProperty 
+}: { 
+  isSatellite: boolean; 
+  setIsSatellite: (v: boolean) => void;
+  hasSelectedProperty: boolean;
+}) {
   const map = useMap();
 
   const handleZoomIn = () => map.zoomIn();
@@ -153,47 +164,44 @@ function MapControls({ isSatellite, setIsSatellite }: { isSatellite: boolean; se
   };
 
   return (
-    <div className="absolute bottom-24 sm:bottom-8 right-4 sm:right-8 z-[1000] flex flex-col gap-3">
+    <div className={cn(
+      "absolute right-4 sm:right-8 z-[1000] flex flex-col gap-4 transition-all duration-500",
+      hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-24 sm:bottom-12"
+    )}>
       {/* Zoom Controls */}
-      <div className="flex flex-col overflow-hidden rounded-2xl border border-white/40 bg-white/90 shadow-2xl backdrop-blur-xl">
+      <div className="flex flex-col overflow-hidden rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
         <button 
           onClick={handleZoomIn}
           title="Zoom In"
-          className="flex h-12 w-12 items-center justify-center transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+          className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
         >
-          <Plus className="h-5 w-5 text-zinc-800" />
+          <Plus className="h-5 w-5 text-zinc-900" />
         </button>
         <div className="mx-3 h-px bg-zinc-200/50" />
         <button 
           onClick={handleZoomOut}
           title="Zoom Out"
-          className="flex h-12 w-12 items-center justify-center transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+          className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
         >
-          <Minus className="h-5 w-5 text-zinc-800" />
+          <Minus className="h-5 w-5 text-zinc-900" />
         </button>
       </div>
 
-      {/* Satellite Toggle */}
-      <button 
-        onClick={() => setIsSatellite(!isSatellite)}
-        title={isSatellite ? "Switch to Map" : "Switch to Satellite"}
-        className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/40 bg-white/90 shadow-2xl backdrop-blur-xl transition-all hover:scale-105 active:scale-95"
-      >
-        {isSatellite ? (
-          <MapIcon className="h-5 w-5 text-zinc-800" />
-        ) : (
-          <Satellite className="h-5 w-5 text-zinc-800" />
-        )}
-      </button>
-
-      {/* GPS Button */}
-      <button 
-        onClick={handleGPS}
-        title="Find My Location"
-        className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl transition-all hover:scale-105 active:scale-95"
-      >
-        <Navigation className="h-5 w-5 text-white" />
-      </button>
+      {/* Satellite & GPS */}
+      <div className="flex flex-col gap-3">
+        <button 
+          onClick={() => setIsSatellite(!isSatellite)}
+          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95"
+        >
+          {isSatellite ? <MapIcon className="h-5 w-5 text-zinc-900" /> : <Satellite className="h-5 w-5 text-zinc-900" />}
+        </button>
+        <button 
+          onClick={handleGPS}
+          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-zinc-900 shadow-xl transition-all hover:scale-110 active:scale-90 active:rotate-12"
+        >
+          <Navigation className="h-5 w-5 text-white" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -224,6 +232,7 @@ const getCurvedPath = (start: [number, number], end: [number, number], segments:
 };
 
 export default function MapComponent({ properties, selectedProperty, onSelectProperty, userLocation }: MapComponentProps) {
+  const { isInCart, addToCart, removeFromCart, isSaved, toggleSave } = useDiscussion();
   const [isSatellite, setIsSatellite] = useState(false);
   const center: [number, number] = selectedProperty 
     ? getCoords(selectedProperty)
@@ -252,7 +261,11 @@ export default function MapComponent({ properties, selectedProperty, onSelectPro
           : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         }
       />
-      <MapControls isSatellite={isSatellite} setIsSatellite={setIsSatellite} />
+      <MapControls 
+        isSatellite={isSatellite} 
+        setIsSatellite={setIsSatellite} 
+        hasSelectedProperty={!!selectedProperty}
+      />
       
       {curvedPath && (
         <>
@@ -292,27 +305,106 @@ export default function MapComponent({ properties, selectedProperty, onSelectPro
             click: () => onSelectProperty(property),
           }}
         >
-          <Popup>
-            <div className="p-1">
-              <div className="mb-2 flex items-center gap-2">
-                <span className={`rounded-md p-1.5 ${getPropertyConfig(property.type).bgColor}`}>
-                  {(() => {
-                    const ConfigIcon = getPropertyConfig(property.type).icon;
-                    return <ConfigIcon className={`h-4 w-4 ${getPropertyConfig(property.type).color}`} />;
-                  })()}
-                </span>
-                <h3 className="font-bold">{property.type}</h3>
+          <Popup minWidth={340} maxWidth={340}>
+            <div className="flex bg-white overflow-hidden p-0">
+              {/* Left Image Section */}
+              <div className="relative w-32 shrink-0 overflow-hidden bg-zinc-100">
+                {Array.isArray(property.image_urls) && property.image_urls.length > 0 ? (
+                  <img 
+                    src={property.image_urls[0]} 
+                    alt={property.type} 
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-110"
+                  />
+                ) : (
+                  <div className={cn("flex h-full w-full items-center justify-center", getPropertyConfig(property.type).bgColor)}>
+                    {(() => {
+                      const ConfigIcon = getPropertyConfig(property.type).icon;
+                      return <ConfigIcon className={cn("h-10 w-10", getPropertyConfig(property.type).color)} />;
+                    })()}
+                  </div>
+                )}
+                {/* Micro Price Badge on Image */}
+                <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-zinc-900/80 backdrop-blur-md rounded-md border border-white/20">
+                  <span className="text-[10px] font-black text-white tracking-widest uppercase">
+                    {formatPrice(property.price_min)}
+                  </span>
+                </div>
               </div>
-              <p className="text-sm font-black text-black">{formatPrice(property.price_min)}</p>
-              <p className="text-[10px] text-zinc-500">{property.area}, {property.city}</p>
-              <a 
-                href={`/property/${property.property_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 block rounded-lg bg-zinc-900 px-3 py-2 text-center text-[10px] font-bold text-white transition-opacity hover:opacity-90"
-              >
-                View Details
-              </a>
+
+              {/* Right Content Area */}
+              <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                <div className="flex flex-col gap-1">
+                  <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight truncate">
+                    {formatSizeRange(property.size_min, property.size_max, property.size_unit)} {property.type}
+                  </h3>
+                  <div className="flex items-center gap-1.5 ty-caption font-medium text-zinc-400">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{property.area}</span>
+                  </div>
+                  {property.tags && property.tags.length > 0 && (
+                    <div className="mt-1 flex gap-1 items-center">
+                       <span className="ty-micro font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                          {property.tags[0]}
+                       </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        isInCart(property.property_id) 
+                          ? removeFromCart(property.property_id) 
+                          : addToCart(property);
+                      }}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 ty-micro font-black transition-all active:scale-[0.98]",
+                        isInCart(property.property_id)
+                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                          : "bg-zinc-900 text-white hover:bg-black shadow-lg shadow-black/10"
+                      )}
+                    >
+                      {isInCart(property.property_id) ? (
+                        <>
+                          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                          Added
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-3.5 w-3.5" strokeWidth={3} />
+                          Discuss
+                        </>
+                      )}
+                    </button>
+                    
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSave(property.property_id);
+                      }}
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-xl border transition-all active:scale-90",
+                        isSaved(property.property_id) 
+                          ? "text-rose-500 bg-rose-50 border-rose-100" 
+                          : "border-zinc-100 text-zinc-400 hover:bg-zinc-50"
+                      )}
+                    >
+                      <Heart className={cn("h-4 w-4", isSaved(property.property_id) && "fill-current")} />
+                    </button>
+                  </div>
+
+                  <a 
+                    href={`/property/${property.property_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-zinc-100 py-2 ty-micro font-bold text-zinc-600 transition-all hover:bg-zinc-50 active:scale-[0.98]"
+                  >
+                    View Details
+                  </a>
+                </div>
+              </div>
             </div>
           </Popup>
         </Marker>

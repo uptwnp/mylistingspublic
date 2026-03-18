@@ -1,5 +1,4 @@
-'use client';
-
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -47,6 +46,14 @@ export function SelectionBottomSheet({
   onSelect,
   data: areaData = []
 }: SelectionBottomSheetProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredAreas = areaData.filter(area => 
+    area.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const showNearby = !searchQuery || 'near me'.includes(searchQuery.toLowerCase());
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -167,54 +174,46 @@ export function SelectionBottomSheet({
                       <input 
                         type="text"
                         placeholder="Search areas..."
+                        value={searchQuery}
                         className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-12 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
-                        onChange={(e) => {
-                          // Simple local filtering for the list
-                          const val = e.target.value.toLowerCase();
-                          const el = document.getElementById('area-list');
-                          if (el) {
-                            const buttons = el.getElementsByTagName('button');
-                            for (let i = 0; i < buttons.length; i++) {
-                              const text = buttons[i].innerText.toLowerCase();
-                              buttons[i].style.display = text.includes(val) ? 'flex' : 'none';
-                            }
-                          }
-                        }}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
 
                     <div id="area-list" className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto pr-1 custom-scrollbar">
-                      <button
-                        onClick={() => {
-                          if ('geolocation' in navigator) {
-                            navigator.geolocation.getCurrentPosition(() => {}, () => {});
-                          }
-                          onSelect('Nearby');
-                          onClose();
-                        }}
-                        className={cn(
-                          "flex items-center gap-4 w-full rounded-2xl border-2 px-5 py-4 text-left transition-all mb-2",
-                          selectedValue === 'Nearby' 
-                            ? "border-zinc-900 bg-zinc-50" 
-                            : "border-emerald-100 bg-emerald-50/30 active:border-emerald-300"
-                        )}
-                      >
-                        <div className={cn(
-                          "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
-                          selectedValue === 'Nearby' ? "bg-zinc-900 text-white" : "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
-                        )}>
-                          <Navigation className="h-5 w-5" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className={cn("text-base font-bold", selectedValue === 'Nearby' ? "text-zinc-900" : "text-emerald-700")}>
-                            Nearby Properties
-                          </span>
-                          <span className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-wider">Use Current Location</span>
-                        </div>
-                      </button>
+                      {showNearby && (
+                        <button
+                          onClick={() => {
+                            if ('geolocation' in navigator) {
+                              navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                            }
+                            onSelect('Near Me');
+                            onClose();
+                          }}
+                          className={cn(
+                            "flex items-center gap-4 w-full rounded-2xl border-2 px-5 py-4 text-left transition-all mb-2",
+                            selectedValue === 'Near Me' 
+                              ? "border-zinc-900 bg-zinc-50" 
+                              : "border-emerald-100 bg-emerald-50/30 active:border-emerald-300"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+                            selectedValue === 'Near Me' ? "bg-zinc-900 text-white" : "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
+                          )}>
+                            <Navigation className="h-5 w-5" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className={cn("text-base font-bold", selectedValue === 'Near Me' ? "text-zinc-900" : "text-emerald-700")}>
+                              Near Me
+                            </span>
+                            <span className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-wider">Use Current Location</span>
+                          </div>
+                        </button>
+                      )}
 
-                      {areaData.length > 0 ? (
-                        areaData.map((area) => (
+                      {filteredAreas.length > 0 ? (
+                        filteredAreas.map((area) => (
                           <button
                             key={area}
                             onClick={() => {
@@ -241,7 +240,7 @@ export function SelectionBottomSheet({
                         ))
                       ) : (
                         <div className="text-center py-12 text-zinc-400">
-                          No areas found for this city.
+                          No areas found matching "{searchQuery}"
                         </div>
                       )}
                     </div>
