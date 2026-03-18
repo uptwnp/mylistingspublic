@@ -113,33 +113,18 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
           )}
         </motion.div>
 
-        {/* Quick Actions Column */}
         <motion.div layout className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => handleActionClick(e, () => inCart ? removeFromCart(property.property_id) : addToCart(property))}
-              className={cn(
-                "flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition-all active:scale-95 shadow-lg",
-                inCart
-                  ? "bg-zinc-100 text-zinc-400 border border-zinc-200 shadow-none"
-                  : "bg-zinc-900 text-white shadow-black/10 hover:bg-black"
-              )}
-            >
-              {inCart ? <Minus className="h-4 w-4 sm:h-5 sm:w-5" /> : <Plus className="h-4 w-4 sm:h-5 sm:w-5" />}
-            </button>
-          </div>
+          <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 rounded-full ty-micro font-semibold text-zinc-700">
+            {property.type}
+          </span>
 
-          <div className="flex items-center gap-1">
-             <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 rounded-full ty-micro font-semibold text-zinc-700">
-              {property.type}
-            </span>
-            <motion.div
-              animate={{ rotate: isExpanded ? 90 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-400" />
-            </motion.div>
-          </div>
+          <motion.div
+            animate={{ rotate: isExpanded ? 90 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-1 items-center"
+          >
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-400" />
+          </motion.div>
         </motion.div>
       </motion.div>
 
@@ -175,43 +160,68 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
                 </div>
               )}
 
-              {/* Buttons */}
-              <div className="flex gap-2 pt-2">
-                <a
-                  href={`/property/${property.property_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 py-2.5 ty-caption font-bold text-white shadow-lg transition-all hover:bg-black active:scale-[0.98]"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  View Details
-                </a>
+              <div className="flex flex-col gap-2 pt-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => handleActionClick(e, () => inCart ? removeFromCart(property.property_id) : addToCart(property))}
+                    className={cn(
+                      "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 ty-caption font-bold shadow-lg transition-all active:scale-[0.98]",
+                      inCart
+                        ? "bg-emerald-500 text-white shadow-emerald-500/20"
+                        : "bg-zinc-900 text-white hover:bg-black shadow-black/10"
+                    )}
+                  >
+                    {inCart ? (
+                      <>
+                        <Check className="h-4 w-4" strokeWidth={3} />
+                        Discuss Now (Added)
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" strokeWidth={3} />
+                        Add to Discussion
+                      </>
+                    )}
+                  </button>
 
-                <button 
-                  className={cn(
-                    "flex h-12 w-12 items-center justify-center rounded-xl border transition-all active:scale-90",
-                    saved 
-                      ? "text-rose-500 bg-rose-50 border-rose-100" 
-                      : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
-                  )}
-                  onClick={(e) => handleActionClick(e, () => toggleSave(property.property_id))}
-                >
-                  <Heart className={cn("h-5 w-5", saved && "fill-current")} />
-                </button>
-                
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigator.share?.({
-                      title: `${property.type} in ${property.area}`,
-                      url: window.location.origin + `/property/${property.property_id}`
-                    });
-                  }}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-95"
-                >
-                  <Share2 className="h-5 w-5" />
-                </button>
+                  <button 
+                    className={cn(
+                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-90",
+                      saved 
+                        ? "text-rose-500 bg-rose-50 border-rose-100" 
+                        : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                    )}
+                    onClick={(e) => handleActionClick(e, () => toggleSave(property.property_id))}
+                  >
+                    <Heart className={cn("h-5 w-5", saved && "fill-current")} />
+                  </button>
+                </div>
+
+                <div className="flex gap-2">
+                  <a
+                    href={`/property/${property.property_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-2.5 ty-caption font-bold text-zinc-900 transition-all hover:bg-zinc-50 active:scale-[0.98]"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Full Property Page
+                  </a>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.share?.({
+                        title: `${property.type} in ${property.area}`,
+                        url: window.location.origin + `/property/${property.property_id}`
+                      });
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-95"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
