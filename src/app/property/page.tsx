@@ -1,8 +1,8 @@
 'use client';
-export const runtime = 'edge';
+
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getPropertyById } from '@/lib/supabase';
 import { Property } from '@/types';
 import { useDiscussion } from '@/context/DiscussionContext';
@@ -25,8 +25,27 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
 
 
 export default function PropertyDetailPage() {
-  const { id } = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
+  
+  // Robust ID detection for static exports
+  const [detectedId, setDetectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // 1. Try search param (?id=...)
+    let id = searchParams.get('id');
+    
+    // 2. Fallback to path parsing (/property/123)
+    if (!id && typeof window !== 'undefined') {
+      const pathParts = window.location.pathname.split('/');
+      id = pathParts[pathParts.length - 1];
+    }
+    
+    if (id && id !== 'property') {
+      setDetectedId(id);
+    }
+  }, [searchParams]);
+
   const mapSectionRef = useRef<HTMLDivElement>(null);
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,12 +74,11 @@ export default function PropertyDetailPage() {
 
   useEffect(() => {
     const fetchProperty = async () => {
-      if (!id) return;
+      if (!detectedId) return;
       setLoading(true);
       
       try {
-        const cleanId = Array.isArray(id) ? id[0] : id;
-        const data = await getPropertyById(cleanId) as Property | null;
+        const data = await getPropertyById(detectedId) as Property | null;
         if (data) {
           setProperty(data);
           // Fetch similar properties
@@ -75,7 +93,7 @@ export default function PropertyDetailPage() {
     };
 
     fetchProperty();
-  }, [id]);
+  }, [detectedId]);
 
   const scrollToMap = () => {
     mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
