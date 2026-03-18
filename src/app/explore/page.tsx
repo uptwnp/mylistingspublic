@@ -177,7 +177,7 @@ function ExploreContent() {
                   onClick={() => setActiveSelectionSheet('budget')}
                   className="flex shrink-0 items-center gap-2 rounded-full bg-zinc-50 border border-zinc-100 px-4 py-2 shadow-sm active:scale-95 transition-all"
                 >
-                  <span className="text-[9px] font-black text-zinc-900 uppercase tracking-widest">{searchParams.get('budget') || "Any Budget"}</span>
+                  <span className="text-[9px] font-bold text-zinc-900 uppercase tracking-widest">{searchParams.get('budget') || "Any Budget"}</span>
                   <div className="h-2.5 w-px bg-zinc-200" />
                   <ChevronDown className="h-3 w-3 text-zinc-400" />
                 </button>
@@ -186,7 +186,7 @@ function ExploreContent() {
                   onClick={() => setActiveSelectionSheet('type')}
                   className="flex shrink-0 items-center gap-2 rounded-full bg-zinc-50 border border-zinc-100 px-4 py-2 shadow-sm active:scale-95 transition-all"
                 >
-                  <span className="text-[9px] font-black text-zinc-900 uppercase tracking-widest">{searchParams.get('type') || "Any Type"}</span>
+                  <span className="text-[9px] font-bold text-zinc-900 uppercase tracking-widest">{searchParams.get('type') || "Any Type"}</span>
                   <div className="h-2.5 w-px bg-zinc-200" />
                   <ChevronDown className="h-3 w-3 text-zinc-400" />
                 </button>
@@ -201,7 +201,7 @@ function ExploreContent() {
 
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">
-                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">Explore Properties</h1>
+                  <h1 className="text-lg sm:text-xl font-bold tracking-tight text-zinc-900">Explore Properties</h1>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">
                       {properties.length} Results Found
@@ -302,7 +302,7 @@ function ExploreContent() {
                     <span>Prev</span>
                   </button>
                   
-                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                     Page {page + 1}
                   </span>
 

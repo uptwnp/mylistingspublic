@@ -89,7 +89,7 @@ export default function DiscussionCartPage() {
                 <Link href="/" className="mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-500 hover:text-black">
                   <ArrowLeft className="h-3.5 w-3.5" /> Back to Discover
                 </Link>
-                <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-900 leading-tight">
+                <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-zinc-900 leading-tight">
                   Discussion Cart
                 </h1>
                 <p className="mt-2 text-sm sm:text-lg font-medium text-zinc-500">
@@ -132,7 +132,7 @@ export default function DiscussionCartPage() {
                               </div>
                               <div className="flex flex-1 flex-col justify-center min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
-                                  <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[7px] sm:text-[8px] font-black uppercase tracking-wider text-zinc-500">
+                                  <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-zinc-500">
                                     ID: {property.property_id}
                                   </span>
                                   <span className="text-[9px] sm:text-[10px] font-bold text-zinc-400 truncate">{property.area}</span>
@@ -141,7 +141,7 @@ export default function DiscussionCartPage() {
                                   <Icon className={cn("h-3 w-3", config.color)} />
                                   {property.type}
                                 </h3>
-                                <p className="text-xs sm:text-sm font-black text-black mt-0.5 sm:mt-1">{formatPrice(property.price_min)}</p>
+                                <p className="text-xs sm:text-sm font-bold text-black mt-0.5 sm:mt-1">{formatPrice(property.price_min)}</p>
                               </div>
                             </Link>
                           );
@@ -165,7 +165,7 @@ export default function DiscussionCartPage() {
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
-                            <label className="mb-1.5 block text-[8px] font-black uppercase tracking-[0.2em] text-blue-400">Your Inquiry</label>
+                            <label className="mb-1.5 block text-[8px] font-bold uppercase tracking-[0.2em] text-blue-400">Your Inquiry</label>
                             <p className="text-xs sm:text-sm font-bold text-blue-900 leading-relaxed italic">
                               "{inquiry}"
                             </p>
@@ -173,7 +173,7 @@ export default function DiscussionCartPage() {
                         ) : (
                           <button 
                             onClick={() => setInquiryProperty(property)}
-                            className="flex w-full items-center justify-center gap-2 py-1 sm:py-2 text-[9px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-600 transition-colors"
+                            className="flex w-full items-center justify-center gap-2 py-1 sm:py-2 text-[9px] font-bold uppercase tracking-widest text-blue-400 hover:text-blue-600 transition-colors"
                           >
                             <Plus className="h-3.5 w-3.5" />
                             Add Inquiry Question
@@ -190,7 +190,7 @@ export default function DiscussionCartPage() {
             {/* Discussion Options */}
             <div className="space-y-6 lg:block pb-24 lg:pb-0">
               <aside className="rounded-3xl bg-white p-6 shadow-xl shadow-zinc-200/50 border border-zinc-100 lg:sticky lg:top-32">
-                <h2 className="mb-6 text-xl font-black tracking-tight">Consultation Type</h2>
+                <h2 className="mb-6 text-xl font-bold tracking-tight">Consultation Type</h2>
                 
                 <div className="space-y-3">
                   <button 
@@ -236,7 +236,7 @@ export default function DiscussionCartPage() {
                 <div className="mt-8 border-t border-zinc-100 pt-6 space-y-3">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm font-medium text-zinc-500">Summary</span>
-                    <span className="text-sm font-black">{properties.length} Items</span>
+                    <span className="text-sm font-bold">{properties.length} Items</span>
                   </div>
 
                   <button 
@@ -262,7 +262,7 @@ export default function DiscussionCartPage() {
             <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-zinc-100 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] lg:hidden">
               <button 
                 onClick={() => setShowForm(true)}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl shadow-zinc-200 active:scale-[0.98] transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-zinc-200 active:scale-[0.98] transition-all"
               >
                 Proceed to Discuss ({properties.length})
               </button>
@@ -292,9 +292,9 @@ export default function DiscussionCartPage() {
                         {discussionType === 'phone' && <Phone className="h-3 w-3" />}
                         {discussionType === 'home' && <Home className="h-3 w-3" />}
                         {discussionType === 'office' && <Building2 className="h-3 w-3" />}
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em]">Quick Request</span>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Quick Request</span>
                       </div>
-                      <h2 className="text-2xl font-black tracking-tight text-zinc-900">
+                      <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
                         {discussionType === 'phone' ? 'Request Callback' : 
                          discussionType === 'home' ? 'Home Consultation' : 'Office Meeting'}
                       </h2>
@@ -392,7 +392,7 @@ export default function DiscussionCartPage() {
                       </div>
                     </div>
 
-                    <button className="w-full rounded-xl bg-zinc-900 py-4 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-black active:scale-[0.98] shadow-lg shadow-zinc-200">
+                    <button className="w-full rounded-xl bg-zinc-900 py-4 text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-black active:scale-[0.98] shadow-lg shadow-zinc-200">
                       Submit Consultation Request
                     </button>
                     
