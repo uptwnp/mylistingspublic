@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { InquiryModal } from '@/components/InquiryModal';
+import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
 
 interface DiscussionContextType {
   cartItems: string[];
@@ -20,6 +21,8 @@ interface DiscussionContextType {
   clearCart: () => void;
   isFilterModalOpen: boolean;
   setIsFilterModalOpen: (open: boolean) => void;
+  activeSelectionSheet: 'budget' | 'type' | null;
+  setActiveSelectionSheet: (type: 'budget' | 'type' | null) => void;
   confirmAddToCart: (id: string, question: string) => void;
 }
 
@@ -35,6 +38,7 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('Panipat');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | null>(null);
   const [inquiries, setInquiries] = useState<Record<string, string>>({});
   const [inquiryProperty, setInquiryProperty] = useState<any | null>(null);
 
@@ -155,6 +159,8 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
       clearCart,
       isFilterModalOpen,
       setIsFilterModalOpen,
+      activeSelectionSheet,
+      setActiveSelectionSheet,
       inquiries,
       inquiryProperty,
       setInquiryProperty,
@@ -163,6 +169,10 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     }}>
       {children}
       <InquiryModal />
+      
+      {/* Global Selection Sheets - Managed by context but need props from caller if we want to sync state */}
+      {/* NOTE: We'll keep the actual SelectionBottomSheet components in Navbar for now as it holds the search state, 
+          OR we move search state here too. Let's move them to Navbar but use context to trigger. */}
     </DiscussionContext.Provider>
   );
 }

@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
-import { Loader2, SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ArrowUpDown, Clock, Tag, Ruler } from 'lucide-react';
+import { Loader2, SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ArrowUpDown, Clock, Tag, Ruler, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useDiscussion } from '@/context/DiscussionContext';
@@ -58,7 +58,7 @@ function ExploreContent() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number, isFallback?: boolean} | null>(null);
   const itemsPerPage = 20;
-  const { setIsFilterModalOpen, selectedCity } = useDiscussion();
+  const { cartItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, setActiveSelectionSheet } = useDiscussion();
   const searchParams = useSearchParams();
   const areaParam = searchParams.get('area');
 
@@ -171,6 +171,34 @@ function ExploreContent() {
             )}>
             {/* Section Header */}
             <div className="pt-6 sm:pt-8 pb-2">
+              {/* Mobile-only Filter Summary Chips */}
+              <div className="flex sm:hidden mb-4 items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <button 
+                  onClick={() => setActiveSelectionSheet('budget')}
+                  className="flex shrink-0 items-center gap-2 rounded-full bg-zinc-50 border border-zinc-100 px-4 py-2 shadow-sm active:scale-95 transition-all"
+                >
+                  <span className="text-[9px] font-black text-zinc-900 uppercase tracking-widest">{searchParams.get('budget') || "Any Budget"}</span>
+                  <div className="h-2.5 w-px bg-zinc-200" />
+                  <ChevronDown className="h-3 w-3 text-zinc-400" />
+                </button>
+
+                <button 
+                  onClick={() => setActiveSelectionSheet('type')}
+                  className="flex shrink-0 items-center gap-2 rounded-full bg-zinc-50 border border-zinc-100 px-4 py-2 shadow-sm active:scale-95 transition-all"
+                >
+                  <span className="text-[9px] font-black text-zinc-900 uppercase tracking-widest">{searchParams.get('type') || "Any Type"}</span>
+                  <div className="h-2.5 w-px bg-zinc-200" />
+                  <ChevronDown className="h-3 w-3 text-zinc-400" />
+                </button>
+
+                <button 
+                  onClick={() => setIsFilterModalOpen(true)}
+                  className="flex shrink-0 h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white shadow-md active:scale-90"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={3} />
+                </button>
+              </div>
+
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">
                   <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">Explore Properties</h1>

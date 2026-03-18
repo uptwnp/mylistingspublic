@@ -142,7 +142,7 @@ function PropertyDetailContent() {
             {property.area}
           </Link>
         </div>
-        <h1 className="text-xl sm:text-3xl font-black text-zinc-900 leading-tight">
+        <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 leading-tight">
           {formatSizeRange(property.size_min, property.size_max, '')} {property.size_unit} {property.type} for sale in {property.area}, {property.city}
         </h1>
       </section>
@@ -275,7 +275,7 @@ function PropertyDetailContent() {
             {/* Highlights Section */}
             {Array.isArray(property.highlights) && property.highlights.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-bold">Key Highlights</h2>
+                <h2 className="text-lg font-bold">Key Highlights</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {property.highlights.map((h, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-xl bg-zinc-50 p-4">
@@ -291,15 +291,15 @@ function PropertyDetailContent() {
 
             {/* Description Section */}
             <div className="space-y-4 pt-4">
-              <h2 className="text-xl font-bold">About this listing</h2>
-              <p className="text-lg leading-relaxed text-zinc-600">
+              <h2 className="text-lg font-bold">About this listing</h2>
+              <p className="text-base leading-relaxed text-zinc-600">
                 {property.description}
               </p>
             </div>
 
             {/* Modern Details Table */}
             <div className="space-y-6 pt-8 border-t border-zinc-100">
-                <h2 className="text-xl font-bold">Listing Details</h2>
+                <h2 className="text-lg font-bold">Listing Details</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/50">
                     {[
                         { label: 'Property Type', value: property.type },
@@ -327,7 +327,7 @@ function PropertyDetailContent() {
             {/* Map Section */}
             <div ref={mapSectionRef} className="space-y-6 pt-8 border-t border-zinc-100">
               <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold">Where you'll be</h2>
+                  <h2 className="text-lg font-bold">Where you'll be</h2>
                   <div className="flex items-center gap-2 text-sm font-medium text-zinc-600">
                       <MapPin className="h-4 w-4" />
                       <span>{property.area}, {property.city}</span>
@@ -354,7 +354,7 @@ function PropertyDetailContent() {
             {/* Similar Properties Section */}
             {similarProperties.length > 0 && (
               <div className="space-y-8 pt-12 border-t border-zinc-100">
-                <h2 className="text-2xl font-bold italic tracking-tight">Similar properties for you</h2>
+                <h2 className="text-xl font-bold italic tracking-tight">Similar properties for you</h2>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   {similarProperties.map((p) => (
                     <PropertyCard key={p.property_id} property={p} />
@@ -378,16 +378,16 @@ function PropertyDetailContent() {
           <aside className="lg:col-span-4 lg:sticky lg:top-24 h-fit">
             <div className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-2xl shadow-black/5 space-y-6">
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Price Range</span>
-                <p className="text-3xl font-black">{formatPriceRange(property.price_min, property.price_max)}</p>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Price Range</span>
+                <p className="text-2xl font-bold">{formatPriceRange(property.price_min, property.price_max)}</p>
               </div>
 
               <div className="space-y-3">
                 <button 
                   onClick={() => inCart ? removeFromCart(property.property_id) : addToCart(property)}
-                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 font-black uppercase tracking-widest transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-black' : 'bg-black text-white'}`}
+                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-3.5 font-bold uppercase tracking-widest transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-black' : 'bg-black text-white'}`}
                 >
-                  <ShoppingCart className="h-5 w-5" />
+                  <ShoppingCart className="h-4 w-4" />
                   {inCart ? 'Remove from Discussion' : 'Add to Discussion'}
                 </button>
                 
@@ -399,7 +399,7 @@ function PropertyDetailContent() {
                       addToCart(property);
                     }
                   }}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-4 font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98]"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-3.5 font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98]"
                 >
                   Discuss Now
                 </button>
@@ -432,8 +432,8 @@ function PropertyDetailContent() {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] md:hidden">
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Price</span>
-            <p className="text-lg font-black text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Price</span>
+            <p className="text-base font-bold text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
           </div>
           <button 
             onClick={() => {
@@ -443,7 +443,7 @@ function PropertyDetailContent() {
                 addToCart(property);
               }
             }}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3 text-[11px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
           >
             Discuss Now
           </button>
@@ -481,7 +481,7 @@ function PropertyDetailContent() {
                   <ShieldCheck className="h-8 w-8 text-amber-600" />
                 </div>
                 
-                <h3 className="mb-4 text-2xl font-black text-zinc-900">Request Photos & Videos</h3>
+                <h3 className="mb-4 text-xl font-bold text-zinc-900">Request Photos & Videos</h3>
                 
                 <div className="space-y-4 text-left">
                   <p className="text-zinc-600 leading-relaxed font-medium">

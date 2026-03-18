@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, Home, Menu, ShoppingCart, User, LogOut, ChevronDown, MapPin, Building2, Trees, Globe, SlidersHorizontal, Search } from 'lucide-react';
+import { Heart, Home, Menu, ShoppingCart, User, LogOut, ChevronDown, MapPin, Building2, Trees, Globe, SlidersHorizontal, Search, Store, X, Wallet } from 'lucide-react';
 import { useDiscussion } from '@/context/DiscussionContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
@@ -9,13 +9,15 @@ import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
 import { HeaderSearch } from './HeaderSearch';
 import { FilterModal } from './FilterModal';
+import { SelectionBottomSheet } from './SelectionBottomSheet';
 import { useCallback } from 'react';
 
 export default function Navbar() {
-  const { savedIds, cartItems, selectedCity, setSelectedCity, isFilterModalOpen, setIsFilterModalOpen } = useDiscussion();
+  const { savedIds, cartItems, selectedCity, setSelectedCity, isFilterModalOpen, setIsFilterModalOpen, activeSelectionSheet, setActiveSelectionSheet } = useDiscussion();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isForceExpanded, setIsForceExpanded] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [initialSegment, setInitialSegment] = useState<string | null>(null);
   const [isOtherCityDropdownOpen, setIsOtherCityDropdownOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -79,7 +81,14 @@ export default function Navbar() {
     if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
 
     router.push(`/explore?${params.toString()}`);
-  }, [selectedCity, query, budget, propertyType, minSize, maxSize, selectedHighlights, router]);
+  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, pathname]);
+
+  // Auto-apply when on Explore page
+  useEffect(() => {
+    if (pathname === '/explore') {
+      handleApplyFilters();
+    }
+  }, [budget, propertyType, handleApplyFilters, pathname]);
 
   const searchProps = {
     city: selectedCity,
@@ -103,61 +112,38 @@ export default function Navbar() {
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
           {/* Top Row: Logo, Center (Tabs/Search), and Actions */}
           <div className="flex items-center justify-between gap-4">
-            {/* Left Section: Logo & Mobile City Dropdown */}
+            {/* Left Section: Logo & Mobile Search Trigger */}
             <div className="flex flex-1 items-center gap-3 sm:gap-6 min-w-0">
               <Link href="/" className="flex items-center gap-2 group shrink-0">
                 <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
                   <Home className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
-                <span className="text-lg sm:text-xl font-black tracking-tighter text-zinc-900 hidden lg:block truncate">
+                <span className="text-lg sm:text-xl font-bold tracking-tighter text-zinc-900 hidden lg:block truncate">
                   My<span className="text-zinc-400 font-medium">Listing</span>
                 </span>
               </Link>
 
-              {/* Mobile City Selector (Next to Logo) */}
-              <div className="flex sm:hidden relative" ref={mobileOtherCityDropdownRef}>
-                <button 
-                  onClick={() => setIsOtherCityDropdownOpen(!isOtherCityDropdownOpen)}
-                  className="flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-900 transition-all active:scale-95"
-                >
-                  <span className="truncate max-w-[80px]">{(selectedCity === "Panipat" || selectedCity === "Karnal" || OTHER_CITIES.includes(selectedCity)) ? selectedCity : "City"}</span>
-                  <ChevronDown className={cn("h-3 w-3 text-zinc-400 transition-transform", isOtherCityDropdownOpen && "rotate-180")} />
-                </button>
-                
-                <AnimatePresence>
-                  {isOtherCityDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute left-0 top-full z-[100] mt-3 w-48 overflow-hidden rounded-[24px] border border-zinc-100 bg-white p-1 shadow-2xl"
-                    >
-                      {["Panipat", "Karnal", ...OTHER_CITIES].map((city) => (
-                        <button
-                          key={city}
-                          onClick={() => {
-                            setSelectedCity(city);
-                            setIsOtherCityDropdownOpen(false);
-                          }}
-                          className={cn(
-                            "flex w-full items-center px-4 py-3 text-left text-[11px] font-black uppercase tracking-tight transition-colors hover:bg-zinc-50 rounded-2xl",
-                            selectedCity === city ? "text-rose-500 bg-rose-50/50" : "text-zinc-600"
-                          )}
-                        >
-                          {city}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              {/* Mobile Search Pill - Visible on scroll or subpages */}
+              {shouldShowCompact && (
+                <div className="sm:hidden flex-1 px-2">
+                  <button
+                    onClick={() => setIsMobileSearchOpen(true)}
+                    className="flex w-full items-center gap-3 rounded-full border border-zinc-200 bg-white px-4 py-2.5 shadow-md shadow-zinc-200/50 hover:shadow-lg transition-all"
+                  >
+                    <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
+                    <span className="text-[13px] font-black text-zinc-900 truncate tracking-tight">
+                      {query ? `${query}, ${selectedCity}` : selectedCity}
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Middle Section: Airbnb-style Tabs or Compact Search */}
+            {/* Middle Section: Desktop Tabs or Compact Search */}
             <div className="flex-[3] flex justify-center items-center min-w-0">
                 <AnimatePresence mode="wait">
                   {shouldShowCompact ? (
-                    <div className="w-full max-w-md z-20" key="compact-search">
+                    <div className="w-full max-w-md z-20 hidden sm:block" key="compact-search">
                       <HeaderSearch 
                         isScrolled={true} 
                         {...searchProps} 
@@ -184,7 +170,7 @@ export default function Navbar() {
                       )}
                     >
                       <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === "Panipat" ? "text-zinc-900" : "text-zinc-300")} />
-                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em]">Panipat</span>
+                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em]">Panipat</span>
                       {selectedCity === "Panipat" && (
                         <div 
                           className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
@@ -199,7 +185,7 @@ export default function Navbar() {
                       )}
                     >
                       <Trees className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === "Karnal" ? "text-zinc-900" : "text-zinc-300")} />
-                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em]">Karnal</span>
+                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em]">Karnal</span>
                       {selectedCity === "Karnal" && (
                         <div 
                           className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
@@ -216,7 +202,7 @@ export default function Navbar() {
                       >
                         <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
                         <div className="relative flex items-center justify-center">
-                          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] leading-none">
+                          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] leading-none">
                             {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
                           </span>
                           <ChevronDown className={cn(
@@ -240,7 +226,7 @@ export default function Navbar() {
                           >
                             {OTHER_CITIES.map((city) => (
                               <button
-                                key={city}
+                                library-key={city}
                                 onClick={() => {
                                   setSelectedCity(city);
                                   setIsOtherCityDropdownOpen(false);
@@ -257,9 +243,9 @@ export default function Navbar() {
                         )}
                       </AnimatePresence>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
             </div>
 
             {/* Right Section: Actions */}
@@ -330,7 +316,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Bottom Row: Large Search / Hero */}
+          {/* Bottom Row / Hero Content */}
           <AnimatePresence>
             {!shouldShowCompact && (
               <motion.div
@@ -341,59 +327,42 @@ export default function Navbar() {
                 className="flex items-center justify-center w-full"
               >
                 <div
-                  className="mt-6 sm:mt-12 pb-6 sm:pb-8 w-full max-w-3xl z-20"
+                  className="mt-4 sm:mt-24 pb-6 sm:pb-8 w-full max-w-5xl z-20"
                   ref={searchContainerRef}
                 >
                   {/* Hero Title (Mobile Only) */}
-                  <div className="mb-6 sm:hidden text-center">
-                    <h1 className="text-3xl font-black tracking-tight text-zinc-900 leading-tight">
+                  <div className="mb-4 sm:hidden text-center text-zinc-900">
+                    <h1 className="text-3xl font-bold tracking-tight text-zinc-900 leading-[0.95]">
                       Find your perfect space in {selectedCity}
                     </h1>
-                    <p className="mt-2 text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                    <p className="mt-3 text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] opacity-80">
                       Curated listings for premium living
                     </p>
-                  </div>
-
-                  {/* City Tabs for Mobile Hero - Hidden if already using top dropdown */}
-                  <div className="hidden items-center justify-center gap-2 mb-6 px-4">
-                    {["Panipat", "Karnal", "Other"].map((city) => {
-                      const isActive = (city === "Other" && OTHER_CITIES.includes(selectedCity)) || selectedCity === city;
-                      if (city === "Other") {
-                        return (
-                          <div key={city} className="relative">
-                            <button
-                              onClick={() => setIsOtherCityDropdownOpen(!isOtherCityDropdownOpen)}
-                              className={cn(
-                                "px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-                                isActive 
-                                  ? "bg-zinc-900 text-white shadow-lg" 
-                                  : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
-                              )}
-                            >
-                              {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
-                            </button>
-                          </div>
-                        );
-                      }
-                      return (
-                        <button
-                          key={city}
-                          onClick={() => setSelectedCity(city)}
-                          className={cn(
-                            "px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-                            isActive 
-                              ? "bg-zinc-900 text-white shadow-lg" 
-                              : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
-                          )}
-                        >
-                          {city}
-                        </button>
-                      );
-                    })}
+                    
+                    {/* Airbnb-style Initial Search Bar for Hero (Mobile) */}
+                    <div className="mt-8 px-4 text-zinc-900">
+                      <button
+                        onClick={() => setIsMobileSearchOpen(true)}
+                        className="flex w-full items-center gap-4 rounded-[32px] border border-zinc-200/80 bg-white p-4 shadow-2xl shadow-zinc-200/60 transition-all hover:scale-[1.02] active:scale-95 text-left"
+                      >
+                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
+                           <Search className="h-5 w-5" strokeWidth={3} />
+                         </div>
+                         <div className="flex flex-col min-w-0">
+                           <span className="text-sm font-bold text-zinc-900 uppercase tracking-tighter">Start your search</span>
+                           <span className="text-[11px] font-bold text-zinc-400 truncate tracking-tight">
+                            {query ? `${query}, ${selectedCity}` : selectedCity}
+                           </span>
+                         </div>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
+                    {/* Shown on desktop */}
+                    <div className="hidden sm:block w-full">
+                      <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -401,6 +370,148 @@ export default function Navbar() {
           </AnimatePresence>
         </div>
       </nav>
+
+      {/* Full-Screen Mobile Search Overlay - Airbnb Style */}
+      <AnimatePresence>
+        {isMobileSearchOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[1000] flex flex-col bg-white sm:hidden"
+          >
+            {/* Overlay Top Bar */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-50">
+              <button 
+                onClick={() => setIsMobileSearchOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-100 text-zinc-900 shadow-sm transition-all active:scale-90"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <div className="flex gap-4">
+                {["Panipat", "Karnal", "Other"].map((city) => {
+                  const isActive = (city === "Other" && OTHER_CITIES.includes(selectedCity)) || selectedCity === city;
+                  return (
+                    <button
+                      key={city}
+                      onClick={() => setSelectedCity(city === "Other" ? "Delhi NCR" : city)}
+                      className={cn(
+                        "relative text-xs font-black uppercase tracking-widest transition-colors pb-1.5",
+                        isActive ? "text-zinc-900" : "text-zinc-400"
+                      )}
+                    >
+                      {city}
+                      {isActive && (
+                        <motion.div layoutId="mobileOverlayCityActive" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-rose-500 rounded-full" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="w-10 opacity-0" /> {/* Spacer */}
+            </div>
+
+            {/* Overlay Content: Search Fields as Cards */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 bg-zinc-50/50">
+              <div className="flex flex-col gap-4">
+                {/* Where Card */}
+                <div className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40">
+                  <h2 className="text-xl font-bold text-zinc-900 mb-6">Where to?</h2>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+                    <input 
+                      type="text"
+                      placeholder="Search areas..."
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="w-full h-14 rounded-2xl border border-zinc-200 pl-12 pr-4 text-base font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-all placeholder:text-zinc-300"
+                      autoFocus
+                    />
+                  </div>
+                  {/* Fast Localities Suggestions */}
+                  <div className="mt-6 flex flex-wrap gap-2">
+                     {["Sector 18", "Tdi City", "Ansal", "Sector 25"].map((area) => (
+                       <button
+                         key={area}
+                         onClick={() => setQuery(area)}
+                         className={cn(
+                           "px-4 py-2 rounded-xl text-[11px] font-bold transition-all",
+                           query === area 
+                             ? "bg-zinc-900 text-white" 
+                             : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                         )}
+                       >
+                         {area}
+                       </button>
+                     ))}
+                  </div>
+                </div>
+
+                {/* Budget Card - OPTIONS SHOWN VIA BOTTOM SHEET */}
+                <button 
+                  onClick={() => setActiveSelectionSheet('budget')}
+                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-zinc-900">What's your budget?</h2>
+                    <Wallet className="h-6 w-6 text-zinc-400" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={cn("text-base font-bold", budget.label === "Any Budget" ? "text-zinc-400" : "text-zinc-900")}>
+                      {budget.label === "Any Budget" ? "Select your price range" : budget.label}
+                    </span>
+                    <div className="h-4 w-px bg-zinc-200" />
+                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                  </div>
+                </button>
+
+                {/* Property Type Card - OPTIONS SHOWN VIA BOTTOM SHEET */}
+                <button 
+                  onClick={() => setActiveSelectionSheet('type')}
+                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-zinc-900">Property type?</h2>
+                    <Home className="h-6 w-6 text-zinc-400" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={cn("text-base font-bold", propertyType === "Any Type" ? "text-zinc-400" : "text-zinc-900")}>
+                      {propertyType === "Any Type" ? "What are you looking for?" : propertyType}
+                    </span>
+                    <div className="h-4 w-px bg-zinc-200" />
+                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Overlay Bottom Bar */}
+            <div className="border-t border-zinc-100 bg-white px-6 py-6 flex items-center justify-between shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
+              <button 
+                onClick={() => {
+                  setQuery('');
+                  setBudget({ label: "Any Budget", value: 0 });
+                  setPropertyType("Any Type");
+                }}
+                className="text-sm font-black text-zinc-900 underline underline-offset-4"
+              >
+                Clear all
+              </button>
+              <button 
+                onClick={() => {
+                  handleApplyFilters();
+                  setIsMobileSearchOpen(false);
+                }}
+                className="flex items-center gap-2 rounded-full bg-rose-500 px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-rose-200 transition-all active:scale-95"
+              >
+                <Search className="h-4 w-4" strokeWidth={3} />
+                <span>Search</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <FilterModal 
         isOpen={isFilterModalOpen}
@@ -416,70 +527,25 @@ export default function Navbar() {
         onApply={handleApplyFilters}
       />
 
-      {/* Fixed Bottom Search Navigation (Mobile Only) */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] sm:hidden bg-white/95 backdrop-blur-2xl border-t border-zinc-100 px-4 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] pb-safe-offset-4">
-        <div className="flex items-center justify-between gap-1 max-w-md mx-auto">
-          {/* Where Segment */}
-          <button
-            onClick={() => {
-              setInitialSegment('location');
-              setIsForceExpanded(true);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="flex-1 flex flex-col items-center gap-1.5 py-1 transition-all active:scale-95"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-50 text-zinc-400">
-              <MapPin className="h-5 w-5" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 leading-none mt-0.5">Where?</span>
-            <span className="text-[9px] font-bold text-zinc-400 truncate max-w-[80px] mt-0.5">{query || "Any Area"}</span>
-          </button>
+      <SelectionBottomSheet
+        isOpen={activeSelectionSheet === 'budget'}
+        onClose={() => setActiveSelectionSheet(null)}
+        title="Your Budget"
+        type="budget"
+        selectedValue={budget}
+        onSelect={setBudget}
+      />
 
-          <div className="h-8 w-px bg-zinc-100" />
+      <SelectionBottomSheet
+        isOpen={activeSelectionSheet === 'type'}
+        onClose={() => setActiveSelectionSheet(null)}
+        title="Property type?"
+        type="propertyType"
+        selectedValue={propertyType}
+        onSelect={setPropertyType}
+      />
 
-          {/* Budget Segment */}
-          <button
-            onClick={() => {
-              setInitialSegment('budget');
-              setIsForceExpanded(true);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="flex-1 flex flex-col items-center gap-1.5 py-1 transition-all active:scale-95"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-50 text-zinc-400">
-              <Globe className="h-5 w-5" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 leading-none mt-0.5">Budget</span>
-            <span className="text-[9px] font-bold text-zinc-400 truncate max-w-[80px] mt-0.5">{budget.label === "Any Budget" ? "Any" : budget.label}</span>
-          </button>
-
-          <div className="h-8 w-px bg-zinc-100" />
-
-          {/* Type Segment */}
-          <button
-            onClick={() => {
-              setInitialSegment('type');
-              setIsForceExpanded(true);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="flex-1 flex flex-col items-center gap-1.5 py-1 transition-all active:scale-95"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-50 text-zinc-400">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 leading-none mt-0.5">Type</span>
-            <span className="text-[9px] font-bold text-zinc-400 truncate max-w-[80px] mt-0.5">{propertyType === "Any Type" ? "Any" : propertyType}</span>
-          </button>
-
-          {/* Advanced Filters Trigger */}
-          <button
-            onClick={() => setIsFilterModalOpen(true)}
-            className="ml-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 text-white shadow-xl shadow-black/20 active:scale-90 transition-all hover:bg-black"
-          >
-            <SlidersHorizontal className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
+      {/* Fixed Bottom Category Filters (Mobile Only) */}
     </>
   );
 }

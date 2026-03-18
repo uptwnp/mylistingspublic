@@ -88,7 +88,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
 
         {/* Main Content Area */}
         <motion.div layout className="flex flex-1 flex-col min-w-0 py-0.5">
-          <h3 className="text-lg sm:text-xl font-black text-zinc-900 leading-tight">
+          <h3 className="text-base sm:text-lg font-bold text-zinc-900 leading-tight">
             {formatPrice(property.price_min)}
           </h3>
 
@@ -130,7 +130,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
           </div>
 
           <div className="flex items-center gap-1">
-             <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 rounded-full text-[8px] sm:text-[10px] font-bold text-zinc-700 uppercase tracking-tight">
+             <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 rounded-full text-[8px] sm:text-[9px] font-semibold text-zinc-700 uppercase tracking-tight">
               {property.type}
             </span>
             <motion.div
@@ -167,7 +167,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
                   {property.tags.map((tag, i) => (
                     <span 
                       key={i} 
-                      className="px-2.5 py-1 bg-zinc-50 text-[11px] font-semibold text-zinc-500 rounded-lg border border-zinc-100"
+                      className="px-2 py-0.5 bg-zinc-50 text-[10px] font-medium text-zinc-500 rounded-lg border border-zinc-100"
                     >
                       {tag}
                     </span>
@@ -182,7 +182,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3.5 text-sm font-black text-white shadow-lg transition-all hover:bg-black active:scale-[0.98]"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-black active:scale-[0.98]"
                 >
                   <ExternalLink className="h-4 w-4" />
                   View Full Property Page

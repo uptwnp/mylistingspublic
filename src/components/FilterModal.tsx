@@ -1,26 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Wallet, Home as HomeIcon, Trees, Search, Ruler, Sparkles, Box } from 'lucide-react';
+import { X, Search, Ruler, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-
-const SUGGESTIONS = [
-  "Sector 18", "Tdi City", "Ansal", "Sector 13-17", "Sector 25", "Model Town", "Sanjay Colony", "Industrial Area"
-];
-
-const BUDGET_OPTIONS = [
-  { label: "Any Budget", value: 0 },
-  { label: "Under 50 Lakh", value: 50 },
-  { label: "Under 1 Cr", value: 100 },
-  { label: "Under 5 Cr", value: 500 },
-  { label: "Under 10 Cr", value: 1000 },
-  { label: "Above 10 Cr", value: 1001 },
-];
-
-const PROPERTY_TYPES = [
-  "Residential Plot", "Resi. House", "Shop", "Office", "Villa", "Apartment", "Commercial Plot"
-];
 
 const AMENITIES = [
   "Main Road", "Corner Plot", "Park Facing", "Gated Community", "Sun Facing", "East Facing", "Sewage", "Electricity"
@@ -119,10 +102,10 @@ export function FilterModal({
               </div>
 
               {/* Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              <div className="flex-1 overflow-y-auto p-6 space-y-10">
                 {/* Search Keywords */}
                 <div>
-                  <label className="mb-3 block text-[10px] font-black uppercase tracking-widest text-zinc-400">Keywords</label>
+                  <label className="mb-4 block text-[10px] font-black uppercase tracking-widest text-secondary/50">Keywords</label>
                   <div className="relative">
                     <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
                     <input
@@ -135,11 +118,9 @@ export function FilterModal({
                   </div>
                 </div>
 
-                {/* Area Input (Removed: already in header) */}
-
                 {/* Size Range */}
                 <div>
-                  <label className="mb-3 block text-[10px] font-black uppercase tracking-widest text-zinc-400">Area / Size (Sq. Yards)</label>
+                  <label className="mb-4 block text-[10px] font-black uppercase tracking-widest text-secondary/50">Area / Size (Sq. Yards)</label>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
                       <Ruler className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
@@ -166,7 +147,7 @@ export function FilterModal({
 
                 {/* Highlights / Amenities */}
                 <div>
-                  <label className="mb-3 block text-[10px] font-black uppercase tracking-widest text-zinc-400">Property Highlights</label>
+                  <label className="mb-4 block text-[10px] font-black uppercase tracking-widest text-secondary/50">Property Highlights</label>
                   <div className="flex flex-wrap gap-2">
                     {AMENITIES.map((h) => (
                       <button
