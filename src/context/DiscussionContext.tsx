@@ -4,6 +4,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { InquiryModal } from '@/components/InquiryModal';
 import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
 
+export interface InquiryData {
+  wantSiteVisit: boolean;
+  interestedInPurchase: boolean;
+  haveQuestion: boolean;
+  question: string;
+}
+
 interface DiscussionContextType {
   cartItems: string[];
   savedIds: string[];
@@ -26,10 +33,10 @@ interface DiscussionContextType {
   setSelectedHighlights: (h: string[]) => void;
   clearFilters: () => void;
   
-  inquiries: Record<string, string>;
+  inquiries: Record<string, InquiryData>;
   inquiryProperty: any | null;
   setInquiryProperty: (property: any | null) => void;
-  updateInquiry: (id: string, question: string) => void;
+  updateInquiry: (id: string, inquiryData: InquiryData) => void;
   addToCart: (property: any) => void;
   removeFromCart: (id: string) => void;
   toggleSave: (id: string) => void;
@@ -40,7 +47,7 @@ interface DiscussionContextType {
   setIsFilterModalOpen: (open: boolean) => void;
   activeSelectionSheet: 'budget' | 'type' | 'area' | null;
   setActiveSelectionSheet: (type: 'budget' | 'type' | 'area' | null) => void;
-  confirmAddToCart: (id: string, question: string) => void;
+  confirmAddToCart: (id: string, inquiryData: InquiryData) => void;
   isMobileSearchOpen: boolean;
   setIsMobileSearchOpen: (open: boolean) => void;
   userLocation: {lat: number, lng: number, isFallback?: boolean} | null;
@@ -72,7 +79,7 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | 'area' | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [inquiries, setInquiries] = useState<Record<string, string>>({});
+  const [inquiries, setInquiries] = useState<Record<string, InquiryData>>({});
   const [inquiryProperty, setInquiryProperty] = useState<any | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number, isFallback?: boolean} | null>(null);
 
@@ -94,7 +101,24 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
       setSelectedCity(savedCity);
     }
     if (savedInquiries) {
-      try { setInquiries(JSON.parse(savedInquiries)); } catch (e) { console.error(e); }
+      try { 
+        const parsed = JSON.parse(savedInquiries);
+        // Migration logic for old string-based inquiries
+        const migrated: Record<string, InquiryData> = {};
+        Object.entries(parsed).forEach(([id, val]) => {
+          if (typeof val === 'string') {
+            migrated[id] = {
+              wantSiteVisit: false,
+              interestedInPurchase: false,
+              haveQuestion: true,
+              question: val
+            };
+          } else {
+            migrated[id] = val as InquiryData;
+          }
+        });
+        setInquiries(migrated);
+      } catch (e) { console.error(e); }
     }
     if (savedFilters) {
       try { 
@@ -179,16 +203,16 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     }
   };
 
-  const confirmAddToCart = (id: string, question: string) => {
+  const confirmAddToCart = (id: string, inquiryData: InquiryData) => {
     if (!cartItems.includes(id)) {
       setCartItems(prev => [...prev, id]);
     }
-    setInquiries(prev => ({ ...prev, [id]: question }));
+    setInquiries(prev => ({ ...prev, [id]: inquiryData }));
     setInquiryProperty(null);
   };
 
-  const updateInquiry = (id: string, question: string) => {
-    setInquiries(prev => ({ ...prev, [id]: question }));
+  const updateInquiry = (id: string, inquiryData: InquiryData) => {
+    setInquiries(prev => ({ ...prev, [id]: inquiryData }));
   };
 
   const removeFromCart = (id: string) => {

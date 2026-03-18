@@ -250,7 +250,23 @@ function PropertyDetailContent() {
 
             {/* Share and Save Buttons */}
             <div className="flex items-center gap-3 py-4 border-b border-zinc-100 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0">
-              <button className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap">
+              <button 
+                onClick={async () => {
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({
+                        title: `${property.type} in ${property.area}, ${property.city}`,
+                        url: window.location.href
+                      });
+                    } catch (err) {
+                      if (err instanceof Error && err.name !== 'AbortError') {
+                        console.error('Error sharing:', err);
+                      }
+                    }
+                  }
+                }}
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap"
+              >
                 <Share2 className="h-4 w-4" />
                 Share
               </button>

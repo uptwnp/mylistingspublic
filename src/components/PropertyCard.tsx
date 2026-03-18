@@ -98,7 +98,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
           </div>
 
           {Array.isArray(property.tags) && property.tags.length > 0 ? (
-            <p className="mt-1 ty-micro font-black text-emerald-600 truncate uppercase tracking-widest opacity-90">
+            <p className="mt-1 ty-micro font-black text-brand-primary truncate uppercase tracking-widest opacity-90">
               {property.tags.join(' • ')}
             </p>
           ) : property.description && (
@@ -179,12 +179,21 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                   </a>
                   
                   <button
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
-                      navigator.share?.({
-                        title: `${property.type} in ${property.area}`,
-                        url: window.location.origin + `/property/${property.property_id}`
-                      });
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({
+                            title: `${property.type} in ${property.area}`,
+                            url: window.location.origin + `/property/${property.property_id}`
+                          });
+                        } catch (err) {
+                          // Only log errors that aren't user-cancellations
+                          if (err instanceof Error && err.name !== 'AbortError') {
+                            console.error('Error sharing:', err);
+                          }
+                        }
+                      }
                     }}
                     className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-95"
                   >
@@ -198,7 +207,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                     className={cn(
                       "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 ty-caption font-bold shadow-lg transition-all active:scale-[0.98]",
                       inCart
-                        ? "bg-emerald-500 text-white shadow-emerald-500/20"
+                        ? "bg-brand-primary text-white shadow-blue-500/20"
                         : "bg-zinc-900 text-white hover:bg-black shadow-black/10"
                     )}
                   >

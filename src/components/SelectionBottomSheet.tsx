@@ -214,21 +214,21 @@ export function SelectionBottomSheet({
                           className={cn(
                             "flex items-center gap-4 w-full rounded-2xl border-2 px-5 py-4 text-left transition-all mb-2",
                             selectedValue === 'Near Me' 
-                              ? "border-zinc-900 bg-zinc-50" 
-                              : "border-emerald-100 bg-emerald-50/30 active:border-emerald-300"
+                              ? "border-brand-primary bg-blue-50" 
+                              : "border-blue-100 bg-blue-50/30 active:border-blue-300"
                           )}
                         >
                           <div className={cn(
                             "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
-                            selectedValue === 'Near Me' ? "bg-zinc-900 text-white" : "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
+                            selectedValue === 'Near Me' ? "bg-brand-primary text-white" : "bg-brand-primary text-white shadow-lg shadow-blue-200"
                           )}>
                             <Navigation className="h-5 w-5" />
                           </div>
                           <div className="flex flex-col">
-                            <span className={cn("text-base font-bold", selectedValue === 'Near Me' ? "text-zinc-900" : "text-emerald-700")}>
+                            <span className={cn("text-base font-bold", selectedValue === 'Near Me' ? "text-brand-primary" : "text-blue-700")}>
                               Near Me
                             </span>
-                            <span className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-wider">Use Current Location</span>
+                            <span className="text-[10px] font-bold text-blue-600/70 uppercase tracking-wider">Use Current Location</span>
                           </div>
                         </button>
                       )}

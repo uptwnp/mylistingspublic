@@ -145,18 +145,18 @@ export function HomeSearch() {
                           }}
                           className={cn(
                             "flex items-center gap-4 rounded-xl px-4 py-3 ty-body font-bold transition-all text-left group w-full",
-                            s === 'Near Me' ? "text-emerald-600 hover:bg-emerald-50" : "text-zinc-700 hover:bg-zinc-50"
+                            s === 'Near Me' ? "text-brand-primary hover:bg-blue-50" : "text-zinc-700 hover:bg-zinc-50"
                           )}
                         >
                           <div className={cn(
                             "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-                            s === 'Near Me' ? "bg-emerald-100 group-hover:bg-emerald-200" : "bg-zinc-100 group-hover:bg-zinc-200"
+                            s === 'Near Me' ? "bg-blue-50 group-hover:bg-blue-100" : "bg-zinc-100 group-hover:bg-zinc-200"
                           )}>
-                             {s === 'Near Me' ? <Navigation className="h-5 w-5 text-emerald-600" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
+                             {s === 'Near Me' ? <Navigation className="h-5 w-5 text-brand-primary" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className={cn("truncate", s === 'Near Me' && "text-emerald-600")}>{s}</span>
-                            {s === 'Near Me' && <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Current location</span>}
+                            <span className={cn("truncate", s === 'Near Me' && "text-brand-primary")}>{s}</span>
+                            {s === 'Near Me' && <span className="text-[10px] font-bold text-brand-primary/50 uppercase tracking-wider">Current location</span>}
                           </div>
                         </button>
                       ));
@@ -292,8 +292,8 @@ export function HomeSearch() {
           <button 
             onClick={(e) => { e.stopPropagation(); handleSearch(); }}
             className={cn(
-              "mr-2 flex h-12 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white transition-all shadow-lg shadow-black/20",
-              activeSegment ? "px-6 w-auto gap-3 hover:bg-black" : "w-12 px-0 hover:bg-black"
+              "mr-2 flex h-12 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition-all shadow-lg shadow-blue-500/20",
+              activeSegment ? "px-6 w-auto gap-3 hover:bg-blue-700" : "w-12 px-0 hover:bg-blue-700"
             )}
           >
             <Search className="h-5 w-5" strokeWidth={3} />

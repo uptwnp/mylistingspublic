@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-heading: "Outfit", sans-serif;
-  --font-body: "Inter", sans-serif;
+  --font-heading: var(--font-plus-jakarta), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
 
-  --color-brand-primary: #10b981;
-  --color-brand-secondary: #0f172a;
+  --color-brand-primary: #1d4ed8; /* Industrial Blue */
+  --color-brand-secondary: #1e293b;
   --color-brand-accent: #3b82f6;
 
   --color-glass-border: rgba(255, 255, 255, 0.1);
@@ -47,10 +47,10 @@
   --text-micro:     9px;  /* tiny badges, counters         */
 
   /* ── Font Colors ── */
-  --color-text-primary:   #09090b;  /* zinc-950 – main content      */
-  --color-text-secondary: #52525b;  /* zinc-600 – supporting copy   */
-  --color-text-tertiary:  #a1a1aa;  /* zinc-400 – captions, muted   */
-  --color-text-accent:    #10b981;  /* emerald – brand CTAs         */
+  --color-text-primary:   #0f172a;  /* slate-900 – main content      */
+  --color-text-secondary: #475569;  /* slate-600 – supporting copy   */
+  --color-text-tertiary:  #94a3b8;  /* slate-400 – captions, muted   */
+  --color-text-accent:    #1d4ed8;  /* Industrial Blue – brand CTAs */
   --color-text-danger:    #f43f5e;  /* rose-500 – emphasis          */
   --color-text-inverse:   #ffffff;  /* white – on dark bg           */
 
@@ -140,7 +140,7 @@ input[type="radio"],
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

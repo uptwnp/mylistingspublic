@@ -154,13 +154,13 @@ export function FilterModal({
                         key={h}
                         onClick={() => toggleHighlight(h)}
                         className={cn(
-                          "flex items-center gap-2 rounded-xl border px-4 py-2.5 transition-all",
+                          "flex items-center gap-2 rounded-xl border px-4 py-2.5 transition-all text-left group",
                           localHighlights.includes(h)
-                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 font-bold"
+                            ? "border-brand-primary bg-blue-50 text-brand-primary font-bold shadow-sm shadow-blue-500/10"
                             : "border-zinc-100 bg-white text-zinc-500 hover:border-zinc-200"
                         )}
                       >
-                        <Sparkles className={cn("h-3.5 w-3.5", localHighlights.includes(h) ? "text-emerald-500" : "text-zinc-300")} />
+                        <Sparkles className={cn("h-3.5 w-3.5", localHighlights.includes(h) ? "text-brand-primary" : "text-zinc-300")} />
                         <span className="ty-caption">{h}</span>
                       </button>
                     ))}

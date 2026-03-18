@@ -11,12 +11,27 @@ import { useRouter } from 'next/navigation';
 export function InquiryModal() {
   const router = useRouter();
   const { inquiryProperty, setInquiryProperty, confirmAddToCart, inquiries, isInCart } = useDiscussion();
+  const [wantSiteVisit, setWantSiteVisit] = useState(false);
+  const [interestedInPurchase, setInterestedInPurchase] = useState(false);
+  const [haveQuestion, setHaveQuestion] = useState(true);
   const [question, setQuestion] = useState('');
 
   useEffect(() => {
     if (inquiryProperty) {
       const id = typeof inquiryProperty === 'string' ? inquiryProperty : inquiryProperty.property_id;
-      setQuestion(inquiries[id] || '');
+      const existingInquiry = inquiries[id];
+      if (existingInquiry) {
+        setWantSiteVisit(existingInquiry.wantSiteVisit);
+        setInterestedInPurchase(existingInquiry.interestedInPurchase);
+        setHaveQuestion(existingInquiry.haveQuestion);
+        setQuestion(existingInquiry.question || '');
+      } else {
+        // Reset for new item
+        setWantSiteVisit(false);
+        setInterestedInPurchase(false);
+        setHaveQuestion(true);
+        setQuestion('');
+      }
     }
   }, [inquiryProperty, inquiries]);
 
@@ -24,7 +39,12 @@ export function InquiryModal() {
     e.preventDefault();
     if (inquiryProperty) {
       const id = typeof inquiryProperty === 'string' ? inquiryProperty : inquiryProperty.property_id;
-      confirmAddToCart(id, question);
+      confirmAddToCart(id, {
+        wantSiteVisit,
+        interestedInPurchase,
+        haveQuestion,
+        question: haveQuestion ? question : ''
+      });
       router.push('/discussion-cart');
     }
   };
@@ -59,7 +79,7 @@ export function InquiryModal() {
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white">
                     <MessageSquare className="h-4 w-4" />
                   </div>
-                  <h2 className="text-base font-bold text-zinc-900">{isEdit ? 'Edit Inquiry' : 'Add to Discussion'}</h2>
+                  <h2 className="text-base font-bold text-zinc-900">{isEdit ? 'Edit Options' : 'Add to Discussion'}</h2>
                 </div>
                 <button
                   onClick={() => setInquiryProperty(null)}
@@ -70,7 +90,7 @@ export function InquiryModal() {
               </div>
 
               {/* Body */}
-              <div className="p-5 space-y-5">
+              <div className="p-5 space-y-5 overflow-y-auto max-h-[70vh]">
                 {/* Compact Property Preview */}
                 {property && (
                   <div className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
@@ -97,22 +117,92 @@ export function InquiryModal() {
                   </div>
                 )}
 
-                {/* Question Input */}
+                {/* Inquiry Options */}
                 <form id="inquiry-form" onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-                      <HelpCircle className="h-3 w-3" />
-                      What's your question?
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                      What are you looking for?
                     </label>
-                    <textarea
-                      autoFocus
-                      value={question}
-                      onChange={(e) => setQuestion(e.target.value)}
-                      placeholder="e.g. Is it open from two sides? Does it have a clear registry?"
-                      className="w-full min-h-[100px] rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4 text-sm font-medium text-zinc-900 outline-none ring-zinc-900 transition-all focus:border-zinc-900 focus:bg-white focus:ring-1 placeholder:text-zinc-300"
-                      required
-                    />
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => setWantSiteVisit(!wantSiteVisit)}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-2xl border p-3.5 transition-all text-sm font-semibold",
+                          wantSiteVisit 
+                            ? "bg-zinc-900 border-zinc-900 text-white" 
+                            : "bg-zinc-50 border-zinc-100 text-zinc-600 hover:border-zinc-300"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                          wantSiteVisit ? "bg-white border-white text-zinc-900" : "bg-white border-zinc-200"
+                        )}>
+                          {wantSiteVisit && <div className="w-2.5 h-2.5 rounded-sm bg-zinc-900" />}
+                        </div>
+                        Want Site Visit
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setInterestedInPurchase(!interestedInPurchase)}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-2xl border p-3.5 transition-all text-sm font-semibold",
+                          interestedInPurchase 
+                            ? "bg-zinc-900 border-zinc-900 text-white" 
+                            : "bg-zinc-50 border-zinc-100 text-zinc-600 hover:border-zinc-300"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                          interestedInPurchase ? "bg-white border-white text-zinc-900" : "bg-white border-zinc-200"
+                        )}>
+                          {interestedInPurchase && <div className="w-2.5 h-2.5 rounded-sm bg-zinc-900" />}
+                        </div>
+                        Interested in Purchase
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setHaveQuestion(!haveQuestion)}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-2xl border p-3.5 transition-all text-sm font-semibold",
+                          haveQuestion 
+                            ? "bg-zinc-900 border-zinc-900 text-white" 
+                            : "bg-zinc-50 border-zinc-100 text-zinc-600 hover:border-zinc-300"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                          haveQuestion ? "bg-white border-white text-zinc-900" : "bg-white border-zinc-200"
+                        )}>
+                          {haveQuestion && <div className="w-2.5 h-2.5 rounded-sm bg-zinc-900" />}
+                        </div>
+                        Have a Question
+                      </button>
+                    </div>
                   </div>
+
+                  {haveQuestion && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-2 pt-2"
+                    >
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
+                        <HelpCircle className="h-3 w-3" />
+                        Specific Question
+                      </label>
+                      <textarea
+                        autoFocus
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        placeholder="e.g. Is it open from two sides? Does it have a clear registry?"
+                        className="w-full min-h-[80px] rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4 text-sm font-medium text-zinc-900 outline-none ring-zinc-900 transition-all focus:border-zinc-900 focus:bg-white focus:ring-1 placeholder:text-zinc-300"
+                        required={haveQuestion}
+                      />
+                    </motion.div>
+                  )}
                 </form>
               </div>
 
@@ -124,7 +214,7 @@ export function InquiryModal() {
                   className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-zinc-900 py-3.5 text-sm font-bold text-white shadow-xl shadow-black/10 transition-all hover:bg-black active:scale-[0.98]"
                 >
                   <Send className="h-4 w-4" />
-                  {isEdit ? 'Update Discussion' : 'Add to Discussion Cart'}
+                  {isEdit ? 'Update Selections' : 'Add to Discussion Cart'}
                 </button>
               </div>
             </motion.div>

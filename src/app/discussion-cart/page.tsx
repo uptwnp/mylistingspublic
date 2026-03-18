@@ -165,10 +165,25 @@ export default function DiscussionCartPage() {
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
-                            <label className="mb-1.5 block text-[8px] font-bold uppercase tracking-[0.2em] text-blue-400">Your Inquiry</label>
-                            <p className="text-xs sm:text-sm font-bold text-blue-900 leading-relaxed italic">
-                              "{inquiry}"
-                            </p>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {inquiry.wantSiteVisit && (
+                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-600">Site Visit</span>
+                              )}
+                              {inquiry.interestedInPurchase && (
+                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-brand-primary">Interested</span>
+                              )}
+                            </div>
+                            {inquiry.haveQuestion && inquiry.question && (
+                              <>
+                                <label className="mb-1.5 block text-[8px] font-bold uppercase tracking-[0.2em] text-blue-400">Your Inquiry</label>
+                                <p className="text-xs sm:text-sm font-bold text-blue-900 leading-relaxed italic">
+                                  "{inquiry.question}"
+                                </p>
+                              </>
+                            )}
+                            {!inquiry.wantSiteVisit && !inquiry.interestedInPurchase && !inquiry.haveQuestion && (
+                              <p className="text-[10px] font-medium text-blue-400">No specific preferences selected.</p>
+                            )}
                           </>
                         ) : (
                           <button 
@@ -223,7 +238,7 @@ export default function DiscussionCartPage() {
                     onClick={() => { setDiscussionType('office'); setShowForm(true); }}
                     className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${discussionType === 'office' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
                   >
-                    <div className="rounded-full bg-emerald-100 p-3 text-emerald-600 group-hover:scale-110 transition-transform">
+                    <div className="rounded-full bg-blue-100 p-3 text-brand-primary group-hover:scale-110 transition-transform">
                       <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div>
@@ -241,7 +256,7 @@ export default function DiscussionCartPage() {
 
                   <button 
                     onClick={handleShare}
-                    className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg ${isShared ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-zinc-900 text-white shadow-zinc-200'}`}
+                    className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg ${isShared ? 'bg-brand-primary text-white shadow-blue-100' : 'bg-zinc-900 text-white shadow-zinc-200'}`}
                   >
                     {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
                     {isShared ? 'Link Copied!' : 'Share Cart'}
@@ -381,8 +396,10 @@ export default function DiscussionCartPage() {
                               </div>
                               {pInquiry && (
                                 <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block w-48 z-[200]">
-                                  <div className="rounded-lg bg-zinc-900 p-2 text-[9px] font-bold text-white shadow-xl">
-                                    <p className="italic">"{pInquiry}"</p>
+                                  <div className="rounded-lg bg-zinc-900 p-2 text-[9px] font-bold text-white shadow-xl space-y-1">
+                                    {(pInquiry as any).wantSiteVisit && <p className="text-blue-300">• Want Site Visit</p>}
+                                    {(pInquiry as any).interestedInPurchase && <p className="text-emerald-300">• Interested in Purchase</p>}
+                                    {(pInquiry as any).haveQuestion && (pInquiry as any).question && <p className="italic">"{(pInquiry as any).question}"</p>}
                                   </div>
                                 </div>
                               )}

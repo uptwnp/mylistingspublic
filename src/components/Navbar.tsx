@@ -339,7 +339,7 @@ export default function Navbar() {
                                 }}
                                 className={cn(
                                   "flex w-full items-center px-4 py-3 text-left text-sm font-bold transition-colors hover:bg-zinc-50 rounded-2xl",
-                                  selectedCity === city ? "text-rose-500 bg-rose-50/50" : "text-zinc-600"
+                                  selectedCity === city ? "text-brand-primary bg-blue-50/50" : "text-zinc-600"
                                 )}
                               >
                                 {city}
@@ -490,7 +490,7 @@ export default function Navbar() {
                       >
                         {city === "Other" && OTHER_CITIES.includes(selectedCity) ? selectedCity : city}
                         {isActive && (
-                          <motion.div layoutId="mobileOverlayCityActive" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-rose-500 rounded-full" />
+                          <motion.div layoutId="mobileOverlayCityActive" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-primary rounded-full" />
                         )}
                       </button>
 
@@ -512,7 +512,7 @@ export default function Navbar() {
                                   }}
                                   className={cn(
                                     "flex w-full items-center px-4 py-2 text-left text-[10px] font-black uppercase tracking-wider transition-colors hover:bg-zinc-50 rounded-xl",
-                                    selectedCity === otherCity ? "text-rose-500 bg-rose-50/50" : "text-zinc-600"
+                                    selectedCity === otherCity ? "text-brand-primary bg-blue-50/50" : "text-zinc-600"
                                   )}
                                 >
                                   {otherCity}
@@ -601,7 +601,7 @@ export default function Navbar() {
                   handleApplyFilters();
                   setIsMobileSearchOpen(false);
                 }}
-                className="flex items-center gap-2 rounded-full bg-rose-500 px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-rose-200 transition-all active:scale-95"
+                className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all active:scale-95"
               >
                 <Search className="h-4 w-4" strokeWidth={3} />
                 <span>Search</span>

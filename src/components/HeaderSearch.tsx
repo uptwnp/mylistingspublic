@@ -204,18 +204,18 @@ export function HeaderSearch({
                               }}
                               className={cn(
                                 "flex items-center gap-4 rounded-xl px-4 py-3 ty-body font-bold transition-all text-left group",
-                                s === 'Near Me' ? "text-emerald-600 hover:bg-emerald-50" : "text-zinc-700 hover:bg-zinc-50"
+                                s === 'Near Me' ? "text-brand-primary hover:bg-blue-50" : "text-zinc-700 hover:bg-zinc-50"
                               )}
                             >
                               <div className={cn(
                                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-                                s === 'Near Me' ? "bg-emerald-100 group-hover:bg-emerald-200" : "bg-zinc-100 group-hover:bg-zinc-200"
+                                s === 'Near Me' ? "bg-blue-50 group-hover:bg-blue-100" : "bg-zinc-100 group-hover:bg-zinc-200"
                               )}>
-                                 {s === 'Near Me' ? <Navigation className="h-5 w-5 text-emerald-600" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
+                                 {s === 'Near Me' ? <Navigation className="h-5 w-5 text-brand-primary" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className={cn("truncate", s === 'Near Me' && "text-emerald-600")}>{s}</span>
-                                {s === 'Near Me' && <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Current location</span>}
+                                <span className={cn("truncate", s === 'Near Me' && "text-brand-primary")}>{s}</span>
+                                {s === 'Near Me' && <span className="text-[10px] font-bold text-brand-primary/50 uppercase tracking-wider">Current location</span>}
                               </div>
                             </button>
                           ));
@@ -316,7 +316,7 @@ export function HeaderSearch({
 
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleSearch(); }}
-                  className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white transition-all shadow-lg hover:bg-rose-600 active:scale-95 ml-2"
+                  className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition-all shadow-lg hover:bg-blue-700 active:scale-95 ml-2"
                 >
                   <Search className="h-6 w-6" strokeWidth={3} />
                 </button>
@@ -400,7 +400,7 @@ export function HeaderSearch({
                     e.stopPropagation(); 
                     handleSearch(); 
                   }}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white ml-2 transition-transform active:scale-90 hover:bg-rose-600"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white ml-2 transition-transform active:scale-90 hover:bg-blue-700"
                 >
                   <Search className="h-4 w-4" strokeWidth={3} />
                 </div>
