@@ -43,25 +43,25 @@ export default function Home() {
 
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12 pb-32 space-y-12 sm:space-y-24">
         <PropertySection 
-          title={`Residential Plots for sale in ${selectedCity}`} 
+          title={`Residential Plots for sale`} 
           city={selectedCity}
           type="Residential Plot" 
         />
 
         <PropertySection 
-          title={`Apartments for sale in ${selectedCity}`} 
+          title={`Apartments for sale`} 
           city={selectedCity}
           type="Flat/Apartment" 
         />
 
         <PropertySection 
-          title={`Villas for sale in ${selectedCity}`} 
+          title={`Villas for sale`} 
           city={selectedCity}
           type="House/Villa" 
         />
 
         <PropertySection 
-          title={`Commercial Space in ${selectedCity}`} 
+          title={`Commercial Space`} 
           city={selectedCity}
           type="Commercial" 
         />
