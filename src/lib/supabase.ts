@@ -174,7 +174,7 @@ export async function getProperties(
     }
 
     if (keywords) {
-      query = query.or(`description.ilike.%${keywords}%,tags.ilike.%${keywords}%,area.ilike.%${keywords}%`);
+      query = query.or(`description.ilike.%${keywords}%,tags.ilike.%${keywords}%,area.ilike.%${keywords}%,type.ilike.%${keywords}%,city.ilike.%${keywords}%`);
     }
 
     const { data, error } = await query

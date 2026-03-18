@@ -55,16 +55,21 @@ function ExploreContent() {
   }, []);
 
   const [page, setPage] = useState(0);
-  const [sortOption, setSortOption] = useState(SORT_OPTIONS[0]);
+  const searchParams = useSearchParams();
+  const areaParam = searchParams.get('area');
+  
+  const [sortOption, setSortOption] = useState(() => {
+    if (areaParam === 'Near Me') return NEARBY_SORT_OPTIONS[0];
+    return SORT_OPTIONS[0];
+  });
   const [isSortOpen, setIsSortOpen] = useState(false);
   const itemsPerPage = 20;
+
   const { 
     cartItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
     setActiveSelectionSheet, setKeywords, setMinSize, setMaxSize, 
     setSelectedHighlights, clearFilters, userLocation, setUserLocation
   } = useDiscussion();
-  const searchParams = useSearchParams();
-  const areaParam = searchParams.get('area');
 
   // Request location if nearby is selected
   useEffect(() => {

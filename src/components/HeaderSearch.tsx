@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
 import { getAreas } from '@/lib/supabase';
+import { useDiscussion } from '@/context/DiscussionContext';
 
 
 export const BUDGET_OPTIONS = [
@@ -59,6 +60,7 @@ export function HeaderSearch({
 }: HeaderSearchProps) {
   const [activeSegment, setActiveSegment] = useState<string | null>(initialSegment);
   const [allAreas, setAllAreas] = useState<string[]>([]);
+  const { setUserLocation } = useDiscussion();
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -184,7 +186,18 @@ export function HeaderSearch({
                               onClick={(e) => { 
                                 e.stopPropagation(); 
                                 if (s === 'Near Me' && 'geolocation' in navigator) {
-                                  navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                                  navigator.geolocation.getCurrentPosition(
+                                    (position) => {
+                                      setUserLocation({
+                                        lat: position.coords.latitude,
+                                        lng: position.coords.longitude,
+                                        isFallback: false
+                                      });
+                                    },
+                                    (error) => {
+                                      console.error("Error getting location:", error);
+                                    }
+                                  );
                                 }
                                 setQuery(s); 
                                 setActiveSegment('budget'); 
