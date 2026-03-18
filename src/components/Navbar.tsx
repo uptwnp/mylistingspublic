@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, Home, Menu, ShoppingCart, User, LogOut, ChevronDown, MapPin, Building2, Trees, Globe } from 'lucide-react';
+import { Heart, Home, Menu, ShoppingCart, User, LogOut, ChevronDown, MapPin, Building2, Trees, Globe, SlidersHorizontal, Search } from 'lucide-react';
 import { useDiscussion } from '@/context/DiscussionContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
@@ -103,16 +103,54 @@ export default function Navbar() {
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
           {/* Top Row: Logo, Center (Tabs/Search), and Actions */}
           <div className="flex items-center justify-between gap-4">
-            {/* Left Section: Logo */}
-            <div className="flex flex-1 items-center gap-6">
+            {/* Left Section: Logo & Mobile City Dropdown */}
+            <div className="flex flex-1 items-center gap-3 sm:gap-6 min-w-0">
               <Link href="/" className="flex items-center gap-2 group shrink-0">
                 <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
                   <Home className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
-                <span className="text-lg sm:text-xl font-black tracking-tighter text-zinc-900 hidden sm:block truncate">
+                <span className="text-lg sm:text-xl font-black tracking-tighter text-zinc-900 hidden lg:block truncate">
                   My<span className="text-zinc-400 font-medium">Listing</span>
                 </span>
               </Link>
+
+              {/* Mobile City Selector (Next to Logo) */}
+              <div className="flex sm:hidden relative" ref={mobileOtherCityDropdownRef}>
+                <button 
+                  onClick={() => setIsOtherCityDropdownOpen(!isOtherCityDropdownOpen)}
+                  className="flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-900 transition-all active:scale-95"
+                >
+                  <span className="truncate max-w-[80px]">{(selectedCity === "Panipat" || selectedCity === "Karnal" || OTHER_CITIES.includes(selectedCity)) ? selectedCity : "City"}</span>
+                  <ChevronDown className={cn("h-3 w-3 text-zinc-400 transition-transform", isOtherCityDropdownOpen && "rotate-180")} />
+                </button>
+                
+                <AnimatePresence>
+                  {isOtherCityDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute left-0 top-full z-[100] mt-3 w-48 overflow-hidden rounded-[24px] border border-zinc-100 bg-white p-1 shadow-2xl"
+                    >
+                      {["Panipat", "Karnal", ...OTHER_CITIES].map((city) => (
+                        <button
+                          key={city}
+                          onClick={() => {
+                            setSelectedCity(city);
+                            setIsOtherCityDropdownOpen(false);
+                          }}
+                          className={cn(
+                            "flex w-full items-center px-4 py-3 text-left text-[11px] font-black uppercase tracking-tight transition-colors hover:bg-zinc-50 rounded-2xl",
+                            selectedCity === city ? "text-rose-500 bg-rose-50/50" : "text-zinc-600"
+                          )}
+                        >
+                          {city}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Middle Section: Airbnb-style Tabs or Compact Search */}
@@ -316,13 +354,13 @@ export default function Navbar() {
                     </p>
                   </div>
 
-                  {/* City Tabs for Mobile Hero */}
-                  <div className="flex sm:hidden items-center justify-center gap-2 mb-6 px-4">
+                  {/* City Tabs for Mobile Hero - Hidden if already using top dropdown */}
+                  <div className="hidden items-center justify-center gap-2 mb-6 px-4">
                     {["Panipat", "Karnal", "Other"].map((city) => {
                       const isActive = (city === "Other" && OTHER_CITIES.includes(selectedCity)) || selectedCity === city;
                       if (city === "Other") {
                         return (
-                          <div key={city} className="relative" ref={mobileOtherCityDropdownRef}>
+                          <div key={city} className="relative">
                             <button
                               onClick={() => setIsOtherCityDropdownOpen(!isOtherCityDropdownOpen)}
                               className={cn(
@@ -334,32 +372,6 @@ export default function Navbar() {
                             >
                               {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
                             </button>
-                            <AnimatePresence>
-                              {isOtherCityDropdownOpen && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                  className="absolute left-1/2 bottom-full z-[100] mb-3 w-48 -translate-x-1/2 overflow-hidden rounded-[24px] border border-zinc-100 bg-white p-1 shadow-2xl"
-                                >
-                                  {OTHER_CITIES.map((c) => (
-                                    <button
-                                      key={c}
-                                      onClick={() => {
-                                        setSelectedCity(c);
-                                        setIsOtherCityDropdownOpen(false);
-                                      }}
-                                      className={cn(
-                                        "flex w-full items-center px-4 py-3 text-left text-[11px] font-black uppercase tracking-tight transition-colors hover:bg-zinc-50 rounded-2xl",
-                                        selectedCity === c ? "text-rose-500 bg-rose-50/50" : "text-zinc-600"
-                                      )}
-                                    >
-                                      {c}
-                                    </button>
-                                  ))}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
                           </div>
                         );
                       }
@@ -403,6 +415,71 @@ export default function Navbar() {
         setSelectedHighlights={setSelectedHighlights}
         onApply={handleApplyFilters}
       />
+
+      {/* Fixed Bottom Search Navigation (Mobile Only) */}
+      <div className="fixed bottom-0 left-0 right-0 z-[100] sm:hidden bg-white/95 backdrop-blur-2xl border-t border-zinc-100 px-4 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] pb-safe-offset-4">
+        <div className="flex items-center justify-between gap-1 max-w-md mx-auto">
+          {/* Where Segment */}
+          <button
+            onClick={() => {
+              setInitialSegment('location');
+              setIsForceExpanded(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex-1 flex flex-col items-center gap-1.5 py-1 transition-all active:scale-95"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-50 text-zinc-400">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 leading-none mt-0.5">Where?</span>
+            <span className="text-[9px] font-bold text-zinc-400 truncate max-w-[80px] mt-0.5">{query || "Any Area"}</span>
+          </button>
+
+          <div className="h-8 w-px bg-zinc-100" />
+
+          {/* Budget Segment */}
+          <button
+            onClick={() => {
+              setInitialSegment('budget');
+              setIsForceExpanded(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex-1 flex flex-col items-center gap-1.5 py-1 transition-all active:scale-95"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-50 text-zinc-400">
+              <Globe className="h-5 w-5" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 leading-none mt-0.5">Budget</span>
+            <span className="text-[9px] font-bold text-zinc-400 truncate max-w-[80px] mt-0.5">{budget.label === "Any Budget" ? "Any" : budget.label}</span>
+          </button>
+
+          <div className="h-8 w-px bg-zinc-100" />
+
+          {/* Type Segment */}
+          <button
+            onClick={() => {
+              setInitialSegment('type');
+              setIsForceExpanded(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex-1 flex flex-col items-center gap-1.5 py-1 transition-all active:scale-95"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-50 text-zinc-400">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 leading-none mt-0.5">Type</span>
+            <span className="text-[9px] font-bold text-zinc-400 truncate max-w-[80px] mt-0.5">{propertyType === "Any Type" ? "Any" : propertyType}</span>
+          </button>
+
+          {/* Advanced Filters Trigger */}
+          <button
+            onClick={() => setIsFilterModalOpen(true)}
+            className="ml-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 text-white shadow-xl shadow-black/20 active:scale-90 transition-all hover:bg-black"
+          >
+            <SlidersHorizontal className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
     </>
   );
 }
