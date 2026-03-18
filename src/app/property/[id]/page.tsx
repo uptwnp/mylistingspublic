@@ -450,14 +450,7 @@ function PropertyDetailContent() {
         </div>
       </div>
 
-      {/* Floating View on Map for mobile - Adjusted position for sticky bar */}
-      <button 
-        onClick={scrollToMap}
-        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105 active:scale-95 md:hidden"
-      >
-        <MapIcon className="h-4 w-4" />
-        View on Map
-      </button>
+
 
       {/* Photo/Video Request Modal */}
       <AnimatePresence>
