@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { getAreas } from '@/lib/supabase';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 import { BUDGET_OPTIONS } from './HeaderSearch';
 
 
@@ -22,7 +22,7 @@ export function HomeSearch() {
     budget, setBudget, 
     propertyType, setPropertyType,
     setUserLocation
-  } = useDiscussion();
+  } = useShortlist();
   const [activeSegment, setActiveSegment] = useState<string | null>(null);
   const [allAreas, setAllAreas] = useState<string[]>([]);
   

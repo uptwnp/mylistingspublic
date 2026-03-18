@@ -7,10 +7,10 @@ import { PropertyCard, PropertyCardSkeleton } from './PropertyCard';
 import { RefreshCcw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCallback } from 'react';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 
 export function PropertyGrid() {
-  const { selectedCity } = useDiscussion();
+  const { selectedCity } = useShortlist();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

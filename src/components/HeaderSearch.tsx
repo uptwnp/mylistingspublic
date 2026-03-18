@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
 import { getAreas } from '@/lib/supabase';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 
 
 export const BUDGET_OPTIONS = [
@@ -60,7 +60,7 @@ export function HeaderSearch({
 }: HeaderSearchProps) {
   const [activeSegment, setActiveSegment] = useState<string | null>(initialSegment);
   const [allAreas, setAllAreas] = useState<string[]>([]);
-  const { setUserLocation } = useDiscussion();
+  const { setUserLocation } = useShortlist();
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();

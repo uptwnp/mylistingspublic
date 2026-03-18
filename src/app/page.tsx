@@ -5,10 +5,12 @@ export const runtime = 'edge';
 import { Search } from 'lucide-react';
 
 import { PropertySection } from "@/components/PropertySection";
-import { useDiscussion } from "@/context/DiscussionContext";
+import { PropertyListSection } from "@/components/PropertyListSection";
+import { ContinueExploringBanner } from "@/components/ContinueExploringBanner";
+import { useShortlist } from "@/context/ShortlistContext";
 
 export default function Home() {
-  const { selectedCity, setIsMobileSearchOpen } = useDiscussion();
+  const { selectedCity, setIsMobileSearchOpen, recentlyVisitedIds, shortlistItems, savedIds } = useShortlist();
 
   return (
     <div className="min-h-screen bg-white">
@@ -41,7 +43,31 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12 pb-32 space-y-12 sm:space-y-24">
+      <ContinueExploringBanner />
+
+      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12 pt-8 pb-32 space-y-10 sm:space-y-16">
+        {recentlyVisitedIds.length > 0 && (
+          <PropertyListSection
+            title="Recently Visited"
+            propertyIds={recentlyVisitedIds}
+          />
+        )}
+
+        {shortlistItems.length > 0 && (
+          <PropertyListSection
+            title="Your Shortlist"
+            propertyIds={shortlistItems}
+            viewAllLink="/shortlist"
+          />
+        )}
+
+        {savedIds.length > 0 && (
+          <PropertyListSection
+            title="Saved Properties"
+            propertyIds={savedIds}
+          />
+        )}
+
         <PropertySection 
           title={`Residential Plots for sale`} 
           city={selectedCity}

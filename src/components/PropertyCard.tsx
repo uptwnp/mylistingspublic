@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Navigation } from 'lucide-react';
 import { Property } from '@/types';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatPrice, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
@@ -18,13 +18,17 @@ interface PropertyCardProps {
 
 export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeFallback, showDistance }: PropertyCardProps) {
   const router = useRouter();
-  const { isInCart, addToCart, removeFromCart, isSaved, toggleSave } = useDiscussion();
+  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave } = useShortlist();
 
-  const inCart = isInCart(property.property_id);
+  const inCart = isInShortlist(property.property_id);
   const saved = isSaved(property.property_id);
 
   const handleCardToggle = (e: React.MouseEvent) => {
-    if (onToggle) onToggle();
+    if (onToggle) {
+      onToggle();
+    } else {
+      router.push(`/property/${property.property_id}`);
+    }
   };
 
   const handleActionClick = (e: React.MouseEvent, action: () => void) => {
@@ -203,7 +207,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
                 <div className="flex gap-2">
                   <button
-                    onClick={(e) => handleActionClick(e, () => inCart ? removeFromCart(property.property_id) : addToCart(property))}
+                    onClick={(e) => handleActionClick(e, () => inCart ? removeFromShortlist(property.property_id) : addToShortlist(property))}
                     className={cn(
                       "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 ty-caption font-bold shadow-lg transition-all active:scale-[0.98]",
                       inCart
@@ -214,12 +218,12 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                     {inCart ? (
                       <>
                         <Check className="h-4 w-4" strokeWidth={3} />
-                        Discuss Now (Added)
+                        Shortlisted
                       </>
                     ) : (
                       <>
                         <Plus className="h-4 w-4" strokeWidth={3} />
-                        Add to Discussion
+                        Add to Shortlist
                       </>
                     )}
                   </button>

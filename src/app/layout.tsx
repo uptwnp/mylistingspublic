@@ -9,7 +9,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { StickyHub } from "@/components/StickyHub";
-import { DiscussionProvider } from "@/context/DiscussionContext";
+import { ShortlistProvider } from "@/context/ShortlistContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -36,14 +36,14 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} antialiased`}
       >
-        <DiscussionProvider>
+        <ShortlistProvider>
           <Navbar />
           <main className="min-h-screen">
             {children}
           </main>
           <Footer />
           <StickyHub />
-        </DiscussionProvider>
+        </ShortlistProvider>
       </body>
     </html>
   );

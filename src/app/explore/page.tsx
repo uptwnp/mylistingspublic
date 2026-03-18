@@ -8,7 +8,7 @@ import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
 import { Loader2, SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ArrowUpDown, Clock, Tag, Ruler, ChevronDown, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { calculateDistance, getPropertyCoords } from '@/lib/utils';
 import { Navigation } from 'lucide-react';
@@ -66,10 +66,10 @@ function ExploreContent() {
   const itemsPerPage = 20;
 
   const { 
-    cartItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
+    shortlistItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
     setActiveSelectionSheet, setKeywords, setMinSize, setMaxSize, 
     setSelectedHighlights, clearFilters, userLocation, setUserLocation
-  } = useDiscussion();
+  } = useShortlist();
 
   // Request location if nearby is selected
   useEffect(() => {

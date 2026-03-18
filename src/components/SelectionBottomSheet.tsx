@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 
 const BUDGET_OPTIONS = [
   { label: "Any Budget", value: 0 },
@@ -47,7 +47,7 @@ export function SelectionBottomSheet({
   onSelect,
   data: areaData = []
 }: SelectionBottomSheetProps) {
-  const { setUserLocation } = useDiscussion();
+  const { setUserLocation } = useShortlist();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredAreas = areaData.filter(area => 

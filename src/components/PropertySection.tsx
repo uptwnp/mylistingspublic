@@ -63,7 +63,7 @@ export function PropertySection({ title, city, type }: PropertySectionProps) {
   if (!loading && properties.length === 0) return null;
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6 py-6 sm:py-12">
+    <div className="w-full space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <div className="min-w-0 pr-4">
           <h2 className="ty-display font-black tracking-tight text-zinc-900 truncate">

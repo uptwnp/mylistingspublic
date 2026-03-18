@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getPropertyById } from '@/lib/supabase';
 import { Property } from '@/types';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 import { useRef } from 'react';
 import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Navigation, Map as MapIcon, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -30,7 +30,7 @@ function PropertyDetailContent() {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
-  const { isInCart, addToCart, removeFromCart, isSaved, toggleSave } = useDiscussion();
+  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave, addRecentlyVisited } = useShortlist();
   const [similarProperties, setSimilarProperties] = useState<Property[]>([]);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -62,6 +62,7 @@ function PropertyDetailContent() {
         const data = await getPropertyById(cleanId) as Property | null;
         if (data) {
           setProperty(data);
+          addRecentlyVisited(data.property_id);
           // Fetch similar properties
           const similar = await getProperties(0, 5, false, data.city, data.type) as Property[];
           setSimilarProperties(similar.filter((p: Property) => p.property_id !== data.property_id).slice(0, 4));
@@ -123,7 +124,7 @@ function PropertyDetailContent() {
     );
   }
 
-  const inCart = isInCart(property.property_id);
+  const inCart = isInShortlist(property.property_id);
   const saved = isSaved(property.property_id);
   const config = getPropertyConfig(property.type);
   const Icon = config.icon;
@@ -430,24 +431,24 @@ function PropertyDetailContent() {
 
               <div className="space-y-3">
                 <button 
-                  onClick={() => inCart ? removeFromCart(property.property_id) : addToCart(property)}
+                  onClick={() => inCart ? removeFromShortlist(property.property_id) : addToShortlist(property)}
                   className={`flex w-full items-center justify-center gap-3 rounded-2xl py-3 ty-label transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-black' : 'bg-black text-white'}`}
                 >
                   <ShoppingCart className="h-4 w-4" />
-                  {inCart ? 'Remove from Discussion' : 'Add to Discussion'}
+                  {inCart ? 'Remove from Shortlist' : 'Add to Shortlist'}
                 </button>
                 
                 <button 
                   onClick={() => {
                     if (inCart) {
-                      router.push('/discussion-cart');
+                      router.push('/shortlist');
                     } else {
-                      addToCart(property);
+                      addToShortlist(property);
                     }
                   }}
                   className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98]"
                 >
-                  Discuss Now
+                  {inCart ? 'Go to Shortlist' : 'Consult Now'}
                 </button>
               </div>
 
@@ -484,14 +485,14 @@ function PropertyDetailContent() {
           <button 
             onClick={() => {
               if (inCart) {
-                router.push('/discussion-cart');
+                router.push('/shortlist');
               } else {
-                addToCart(property);
+                addToShortlist(property);
               }
             }}
             className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
           >
-            Discuss Now
+            {inCart ? 'Go to Shortlist' : 'Consult Now'}
           </button>
         </div>
       </div>

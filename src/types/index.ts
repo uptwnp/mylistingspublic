@@ -22,7 +22,7 @@ export type Property = {
   approved_on: string;
 };
 
-export type DiscussionCartItem = {
+export type ShortlistItem = {
   id: string;
   addedAt: number;
 };

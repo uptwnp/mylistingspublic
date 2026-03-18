@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { InquiryModal } from '@/components/InquiryModal';
+
 import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
 
 export interface InquiryData {
@@ -11,8 +11,8 @@ export interface InquiryData {
   question: string;
 }
 
-interface DiscussionContextType {
-  cartItems: string[];
+interface ShortlistContextType {
+  shortlistItems: string[];
   savedIds: string[];
   selectedCity: string;
   setSelectedCity: (city: string) => void;
@@ -37,34 +37,38 @@ interface DiscussionContextType {
   inquiryProperty: any | null;
   setInquiryProperty: (property: any | null) => void;
   updateInquiry: (id: string, inquiryData: InquiryData) => void;
-  addToCart: (property: any) => void;
-  removeFromCart: (id: string) => void;
+  addToShortlist: (property: any) => void;
+  removeFromShortlist: (id: string) => void;
   toggleSave: (id: string) => void;
-  isInCart: (id: string) => boolean;
+  isInShortlist: (id: string) => boolean;
   isSaved: (id: string) => boolean;
-  clearCart: () => void;
+  clearShortlist: () => void;
   isFilterModalOpen: boolean;
   setIsFilterModalOpen: (open: boolean) => void;
   activeSelectionSheet: 'budget' | 'type' | 'area' | null;
   setActiveSelectionSheet: (type: 'budget' | 'type' | 'area' | null) => void;
-  confirmAddToCart: (id: string, inquiryData: InquiryData) => void;
+  confirmAddToShortlist: (id: string, inquiryData: InquiryData) => void;
   isMobileSearchOpen: boolean;
   setIsMobileSearchOpen: (open: boolean) => void;
   userLocation: {lat: number, lng: number, isFallback?: boolean} | null;
   setUserLocation: (loc: {lat: number, lng: number, isFallback?: boolean} | null) => void;
+  recentlyVisitedIds: string[];
+  addRecentlyVisited: (id: string) => void;
 }
 
-const DiscussionContext = createContext<DiscussionContextType | undefined>(undefined);
+const ShortlistContext = createContext<ShortlistContextType | undefined>(undefined);
 
-const CART_KEY = 'dealer_network_discussion_cart';
+const CART_KEY = 'dealer_network_shortlist';
 const SAVED_KEY = 'dealer_network_saved_properties';
 const CITY_KEY = 'dealer_network_selected_city';
 const FILTERS_KEY = 'dealer_network_global_filters';
 const INQUIRIES_KEY = 'dealer_network_inquiries';
+const RECENT_KEY = 'dealer_network_recently_visited';
 
-export function DiscussionProvider({ children }: { children: React.ReactNode }) {
-  const [cartItems, setCartItems] = useState<string[]>([]);
+export function ShortlistProvider({ children }: { children: React.ReactNode }) {
+  const [shortlistItems, setShortlistItems] = useState<string[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
+  const [recentlyVisitedIds, setRecentlyVisitedIds] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('Panipat');
   
   // Search state
@@ -92,10 +96,14 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     const savedFilters = localStorage.getItem(FILTERS_KEY);
     
     if (savedCart) {
-      try { setCartItems(JSON.parse(savedCart)); } catch (e) { console.error(e); }
+      try { setShortlistItems(JSON.parse(savedCart)); } catch (e) { console.error(e); }
     }
     if (savedProps) {
       try { setSavedIds(JSON.parse(savedProps)); } catch (e) { console.error(e); }
+    }
+    const savedRecent = localStorage.getItem(RECENT_KEY);
+    if (savedRecent) {
+      try { setRecentlyVisitedIds(JSON.parse(savedRecent)); } catch (e) { console.error(e); }
     }
     if (savedCity) {
       setSelectedCity(savedCity);
@@ -133,36 +141,42 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
       } catch (e) { console.error(e); }
     }
     
-    // Check for shared cart in URL
+    // Check for shared shortlist in URL
     const searchParams = new URLSearchParams(window.location.search);
-    const sharedCart = searchParams.get('cart');
+    const sharedShortlist = searchParams.get('shortlist');
     
-    if (sharedCart) {
+    if (sharedShortlist) {
       try {
-        const ids = sharedCart.split(',').filter(id => id.trim() !== '');
+        const ids = sharedShortlist.split(',').filter(id => id.trim() !== '');
         if (ids.length > 0) {
-          setCartItems(ids);
+          setShortlistItems(ids);
           const newRelativePathQuery = window.location.pathname;
           window.history.replaceState(null, '', newRelativePathQuery);
         }
       } catch (e) {
-        console.error('Failed to parse shared cart', e);
+        console.error('Failed to parse shared shortlist', e);
       }
     }
   }, []);
 
   // Update localStorage when state changes
   useEffect(() => {
-    if (cartItems.length > 0 || localStorage.getItem(CART_KEY)) {
-      localStorage.setItem(CART_KEY, JSON.stringify(cartItems));
+    if (shortlistItems.length > 0 || localStorage.getItem(CART_KEY)) {
+      localStorage.setItem(CART_KEY, JSON.stringify(shortlistItems));
     }
-  }, [cartItems]);
+  }, [shortlistItems]);
 
   useEffect(() => {
     if (savedIds.length > 0 || localStorage.getItem(SAVED_KEY)) {
       localStorage.setItem(SAVED_KEY, JSON.stringify(savedIds));
     }
   }, [savedIds]);
+
+  useEffect(() => {
+    if (recentlyVisitedIds.length > 0 || localStorage.getItem(RECENT_KEY)) {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(recentlyVisitedIds));
+    }
+  }, [recentlyVisitedIds]);
 
   useEffect(() => {
     localStorage.setItem(CITY_KEY, selectedCity);
@@ -196,16 +210,16 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     setSelectedHighlights([]);
   };
 
-  const addToCart = (property: any) => {
+  const addToShortlist = (property: any) => {
     const id = typeof property === 'string' ? property : property.property_id;
-    if (!cartItems.includes(id)) {
-      setInquiryProperty(property);
+    if (!shortlistItems.includes(id)) {
+      setShortlistItems(prev => [...prev, id]);
     }
   };
 
-  const confirmAddToCart = (id: string, inquiryData: InquiryData) => {
-    if (!cartItems.includes(id)) {
-      setCartItems(prev => [...prev, id]);
+  const confirmAddToShortlist = (id: string, inquiryData: InquiryData) => {
+    if (!shortlistItems.includes(id)) {
+      setShortlistItems(prev => [...prev, id]);
     }
     setInquiries(prev => ({ ...prev, [id]: inquiryData }));
     setInquiryProperty(null);
@@ -215,8 +229,8 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     setInquiries(prev => ({ ...prev, [id]: inquiryData }));
   };
 
-  const removeFromCart = (id: string) => {
-    setCartItems(prev => prev.filter(item => item !== id));
+  const removeFromShortlist = (id: string) => {
+    setShortlistItems(prev => prev.filter(item => item !== id));
     setInquiries(prev => {
       const { [id]: _, ...rest } = prev;
       return rest;
@@ -232,16 +246,23 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     });
   };
 
-  const isInCart = (id: string) => cartItems.includes(id);
+  const isInShortlist = (id: string) => shortlistItems.includes(id);
   const isSaved = (id: string) => savedIds.includes(id);
-  const clearCart = () => {
-    setCartItems([]);
+  const clearShortlist = () => {
+    setShortlistItems([]);
     setInquiries({});
   };
 
+  const addRecentlyVisited = (id: string) => {
+    setRecentlyVisitedIds(prev => {
+      const filtered = prev.filter(item => item !== id);
+      return [id, ...filtered].slice(0, 10); // Keep latest 10
+    });
+  };
+
   return (
-    <DiscussionContext.Provider value={{
-      cartItems,
+    <ShortlistContext.Provider value={{
+      shortlistItems,
       savedIds,
       selectedCity,
       setSelectedCity,
@@ -260,12 +281,14 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
       selectedHighlights,
       setSelectedHighlights,
       clearFilters,
-      addToCart,
-      removeFromCart,
+      addToShortlist,
+      removeFromShortlist,
       toggleSave,
-      isInCart,
+      isInShortlist,
       isSaved,
-      clearCart,
+      clearShortlist,
+      recentlyVisitedIds,
+      addRecentlyVisited,
       isFilterModalOpen,
       setIsFilterModalOpen,
       activeSelectionSheet,
@@ -274,22 +297,21 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
       inquiryProperty,
       setInquiryProperty,
       updateInquiry,
-      confirmAddToCart,
+      confirmAddToShortlist,
       isMobileSearchOpen,
       setIsMobileSearchOpen,
       userLocation,
       setUserLocation,
     }}>
       {children}
-      <InquiryModal />
-    </DiscussionContext.Provider>
+    </ShortlistContext.Provider>
   );
 }
 
-export function useDiscussion() {
-  const context = useContext(DiscussionContext);
+export function useShortlist() {
+  const context = useContext(ShortlistContext);
   if (context === undefined) {
-    throw new Error('useDiscussion must be used within a DiscussionProvider');
+    throw new Error('useShortlist must be used within a ShortlistProvider');
   }
   return context;
 }

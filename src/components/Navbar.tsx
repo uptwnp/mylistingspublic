@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Heart, Home, Menu, ShoppingCart, User, LogOut, ChevronDown, MapPin, Building2, Trees, Globe, SlidersHorizontal, Search, Store, X, Wallet } from 'lucide-react';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ import { useCallback } from 'react';
 
 export default function Navbar() {
   const { 
-    savedIds, cartItems, selectedCity, setSelectedCity, 
+    savedIds, shortlistItems, selectedCity, setSelectedCity, 
     isFilterModalOpen, setIsFilterModalOpen, 
     activeSelectionSheet, setActiveSelectionSheet, 
     isMobileSearchOpen, setIsMobileSearchOpen,
@@ -26,7 +26,7 @@ export default function Navbar() {
     maxSize, setMaxSize,
     selectedHighlights, setSelectedHighlights,
     clearFilters
-  } = useDiscussion();
+  } = useShortlist();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isForceExpanded, setIsForceExpanded] = useState(false);
@@ -164,10 +164,13 @@ export default function Navbar() {
         selectedHighlights.join(',') !== highlightsInUrl;
         
       if (isDifferent) {
-        handleApplyFilters();
+        const timeout = setTimeout(() => {
+          handleApplyFilters();
+        }, 50);
+        return () => clearTimeout(timeout);
       }
     }
-  }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname]);
+  }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname, searchParams]);
 
   const additionalFiltersCount = [
     keywords,
@@ -369,12 +372,12 @@ export default function Navbar() {
                   className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pl-3 transition-shadow hover:shadow-md cursor-pointer ml-1"
                 >
                   <Menu className="h-4 w-4 text-zinc-600" />
-                  <Link href="/discussion-cart" onClick={(e) => e.stopPropagation()}>
+                  <Link href="/shortlist" onClick={(e) => e.stopPropagation()}>
                     <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors">
                       <ShoppingCart className="h-4 w-4 text-zinc-300" />
-                      {cartItems.length > 0 && (
+                      {shortlistItems.length > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-900 border border-white ty-micro font-bold text-white">
-                          {cartItems.length}
+                          {shortlistItems.length}
                         </span>
                       )}
                     </div>
@@ -407,12 +410,12 @@ export default function Navbar() {
                           Saved properties
                         </Link>
                         <Link 
-                          href="/discussion-cart" 
+                          href="/shortlist" 
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <ShoppingCart className="h-4 w-4 text-zinc-400" />
-                          Discussion cart
+                          Shortlist
                         </Link>
                       </div>
                     </motion.div>

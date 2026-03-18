@@ -3,11 +3,11 @@
 
 export const runtime = 'edge';
 
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 import { Property } from '@/types';
 import { getPropertiesByIds } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
-import { Trash2, Phone, Home, ArrowLeft, Loader2, Building2, Calendar, MapPin, CheckCircle2, Share2, Pencil, Plus } from 'lucide-react';
+import { Trash2, Phone, Home, ArrowLeft, Loader2, Building2, MapPin, CheckCircle2, Share2, Pencil, Plus, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,19 +16,21 @@ import { getPropertyConfig } from '@/lib/property-icons';
 import { cn } from '@/lib/utils';
 
 
-export default function DiscussionCartPage() {
-  const { cartItems, inquiries, removeFromCart, clearCart, setInquiryProperty } = useDiscussion();
+export default function ShortlistPage() {
+  const { shortlistItems, inquiries, updateInquiry, removeFromShortlist, clearShortlist } = useShortlist();
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [discussionType, setDiscussionType] = useState<'phone' | 'home' | 'office'>('phone');
+  const [shortlistType, setShortlistType] = useState<'phone' | 'home' | 'office'>('phone');
   const [isShared, setIsShared] = useState(false);
 
   const handleShare = () => {
-    if (cartItems.length === 0) return;
+    if (shortlistItems.length === 0) return;
     
     const baseUrl = window.location.origin + window.location.pathname;
-    const shareUrl = `${baseUrl}?cart=${cartItems.join(',')}`;
+    const shareUrl = `${baseUrl}?shortlist=${shortlistItems.join(',')}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
       setIsShared(true);
@@ -37,25 +39,25 @@ export default function DiscussionCartPage() {
   };
 
   useEffect(() => {
-    const fetchCartProperties = async () => {
-      if (cartItems.length === 0) {
+    const fetchShortlistProperties = async () => {
+      if (shortlistItems.length === 0) {
         setProperties([]);
         setLoading(false);
         return;
       }
       
       try {
-        const data = await getPropertiesByIds(cartItems.slice(0, 20));
+        const data = await getPropertiesByIds(shortlistItems.slice(0, 20));
         setProperties(data as Property[]);
       } catch (err) {
-        console.error('Failed to fetch cart properties:', err);
+        console.error('Failed to fetch shortlist properties:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCartProperties();
-  }, [cartItems]);
+    fetchShortlistProperties();
+  }, [shortlistItems]);
 
   if (loading) {
     return (
@@ -75,8 +77,8 @@ export default function DiscussionCartPage() {
             <div className="mb-4 sm:mb-6 rounded-full bg-zinc-100 p-4 sm:p-6">
               <Home className="h-8 w-8 sm:h-12 sm:w-12 text-zinc-400" />
             </div>
-            <h2 className="ty-title font-bold">Your cart is empty</h2>
-            <p className="mt-2 ty-caption text-zinc-500">Add properties you're interested in to start a discussion.</p>
+            <h2 className="ty-title font-bold">Your shortlist is empty</h2>
+            <p className="mt-2 ty-caption text-zinc-500">Add properties you're interested in to your shortlist.</p>
             <Link href="/" className="mt-6 sm:mt-8 rounded-full bg-black px-6 sm:px-8 py-2.5 sm:py-3 ty-caption font-bold uppercase tracking-widest text-white">
               Explore Properties
             </Link>
@@ -90,7 +92,7 @@ export default function DiscussionCartPage() {
                   <ArrowLeft className="h-3.5 w-3.5" /> Back to Discover
                 </Link>
                 <h1 className="ty-display font-bold tracking-tight text-zinc-900 leading-tight">
-                  Discussion Cart
+                  Shortlist
                 </h1>
                 <p className="mt-2 ty-caption font-medium text-zinc-500">
                   {properties.length} {properties.length === 1 ? 'property' : 'properties'} selected for consultation.
@@ -147,54 +149,103 @@ export default function DiscussionCartPage() {
                           );
                         })()}
                         <button 
-                          onClick={() => removeFromCart(property.property_id)}
+                          onClick={() => removeFromShortlist(property.property_id)}
                           className="p-1.5 sm:p-2 text-zinc-300 hover:text-rose-500 transition-colors self-center"
                         >
                           <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                       </div>
 
-                      {/* Inquiry Question Display */}
-                      <div className="relative mx-1 mt-1 mb-1 rounded-xl bg-blue-50/50 p-3 sm:p-4 border border-blue-100/50 group/inquiry">
-                        {inquiry ? (
-                          <>
-                            <button 
-                              onClick={() => setInquiryProperty(property)}
-                              className="absolute top-3 right-3 p-1.5 rounded-lg bg-white shadow-sm border border-blue-100 text-blue-600 sm:opacity-0 group-hover/inquiry:opacity-100 transition-opacity"
-                              title="Edit Inquiry"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                            <div className="flex flex-wrap gap-2 mb-2">
-                              {inquiry.wantSiteVisit && (
-                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-600">Site Visit</span>
+                      {/* Note Section */}
+                      {(() => {
+                        const hasNote = inquiries[property.property_id]?.question;
+                        const isEditing = editingNoteId === property.property_id;
+                        return (
+                          <div className="mx-1 mb-1">
+                            <AnimatePresence mode="wait">
+                              {isEditing ? (
+                                <motion.div
+                                  key="editing"
+                                  initial={{ opacity: 0, y: -4 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -4 }}
+                                  className="flex flex-col gap-2"
+                                >
+                                  <textarea
+                                    autoFocus
+                                    rows={2}
+                                    value={noteText}
+                                    onChange={(e) => setNoteText(e.target.value)}
+                                    placeholder="e.g. Open from two sides? Clear registry available?"
+                                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-xs font-medium text-zinc-900 outline-none resize-none transition-all focus:border-zinc-900 focus:bg-white placeholder:text-zinc-300"
+                                  />
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        const existing = inquiries[property.property_id] || { wantSiteVisit: false, interestedInPurchase: false, haveQuestion: false, question: '' };
+                                        updateInquiry(property.property_id, {
+                                          ...existing,
+                                          haveQuestion: noteText.trim().length > 0,
+                                          question: noteText.trim(),
+                                        });
+                                        setEditingNoteId(null);
+                                      }}
+                                      className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white transition-all active:scale-95"
+                                    >
+                                      <Check className="h-3 w-3" strokeWidth={3} />
+                                      Save Note
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingNoteId(null)}
+                                      className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-[10px] font-bold text-zinc-500 transition-all hover:bg-zinc-50 active:scale-95"
+                                    >
+                                      <X className="h-3 w-3" />
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              ) : hasNote ? (
+                                <motion.div
+                                  key="has-note"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className="flex items-start justify-between gap-2 rounded-xl bg-blue-50/60 border border-blue-100/70 px-3 py-2.5"
+                                >
+                                  <p className="text-[11px] font-medium text-blue-800 leading-relaxed italic flex-1">
+                                    "{inquiries[property.property_id].question}"
+                                  </p>
+                                  <button
+                                    onClick={() => {
+                                      setNoteText(inquiries[property.property_id]?.question || '');
+                                      setEditingNoteId(property.property_id);
+                                    }}
+                                    className="shrink-0 flex items-center gap-1 rounded-lg border border-blue-100 bg-white px-2 py-1 text-[9px] font-bold text-blue-500 shadow-sm transition-all hover:border-blue-200 active:scale-95"
+                                  >
+                                    <Pencil className="h-2.5 w-2.5" />
+                                    Edit
+                                  </button>
+                                </motion.div>
+                              ) : (
+                                <motion.button
+                                  key="add-note"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  onClick={() => {
+                                    setNoteText('');
+                                    setEditingNoteId(property.property_id);
+                                  }}
+                                  className="flex w-full items-center gap-1.5 rounded-xl border border-dashed border-zinc-200 px-3 py-2 text-[10px] font-bold text-zinc-400 hover:border-zinc-300 hover:text-zinc-600 transition-all active:scale-[0.98]"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  Add a note for this property
+                                </motion.button>
                               )}
-                              {inquiry.interestedInPurchase && (
-                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-brand-primary">Interested</span>
-                              )}
-                            </div>
-                            {inquiry.haveQuestion && inquiry.question && (
-                              <>
-                                <label className="mb-1.5 block text-[8px] font-bold uppercase tracking-[0.2em] text-blue-400">Your Inquiry</label>
-                                <p className="text-xs sm:text-sm font-bold text-blue-900 leading-relaxed italic">
-                                  "{inquiry.question}"
-                                </p>
-                              </>
-                            )}
-                            {!inquiry.wantSiteVisit && !inquiry.interestedInPurchase && !inquiry.haveQuestion && (
-                              <p className="text-[10px] font-medium text-blue-400">No specific preferences selected.</p>
-                            )}
-                          </>
-                        ) : (
-                          <button 
-                            onClick={() => setInquiryProperty(property)}
-                            className="flex w-full items-center justify-center gap-2 py-1 sm:py-2 text-[9px] font-bold uppercase tracking-widest text-blue-400 hover:text-blue-600 transition-colors"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            Add Inquiry Question
-                          </button>
-                        )}
-                      </div>
+                            </AnimatePresence>
+                          </div>
+                        );
+                      })()}
                     </motion.div>
                   );
                 })}
@@ -202,15 +253,15 @@ export default function DiscussionCartPage() {
               </AnimatePresence>
             </div>
 
-            {/* Discussion Options */}
+            {/* Shortlist Options */}
             <div className="space-y-6 lg:block pb-24 lg:pb-0">
               <aside className="rounded-3xl bg-white p-6 shadow-xl shadow-zinc-200/50 border border-zinc-100 lg:sticky lg:top-32">
                 <h2 className="mb-6 ty-title font-bold tracking-tight">Consultation Type</h2>
                 
                 <div className="space-y-3">
                   <button 
-                    onClick={() => { setDiscussionType('phone'); setShowForm(true); }}
-                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${discussionType === 'phone' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
+                    onClick={() => { setShortlistType('phone'); setShowForm(true); }}
+                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'phone' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
                   >
                     <div className="rounded-full bg-blue-100 p-3 text-blue-600 group-hover:scale-110 transition-transform">
                       <Phone className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -222,8 +273,8 @@ export default function DiscussionCartPage() {
                   </button>
 
                   <button 
-                    onClick={() => { setDiscussionType('home'); setShowForm(true); }}
-                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${discussionType === 'home' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
+                    onClick={() => { setShortlistType('home'); setShowForm(true); }}
+                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'home' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
                   >
                     <div className="rounded-full bg-amber-100 p-3 text-amber-600 group-hover:scale-110 transition-transform">
                       <Home className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -235,8 +286,8 @@ export default function DiscussionCartPage() {
                   </button>
 
                   <button 
-                    onClick={() => { setDiscussionType('office'); setShowForm(true); }}
-                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${discussionType === 'office' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
+                    onClick={() => { setShortlistType('office'); setShowForm(true); }}
+                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'office' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
                   >
                     <div className="rounded-full bg-blue-100 p-3 text-brand-primary group-hover:scale-110 transition-transform">
                       <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -259,11 +310,11 @@ export default function DiscussionCartPage() {
                     className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg ${isShared ? 'bg-brand-primary text-white shadow-blue-100' : 'bg-zinc-900 text-white shadow-zinc-200'}`}
                   >
                     {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                    {isShared ? 'Link Copied!' : 'Share Cart'}
+                    {isShared ? 'Link Copied!' : 'Share Shortlist'}
                   </button>
 
                   <button 
-                    onClick={clearCart}
+                    onClick={clearShortlist}
                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 py-3 text-xs font-bold uppercase tracking-widest text-zinc-400 transition-all hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -273,13 +324,13 @@ export default function DiscussionCartPage() {
               </aside>
             </div>
             
-            {/* Sticky Mobile Bottom Bar for Cart */}
+            {/* Sticky Mobile Bottom Bar for Shortlist */}
             <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-zinc-100 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] lg:hidden">
               <button 
                 onClick={() => setShowForm(true)}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-zinc-200 active:scale-[0.98] transition-all"
               >
-                Proceed to Discuss ({properties.length})
+                Proceed to Consultation ({properties.length})
               </button>
             </div>
           </div>
@@ -304,14 +355,14 @@ export default function DiscussionCartPage() {
                   <div className="mb-6 flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2 text-zinc-400 mb-1">
-                        {discussionType === 'phone' && <Phone className="h-3 w-3" />}
-                        {discussionType === 'home' && <Home className="h-3 w-3" />}
-                        {discussionType === 'office' && <Building2 className="h-3 w-3" />}
+                        {shortlistType === 'phone' && <Phone className="h-3 w-3" />}
+                        {shortlistType === 'home' && <Home className="h-3 w-3" />}
+                        {shortlistType === 'office' && <Building2 className="h-3 w-3" />}
                         <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Quick Request</span>
                       </div>
                       <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
-                        {discussionType === 'phone' ? 'Request Callback' : 
-                         discussionType === 'home' ? 'Home Consultation' : 'Office Meeting'}
+                        {shortlistType === 'phone' ? 'Request Callback' : 
+                         shortlistType === 'home' ? 'Home Consultation' : 'Office Meeting'}
                       </h2>
                     </div>
                     <button 
@@ -322,7 +373,7 @@ export default function DiscussionCartPage() {
                     </button>
                   </div>
 
-                  <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); alert('Request Sent Successfully!'); setShowForm(false); clearCart(); }}>
+                  <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); alert('Request Sent Successfully!'); setShowForm(false); clearShortlist(); }}>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1.5">
                         <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Full Name</label>
@@ -345,7 +396,7 @@ export default function DiscussionCartPage() {
                         </select>
                       </div>
                       
-                      {discussionType === 'office' ? (
+                      {shortlistType === 'office' ? (
                         <div className="space-y-1.5">
                           <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Preferred Date</label>
                           <input type="date" required className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white" />
@@ -363,7 +414,7 @@ export default function DiscussionCartPage() {
                       )}
                     </div>
 
-                     {discussionType === 'home' && (
+                    {shortlistType === 'home' && (
                       <div className="space-y-1.5">
                         <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1 flex items-center gap-2">
                           <MapPin className="h-3 w-3" /> Consultation Address
@@ -373,7 +424,7 @@ export default function DiscussionCartPage() {
                     )}
 
                     <div className="rounded-2xl border border-zinc-50 bg-zinc-50/50 p-4">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Items for Discussion ({properties.length})</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Items in Shortlist ({properties.length})</p>
                       <div className="flex flex-wrap gap-2">
                         {properties.map(p => {
                           const pConfig = getPropertyConfig(p.type);

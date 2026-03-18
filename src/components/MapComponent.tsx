@@ -11,7 +11,7 @@ import { formatPrice, getPropertyCoords, cn, formatSizeRange } from '@/lib/utils
 import { getPropertyConfig } from '@/lib/property-icons';
 import { renderToStaticMarkup } from 'react-dom/server';
 import Link from 'next/link';
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PropertyCard } from './PropertyCard';
 import { X } from 'lucide-react';
@@ -296,7 +296,7 @@ export default function MapComponent({
   disableCard = false
 }: MapComponentProps) {
   const router = useRouter();
-  const { isInCart, addToCart, removeFromCart, isSaved, toggleSave } = useDiscussion();
+  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave } = useShortlist();
   const [isSatellite, setIsSatellite] = useState(false);
   const [zoom, setZoom] = useState(13);
 

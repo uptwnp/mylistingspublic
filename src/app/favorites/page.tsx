@@ -3,7 +3,7 @@
 
 export const runtime = 'edge';
 
-import { useDiscussion } from '@/context/DiscussionContext';
+import { useShortlist } from '@/context/ShortlistContext';
 import { Property } from '@/types';
 import { getProperties, getPropertiesByIds } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { PropertyCard } from '@/components/PropertyCard';
 
 export default function FavoritesPage() {
-  const { savedIds } = useDiscussion();
+  const { savedIds } = useShortlist();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
