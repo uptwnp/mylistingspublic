@@ -63,13 +63,13 @@ export function PropertySection({ title, city, type }: PropertySectionProps) {
   if (!loading && properties.length === 0) return null;
 
   return (
-    <div className="w-full space-y-6 py-12">
+    <div className="w-full space-y-4 sm:space-y-6 py-6 sm:py-12">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black tracking-tight text-zinc-900 sm:text-3xl">
+        <div className="min-w-0 pr-4">
+          <h2 className="text-xl sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
             {title}
           </h2>
-          <p className="text-sm text-zinc-500">Hand-picked properties in {city}.</p>
+          <p className="text-xs sm:text-sm text-zinc-500 font-medium truncate">Hand-picked properties in {city}.</p>
         </div>
         <Link 
           href={`/explore?city=${city}&type=${type}`}

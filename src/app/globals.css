@@ -79,6 +79,14 @@ input[type="radio"],
   -webkit-text-fill-color: transparent;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Leaflet Styles */
 @import "leaflet/dist/leaflet.css";
 

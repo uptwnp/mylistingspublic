@@ -1,0 +1,8 @@
+# Add your custom redirects here
+# Format: [source] [destination] [code?]
+
+# Example:
+# /home301 / 301
+
+# Fallback for SPA routing if needed (Next.js Worker should handle this, but it's here for reference)
+# /* /index.html 200

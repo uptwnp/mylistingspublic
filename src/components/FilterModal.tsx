@@ -96,22 +96,23 @@ export function FilterModal({
           />
 
           {/* Modal Container */}
-          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[101] flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.9, y: '100%' }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg overflow-hidden rounded-[32px] bg-white shadow-2xl pointer-events-auto flex flex-col max-h-[90vh]"
+              exit={{ opacity: 0, scale: 0.9, y: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-full max-w-lg overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white shadow-2xl pointer-events-auto flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh]"
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-zinc-100 p-6">
+              <div className="flex items-center justify-between border-b border-zinc-100 p-5 sm:p-6">
                 <div>
                   <h2 className="text-xl font-black text-zinc-900">Filters</h2>
-                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Fine-tune your search</p>
+                  <p className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest">Fine-tune your search</p>
                 </div>
                 <button
                   onClick={onClose}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors hover:bg-zinc-200"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-all hover:bg-zinc-200 active:scale-90"
                 >
                   <X className="h-5 w-5" />
                 </button>

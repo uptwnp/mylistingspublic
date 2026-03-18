@@ -59,7 +59,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
         {/* Left Image/Icon Box */}
         <motion.div 
           layout
-          className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[18px]"
+          className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-[14px] sm:rounded-[18px]"
         >
           {hasImage ? (
             <Image
@@ -68,19 +68,19 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
               fill
               unoptimized
               className="object-cover"
-              sizes="80px"
+              sizes="(max-width: 640px) 64px, 80px"
             />
           ) : (
             <div className={cn("flex h-full w-full items-center justify-center", config.bgColor)}>
-              <Icon className={cn("h-8 w-8", config.color)} />
+              <Icon className={cn("h-6 w-6 sm:h-8 sm:w-8", config.color)} />
             </div>
           )}
           
           {/* Selection Indicator for Cart */}
           {inCart && (
             <motion.div layout className="absolute inset-0 bg-zinc-900/40 flex items-center justify-center backdrop-blur-[1px]">
-              <div className="bg-white rounded-full p-1.5 shadow-lg">
-                <Check className="h-3.5 w-3.5 text-zinc-900" strokeWidth={4} />
+              <div className="bg-white rounded-full p-1 shadow-lg">
+                <Check className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-zinc-900" strokeWidth={4} />
               </div>
             </motion.div>
           )}
@@ -88,23 +88,23 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
 
         {/* Main Content Area */}
         <motion.div layout className="flex flex-1 flex-col min-w-0 py-0.5">
-          <h3 className="text-xl font-black text-zinc-900 leading-tight">
+          <h3 className="text-lg sm:text-xl font-black text-zinc-900 leading-tight">
             {formatPrice(property.price_min)}
           </h3>
 
-          <div className="mt-1 flex items-center gap-1.5 text-[13px] font-medium text-zinc-500">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
+          <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 text-[11px] sm:text-[13px] font-medium text-zinc-500">
+            <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
             <span className="truncate">{property.area}, {property.city}</span>
           </div>
 
-          <div className="mt-1 flex items-center gap-1.5 text-[13px] font-medium text-zinc-500">
-            <Ruler className="h-3.5 w-3.5 shrink-0" />
+          <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 text-[11px] sm:text-[13px] font-medium text-zinc-500">
+            <Ruler className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
             <span>{formatSizeRange(property.size_min, property.size_max, property.size_unit)}</span>
           </div>
 
           {showDistance && property.landmark_location_distance !== undefined && property.landmark_location_distance > 0 && (
-            <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-rose-500">
-              <Navigation className="h-2.5 w-2.5" />
+            <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 text-[9px] sm:text-[11px] font-bold text-rose-500">
+              <Navigation className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
               <span>
                 {property.landmark_location_distance.toFixed(1)} km 
                 {isNearbyFallback ? ' from city center' : ' away'}
@@ -114,30 +114,30 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
         </motion.div>
 
         {/* Quick Actions Column */}
-        <motion.div layout className="flex h-20 flex-col items-end justify-between py-0.5 shrink-0">
+        <motion.div layout className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
           <div className="flex items-center gap-2">
             <button
               onClick={(e) => handleActionClick(e, () => inCart ? removeFromCart(property.property_id) : addToCart(property))}
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-90",
+                "flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition-all active:scale-90",
                 inCart
                   ? "bg-zinc-900 text-white shadow-md"
                   : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
               )}
             >
-              {inCart ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+              {inCart ? <Minus className="h-4 w-4 sm:h-5 sm:w-5" /> : <Plus className="h-4 w-4 sm:h-5 sm:w-5" />}
             </button>
           </div>
 
           <div className="flex items-center gap-1">
-             <span className="px-3 py-1 bg-zinc-100 rounded-full text-[10px] font-bold text-zinc-700 uppercase tracking-tight">
+             <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 rounded-full text-[8px] sm:text-[10px] font-bold text-zinc-700 uppercase tracking-tight">
               {property.type}
             </span>
             <motion.div
               animate={{ rotate: isExpanded ? 90 : 0 }}
               transition={{ duration: 0.2 }}
             >
-              <ChevronRight className="h-4 w-4 text-zinc-400" />
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-400" />
             </motion.div>
           </div>
         </motion.div>

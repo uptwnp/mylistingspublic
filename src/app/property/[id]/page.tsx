@@ -134,8 +134,8 @@ export default function PropertyDetailPage() {
   return (
     <div className="min-h-screen bg-white pb-32">
       {/* Top Section: Only for Heading on Desktop, everything for Mobile */}
-      <section className="mx-auto max-w-[1440px] px-6 pt-32 pb-6 lg:px-12">
-        <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">
+      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 pt-24 sm:pt-32 pb-4 sm:pb-6 lg:px-12">
+        <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 sm:mb-4">
           <Link href={`/explore?city=${property.city}`} className="hover:text-zinc-900 transition-colors">
             {property.city}
           </Link>
@@ -144,26 +144,26 @@ export default function PropertyDetailPage() {
             {property.area}
           </Link>
         </div>
-        <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
+        <h1 className="text-xl sm:text-3xl font-black text-zinc-900 leading-tight">
           {formatSizeRange(property.size_min, property.size_max, '')} {property.size_unit} {property.type} for sale in {property.area}, {property.city}
         </h1>
       </section>
 
       {/* Main Grid Content */}
-      <section className="mx-auto max-w-[1440px] px-6 lg:px-12">
+      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
           
           {/* COLUMN 1: Main Content */}
           <div className="lg:col-span-8 space-y-8">
             {/* Photo Gallery Area */}
-            <div className="relative overflow-hidden rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border border-zinc-100">
+            <div className="relative overflow-hidden md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border-b md:border border-zinc-100 -mx-4 md:mx-0">
                {/* Request Photo/Video Button - Always show on top right overlay */}
                <button 
                   onClick={() => setIsPhotoModalOpen(true)}
-                  className="absolute top-6 right-6 z-10 flex items-center gap-2 rounded-xl bg-white/95 backdrop-blur-md px-4 py-2.5 text-xs font-black shadow-xl transition-all hover:bg-white active:scale-95 border border-zinc-100 text-zinc-900 group"
+                  className="absolute top-4 right-4 z-10 flex items-center gap-2 rounded-xl bg-white/95 backdrop-blur-md px-3 py-2 text-[10px] sm:text-xs font-black shadow-xl transition-all hover:bg-white active:scale-95 border border-zinc-100 text-zinc-900 group"
                 >
-                  <ShoppingCart className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900" />
-                  Request Photos & Videos
+                  <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-400 group-hover:text-zinc-900" />
+                  <span className="truncate">Request Photos & Videos</span>
                 </button>
 
               {hasImage ? (
@@ -184,43 +184,51 @@ export default function PropertyDetailPage() {
                   </div>
                 ) : (
                   // Multi Photo Grid (Airbnb Style)
-                  <div className="grid grid-cols-2 grid-rows-2 h-full gap-2 md:grid-cols-4 lg:gap-3">
-                    <div 
-                      onClick={() => openGallery(0)}
-                      className="relative col-span-2 row-span-2 bg-zinc-100 overflow-hidden cursor-pointer group"
-                    >
-                      <Image
-                        src={property.image_urls[0]}
-                        alt={property.description || 'Property Image'}
-                        fill
-                        unoptimized
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        priority
-                      />
-                    </div>
-                    {property.image_urls.slice(1, 5).map((url, i) => (
+                  <div className="h-full relative">
+                    <div className="flex md:grid md:grid-cols-4 md:grid-rows-2 h-full gap-2 md:gap-3 overflow-x-auto md:overflow-hidden snap-x snap-mandatory no-scrollbar">
+                      {/* Main Large Photo / First Photo on Mobile */}
                       <div 
-                        key={i} 
-                        onClick={() => openGallery(i + 1)}
-                        className="relative hidden md:block bg-zinc-100 overflow-hidden cursor-pointer group"
+                        onClick={() => openGallery(0)}
+                        className="relative min-w-full md:min-w-0 md:col-span-2 md:row-span-2 bg-zinc-100 overflow-hidden cursor-pointer group snap-center"
                       >
                         <Image
-                          src={url}
-                          alt={`Property image ${i + 2}`}
-                          unoptimized
+                          src={property.image_urls[0]}
+                          alt={property.description || 'Property Image'}
                           fill
+                          unoptimized
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          priority
                         />
                       </div>
-                    ))}
-                    {property.image_urls.length < 5 && Array.from({ length: 5 - property.image_urls.length }).map((_, i) => (
-                      <div key={`empty-${i}`} className="hidden md:flex items-center justify-center bg-zinc-50/50 border border-zinc-100/50">
-                        <Icon className="h-12 w-12 text-zinc-100" />
-                      </div>
-                    ))}
+                      {/* Sub Photos */}
+                      {property.image_urls.slice(1).map((url, i) => (
+                        <div 
+                          key={i} 
+                          onClick={() => openGallery(i + 1)}
+                          className={cn(
+                            "relative shrink-0 w-4/5 md:w-auto md:shrink bg-zinc-100 overflow-hidden cursor-pointer group snap-center",
+                            i >= 4 ? "md:hidden" : "md:block"
+                          )}
+                        >
+                          <Image
+                            src={url}
+                            alt={`Property image ${i + 2}`}
+                            unoptimized
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Floating Counter for Mobile */}
+                    <div className="absolute bottom-4 right-4 md:hidden bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full z-10">
+                      1 / {property.image_urls.length}
+                    </div>
+
                     <button 
                       onClick={() => openGallery(0)}
-                      className="absolute bottom-6 left-6 flex items-center gap-2 rounded-lg border border-black/10 bg-black/5 backdrop-blur-md px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-black/20 active:scale-95"
+                      className="absolute bottom-6 left-6 hidden md:flex items-center gap-2 rounded-lg border border-black/10 bg-black/5 backdrop-blur-md px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-black/20 active:scale-95"
                     >
                       <svg viewBox="0 0 16 16" className="h-4 w-4 fill-white" aria-hidden="true" focusable="false"><path d="M5 2a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-6 6a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-6 6a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"></path></svg>
                       Show all {property.image_urls.length} photos
@@ -242,27 +250,27 @@ export default function PropertyDetailPage() {
             </div>
 
             {/* Share and Save Buttons */}
-            <div className="flex items-center gap-4 py-4 border-b border-zinc-100">
-              <button className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold border border-zinc-200 hover:bg-zinc-50 transition-colors">
+            <div className="flex items-center gap-3 py-4 border-b border-zinc-100 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0">
+              <button className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap">
                 <Share2 className="h-4 w-4" />
-                Share this property
+                Share
               </button>
               <button 
                 onClick={() => toggleSave(property.property_id)}
                 className={cn(
-                    "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold border border-zinc-200 hover:bg-zinc-50 transition-colors",
+                    "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap",
                     saved && "bg-rose-50 border-rose-100 text-rose-600"
                 )}
               >
                 <Heart className={cn("h-4 w-4", saved && "fill-rose-500 text-rose-500")} />
-                {saved ? 'Saved in Favorites' : 'Save to Favorites'}
+                {saved ? 'Saved' : 'Save'}
               </button>
               <button 
                 onClick={scrollToMap}
-                className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold border border-zinc-200 hover:bg-zinc-50 transition-colors"
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap"
               >
                 <MapIcon className="h-4 w-4" />
-                View on Map
+                Map
               </button>
             </div>
 
@@ -422,7 +430,29 @@ export default function PropertyDetailPage() {
         </div>
       </section>
 
-      {/* Floating View on Map for mobile */}
+      {/* Sticky Bottom CTA for Mobile */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] md:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Price</span>
+            <p className="text-lg font-black text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
+          </div>
+          <button 
+            onClick={() => {
+              if (inCart) {
+                router.push('/discussion-cart');
+              } else {
+                addToCart(property);
+              }
+            }}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+          >
+            Discuss Now
+          </button>
+        </div>
+      </div>
+
+      {/* Floating View on Map for mobile - Adjusted position for sticky bar */}
       <button 
         onClick={scrollToMap}
         className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105 active:scale-95 md:hidden"

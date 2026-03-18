@@ -1,0 +1,16 @@
+/secure/page
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  X-Permitted-Cross-Domain-Policies: none
+  Content-Security-Policy: upgrade-insecure-requests
+
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  X-XSS-Protection: 1; mode=block
+
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *

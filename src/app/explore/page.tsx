@@ -41,7 +41,17 @@ export default function ExplorePage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
+  const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('list');
+
+  useEffect(() => {
+    // Determine initial view mode based on screen width
+    if (window.innerWidth >= 1024) {
+      setViewMode('split');
+    } else {
+      setViewMode('list');
+    }
+  }, []);
+
   const [page, setPage] = useState(0);
   const [sortOption, setSortOption] = useState(SORT_OPTIONS[0]);
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -146,7 +156,7 @@ export default function ExplorePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white pt-20">
-      <div className="mx-auto max-w-[1440px] w-full px-6 lg:px-12 flex-1 flex flex-col">
+      <div className="mx-auto max-w-[1440px] w-full px-4 sm:px-6 lg:px-12 flex-1 flex flex-col">
         {/* Main Content Area */}
         <div className="relative flex flex-1 gap-8 lg:gap-8">
           
@@ -159,16 +169,16 @@ export default function ExplorePage() {
               viewMode === 'list' ? 'w-full' : 'hidden'
             )}>
             {/* Section Header */}
-            <div className="pt-8 pb-2">
+            <div className="pt-6 sm:pt-8 pb-2">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">
-                  <h1 className="text-2xl font-black tracking-tight text-zinc-900">Explore Properties</h1>
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">Explore Properties</h1>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">
                       {properties.length} Results Found
                     </span>
                     <div className="h-1 w-1 rounded-full bg-zinc-300" />
-                    <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">
+                    <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 uppercase tracking-widest leading-none">
                       {selectedCity || "All Localities"}
                     </span>
                   </div>
@@ -178,24 +188,27 @@ export default function ExplorePage() {
                 <div className="relative">
                   <button 
                     onClick={() => setIsSortOpen(!isSortOpen)}
-                    className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-xs font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
+                    className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-[11px] sm:text-xs font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
                   >
-                    <ArrowUpDown className="h-3.5 w-3.5" />
-                    <span>Sort by: {sortOption.label}</span>
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-3.5 w-3.5" />
+                      <span>Sort: {sortOption.label}</span>
+                    </div>
+                    <ChevronLeft className="h-3 w-3 rotate-270" />
                   </button>
 
                   <AnimatePresence>
                     {isSortOpen && (
                       <>
                         <div 
-                          className="fixed inset-0 z-40" 
+                          className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent" 
                           onClick={() => setIsSortOpen(false)} 
                         />
                         <motion.div
                           initial={{ opacity: 0, y: 10, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-zinc-100 bg-white p-1.5 shadow-2xl shadow-zinc-200/50"
+                          className="absolute right-0 left-0 sm:left-auto top-full z-50 mt-2 w-auto sm:w-56 overflow-hidden rounded-2xl border border-zinc-100 bg-white p-1.5 shadow-2xl shadow-zinc-200/50"
                         >
                           {[...SORT_OPTIONS, ...(areaParam === 'Nearby' || userLocation ? NEARBY_SORT_OPTIONS : [])].map((option) => (
                             <button
@@ -206,7 +219,7 @@ export default function ExplorePage() {
                                 setPage(0);
                               }}
                               className={cn(
-                                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold transition-all",
+                                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[11px] sm:text-xs font-bold transition-all",
                                 sortOption.label === option.label 
                                   ? "bg-zinc-900 text-white" 
                                   : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
@@ -225,7 +238,7 @@ export default function ExplorePage() {
             </div>
             
             <div className={cn(
-              "grid w-full gap-4 py-6 items-start",
+              "grid w-full gap-4 py-4 sm:py-6 items-start",
               viewMode === 'list' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'
             )}>
               {loading ? (
@@ -249,25 +262,25 @@ export default function ExplorePage() {
 
             {/* Pagination Controls */}
             {!loading && properties.length > 0 && (
-              <div className="mt-auto border-t border-zinc-100 bg-white py-6">
-                <div className="flex items-center justify-between">
+              <div className="mt-auto border-t border-zinc-100 bg-white py-6 mb-20 lg:mb-0">
+                <div className="flex items-center justify-between gap-4">
                   <button
                     onClick={() => setPage(p => Math.max(0, p - 1))}
                     disabled={page === 0}
-                    className="flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:hover:bg-transparent"
+                    className="flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl border border-zinc-200 px-4 py-2.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:hover:bg-transparent"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    <span>Previous</span>
+                    <span>Prev</span>
                   </button>
                   
-                  <span className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
                     Page {page + 1}
                   </span>
 
                   <button
                     onClick={() => setPage(p => p + 1)}
                     disabled={properties.length < itemsPerPage}
-                    className="flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:hover:bg-transparent"
+                    className="flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl border border-zinc-200 px-4 py-2.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:hover:bg-transparent"
                   >
                     <span>Next</span>
                     <ChevronRight className="h-4 w-4" />
@@ -284,7 +297,7 @@ export default function ExplorePage() {
             viewMode === 'map' ? 'w-full flex' : 'hidden',
             "items-center justify-center pt-8 pb-5"
           )}>
-            <div className="relative h-full w-full overflow-hidden rounded-3xl border border-zinc-200 shadow-sm group">
+            <div className="relative h-full w-full overflow-hidden sm:rounded-3xl border border-zinc-200 shadow-sm group">
               {/* Overlay Buttons */}
               <div className="absolute top-4 right-4 z-40 flex gap-2">
                 {viewMode === 'split' && (
@@ -326,12 +339,11 @@ export default function ExplorePage() {
       {/* View Toggle Button */}
       <button 
         onClick={() => {
-          if (viewMode === 'map') setViewMode('split');
-          else setViewMode(window.innerWidth < 1024 ? 'map' : 'split');
+          if (viewMode === 'map') setViewMode('list');
+          else setViewMode('map');
         }}
         className={cn(
-          "fixed bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105 active:scale-95",
-          (viewMode === 'split' || viewMode === 'map') ? 'lg:hidden' : 'flex'
+          "fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105 active:scale-95 lg:hidden"
         )}
       >
         {viewMode === 'map' ? (

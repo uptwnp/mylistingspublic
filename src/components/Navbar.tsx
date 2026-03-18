@@ -98,23 +98,23 @@ export default function Navbar() {
           ? "border-b border-zinc-200 bg-white/95 backdrop-blur-xl py-3 shadow-sm" 
           : "bg-white py-4 sm:py-6"
       )}>
-        <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
           {/* Top Row: Logo, Center (Tabs/Search), and Actions */}
           <div className="flex items-center justify-between gap-4">
             {/* Left Section: Logo */}
             <div className="flex flex-1 items-center gap-6">
-              <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
-                  <Home className="h-6 w-6 text-white" />
+              <Link href="/" className="flex items-center gap-2 group shrink-0">
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
+                  <Home className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
-                <span className="text-xl font-black tracking-tighter text-zinc-900 hidden lg:block">
+                <span className="text-lg sm:text-xl font-black tracking-tighter text-zinc-900 hidden sm:block truncate">
                   My<span className="text-zinc-400 font-medium">Listing</span>
                 </span>
               </Link>
             </div>
 
             {/* Middle Section: Airbnb-style Tabs or Compact Search */}
-            <div className="flex-[2] flex justify-center items-center">
+            <div className="flex-[3] flex justify-center items-center min-w-0">
                 <AnimatePresence mode="wait">
                   {shouldShowCompact ? (
                     <div className="w-full max-w-md z-20" key="compact-search">
@@ -130,21 +130,21 @@ export default function Navbar() {
                   ) : (
                     <motion.div
                       key="city-tabs"
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="flex items-center justify-center gap-1 sm:gap-2"
+                      className="hidden sm:flex items-center justify-center gap-1 overflow-x-auto no-scrollbar max-w-[calc(100vw-140px)] px-2 sm:max-w-none sm:px-0"
                     >
                     <button 
                       onClick={() => setSelectedCity("Panipat")}
                       className={cn(
-                        "group relative flex flex-col items-center gap-1 px-6 py-1 transition-all",
+                        "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all shrink-0",
                         selectedCity === "Panipat" ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
                       )}
                     >
-                      <Building2 className={cn("h-5 w-5 transition-transform group-hover:scale-110", selectedCity === "Panipat" ? "text-zinc-900" : "text-zinc-300")} />
-                      <span className="text-[10px] font-black uppercase tracking-[0.1em]">Panipat</span>
+                      <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === "Panipat" ? "text-zinc-900" : "text-zinc-300")} />
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em]">Panipat</span>
                       {selectedCity === "Panipat" && (
                         <div 
                           className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
@@ -154,29 +154,29 @@ export default function Navbar() {
                     <button 
                       onClick={() => setSelectedCity("Karnal")}
                       className={cn(
-                        "group relative flex flex-col items-center gap-1 px-6 py-1 transition-all",
+                        "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all shrink-0",
                         selectedCity === "Karnal" ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
                       )}
                     >
-                      <Trees className={cn("h-5 w-5 transition-transform group-hover:scale-110", selectedCity === "Karnal" ? "text-zinc-900" : "text-zinc-300")} />
-                      <span className="text-[10px] font-black uppercase tracking-[0.1em]">Karnal</span>
+                      <Trees className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === "Karnal" ? "text-zinc-900" : "text-zinc-300")} />
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em]">Karnal</span>
                       {selectedCity === "Karnal" && (
                         <div 
                           className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
                         />
                       )}
                     </button>
-                    <div className="relative" ref={otherCityDropdownRef}>
+                    <div className="relative shrink-0" ref={otherCityDropdownRef}>
                       <button 
                         onClick={() => setIsOtherCityDropdownOpen(!isOtherCityDropdownOpen)}
                         className={cn(
-                          "group relative flex flex-col items-center gap-1 px-6 py-1 transition-all",
+                          "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all",
                           OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
                         )}
                       >
-                        <Globe className={cn("h-5 w-5 transition-transform group-hover:scale-110", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
+                        <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
                         <div className="relative flex items-center justify-center">
-                          <span className="text-[10px] font-black uppercase tracking-[0.1em] leading-none">
+                          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] leading-none">
                             {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
                           </span>
                           <ChevronDown className={cn(
@@ -290,7 +290,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Bottom Row: Large Search */}
+          {/* Bottom Row: Large Search / Hero */}
           <AnimatePresence>
             {!shouldShowCompact && (
               <motion.div
@@ -298,15 +298,44 @@ export default function Navbar() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 12 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="flex justify-center w-full"
+                className="flex items-center justify-center w-full"
               >
                 <div
-                  className="mt-8 pb-4 w-full max-w-3xl z-10"
+                  className="mt-6 sm:mt-12 pb-6 sm:pb-8 w-full max-w-3xl z-10"
                   ref={searchContainerRef}
                 >
+                  {/* Hero Title (Mobile Only) */}
+                  <div className="mb-6 sm:hidden text-center">
+                    <h1 className="text-3xl font-black tracking-tight text-zinc-900 leading-tight">
+                      Find your perfect space in {selectedCity}
+                    </h1>
+                    <p className="mt-2 text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                      Curated listings for premium living
+                    </p>
+                  </div>
+
+                  {/* City Tabs for Mobile Hero */}
+                  <div className="flex sm:hidden items-center justify-center gap-2 mb-6 px-4">
+                    {["Panipat", "Karnal", "Other"].map((city) => {
+                      const isActive = (city === "Other" && OTHER_CITIES.includes(selectedCity)) || selectedCity === city;
+                      return (
+                        <button
+                          key={city}
+                          onClick={() => city === "Other" ? setIsOtherCityDropdownOpen(true) : setSelectedCity(city)}
+                          className={cn(
+                            "px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                            isActive 
+                              ? "bg-zinc-900 text-white shadow-lg" 
+                              : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+                          )}
+                        >
+                          {city === "Other" && OTHER_CITIES.includes(selectedCity) ? selectedCity : city}
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   <div className="flex flex-col items-center">
-                    <br />
-                    <br />
                     <HeaderSearch isScrolled={false} {...searchProps} initialSegment={initialSegment} />
                   </div>
                 </div>

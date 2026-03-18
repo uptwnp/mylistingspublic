@@ -49,17 +49,22 @@ export function StickyHub() {
         >
           <Link 
             href="/discussion-cart"
-            className="flex items-center gap-4 rounded-full bg-zinc-900 px-6 py-4 text-white shadow-2xl transition-all hover:scale-105 active:scale-95"
+            className="flex items-center gap-4 rounded-full bg-zinc-900/90 hover:bg-zinc-900 px-6 py-3.5 text-white shadow-[0_20px_40px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all hover:scale-105 active:scale-95 border border-white/10"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <div className="relative">
-                <ShoppingCart className="h-5 w-5" />
-                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+                <div className="absolute inset-0 bg-rose-500 blur-md opacity-20 scale-150 rounded-full" />
+                <ShoppingCart className="h-4 w-4 relative z-10" />
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[8px] font-black text-white shadow-lg shadow-rose-500/50">
                   {cartItems.length}
                 </span>
               </div>
-              <span className="text-sm font-black uppercase tracking-widest">Discuss Out Now</span>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] leading-none mb-0.5">Discuss</span>
+                <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Out Now</span>
+              </div>
             </div>
+            <div className="h-6 w-[1px] bg-white/10" />
             <ArrowRight className="h-4 w-4 text-zinc-400" />
           </Link>
         </motion.div>

@@ -6,7 +6,7 @@ import { Globe, Instagram, Twitter, Mail, Home } from 'lucide-react';
 export default function Footer() {
   return (
     <footer className="bg-zinc-50 border-t border-zinc-200 pt-16 pb-8 mt-20">
-      <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
         <div className="grid gap-12 md:grid-cols-4 mb-20">
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-6 group">

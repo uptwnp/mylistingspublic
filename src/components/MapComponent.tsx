@@ -112,7 +112,7 @@ function MapControls({ isSatellite, setIsSatellite }: { isSatellite: boolean; se
   };
 
   return (
-    <div className="absolute bottom-8 right-8 z-[1000] flex flex-col gap-3">
+    <div className="absolute bottom-24 sm:bottom-8 right-4 sm:right-8 z-[1000] flex flex-col gap-3">
       {/* Zoom Controls */}
       <div className="flex flex-col overflow-hidden rounded-2xl border border-white/40 bg-white/90 shadow-2xl backdrop-blur-xl">
         <button 
