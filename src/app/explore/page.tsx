@@ -57,9 +57,12 @@ function ExploreContent() {
   const [page, setPage] = useState(0);
   const [sortOption, setSortOption] = useState(SORT_OPTIONS[0]);
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number, isFallback?: boolean} | null>(null);
   const itemsPerPage = 20;
-  const { cartItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, setActiveSelectionSheet } = useDiscussion();
+  const { 
+    cartItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
+    setActiveSelectionSheet, setKeywords, setMinSize, setMaxSize, 
+    setSelectedHighlights, clearFilters, userLocation, setUserLocation
+  } = useDiscussion();
   const searchParams = useSearchParams();
   const areaParam = searchParams.get('area');
 
@@ -228,9 +231,23 @@ function ExploreContent() {
 
                 <button 
                   onClick={() => setIsFilterModalOpen(true)}
-                  className="flex shrink-0 h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white shadow-md active:scale-90"
+                  className="relative flex shrink-0 h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white shadow-md active:scale-90"
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={3} />
+                  {(() => {
+                    const count = [
+                      searchParams.get('keywords'),
+                      searchParams.get('minSize'),
+                      searchParams.get('maxSize'),
+                      searchParams.get('highlights')
+                    ].filter(Boolean).length;
+                    
+                    return count > 0 ? (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[8px] font-black text-white border border-white">
+                        {count}
+                      </span>
+                    ) : null;
+                  })()}
                 </button>
               </div>
 
@@ -355,9 +372,10 @@ function ExploreContent() {
                         {hasAdditional && (
                           <button 
                             onClick={() => {
-                              const params = new URLSearchParams(searchParams.toString());
-                              additionalParams.forEach(p => params.delete(p));
-                              router.push(`/explore?${params.toString()}`);
+                              setKeywords('');
+                              setMinSize('');
+                              setMaxSize('');
+                              setSelectedHighlights([]);
                             }}
                             className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-95"
                           >
@@ -365,7 +383,7 @@ function ExploreContent() {
                           </button>
                         )}
                         <button 
-                          onClick={() => router.push('/explore')}
+                          onClick={clearFilters}
                           className={cn(
                             "rounded-full px-8 py-3 ty-caption font-bold transition-all active:scale-95",
                             hasAdditional 

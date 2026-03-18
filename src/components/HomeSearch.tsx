@@ -7,24 +7,8 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { getAreas } from '@/lib/supabase';
 import { useDiscussion } from '@/context/DiscussionContext';
+import { BUDGET_OPTIONS } from './HeaderSearch';
 
-const SUGGESTIONS = [
-  "TDI City", "Sector 13-17", "Sector 18", "Sector 25", "Ansal", "Sector 12", "Model Town", "Sector 8", "Eldeco Estate"
-];
-
-const BUDGET_OPTIONS = [
-  { label: "Any Budget", value: 0 },
-  { label: "Under 40 Lakh", value: 40 },
-  { label: "40 to 80 Lakh", value: 80 },
-  { label: "80 Lakh to 1.2 Cr", value: 120 },
-  { label: "1.2 Cr to 1.6 Cr", value: 160 },
-  { label: "1.6 to 2.5 Cr", value: 250 },
-  { label: "2.5 Cr to 5 Cr", value: 500 },
-  { label: "5 Cr to 10 Cr", value: 1000 },
-  { label: "10 Cr to 50 cr", value: 5000 },
-  { label: "50 Cr to 100 cr", value: 10000 },
-  { label: "100 Cr+", value: 10001 },
-];
 
 const PROPERTY_TYPES = [
   "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Industrial Land", "Industrial Built-up", "Agriculture Land", "Factory", "Godown"
@@ -32,11 +16,14 @@ const PROPERTY_TYPES = [
 
 export function HomeSearch() {
   const router = useRouter();
-  const { selectedCity } = useDiscussion();
+  const { 
+    selectedCity, 
+    query, setQuery, 
+    budget, setBudget, 
+    propertyType, setPropertyType,
+    setUserLocation
+  } = useDiscussion();
   const [activeSegment, setActiveSegment] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
-  const [budget, setBudget] = useState(BUDGET_OPTIONS[0]);
-  const [propertyType, setPropertyType] = useState("Any Type");
   const [allAreas, setAllAreas] = useState<string[]>([]);
   
   const searchRef = useRef<HTMLDivElement>(null);
@@ -59,11 +46,16 @@ export function HomeSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
     const params = new URLSearchParams();
-    if (query) params.set('area', query);
-    if (budget.value > 0) params.set('budget', budget.label);
-    if (propertyType !== "Any Type") params.set('type', propertyType);
+    
+    const finalArea = overrides?.area ?? query;
+    const finalBudget = overrides?.budget ?? budget;
+    const finalType = overrides?.type ?? propertyType;
+
+    if (finalArea) params.set('area', finalArea);
+    if (finalBudget.value > 0) params.set('budget', finalBudget.label);
+    if (finalType !== "Any Type") params.set('type', finalType);
     
     router.push(`/explore?${params.toString()}`);
   };
@@ -79,7 +71,7 @@ export function HomeSearch() {
         <div 
           onClick={(e) => { e.stopPropagation(); setActiveSegment('location'); }}
           className={cn(
-            "flex-[1.4] flex flex-col items-start px-8 py-4 rounded-full transition-all text-left cursor-pointer group",
+            "relative flex-[1.4] flex flex-col items-start px-8 py-4 rounded-full transition-all text-left cursor-pointer group",
             activeSegment === 'location' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
@@ -102,6 +94,84 @@ export function HomeSearch() {
               </button>
             )}
           </div>
+
+          <AnimatePresence>
+            {activeSegment === 'location' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 15 }}
+                className="absolute left-0 top-[calc(100%+12px)] z-50 w-[400px] rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
+              >
+                  <h3 className="mb-5 px-4 ty-label text-zinc-400">
+                    {query ? 'Available Areas' : 'Popular Areas'}
+                  </h3>
+                  <div className="flex flex-col gap-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                    {(() => {
+                      const isNearMe = query.toLowerCase() === 'near me';
+                      const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
+                      const showNearby = !query || isExactMatch || 'near me'.includes(query.toLowerCase());
+                      const showDefault = !query || isExactMatch || isNearMe;
+                      
+                      const filtered = allAreas
+                        .filter(a => a.toLowerCase().includes(query.toLowerCase()))
+                        .slice(0, 10);
+
+                      const areas = showDefault ? allAreas.slice(0, 10) : filtered;
+                      const displayAreas = showNearby ? ['Near Me', ...areas] : areas;
+
+                      return displayAreas.map((s) => (
+                        <button 
+                          key={s} 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (s === 'Near Me' && 'geolocation' in navigator) {
+                              navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                  setUserLocation({
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude,
+                                    isFallback: false
+                                  });
+                                },
+                                (error) => {
+                                  console.error("Error getting location:", error);
+                                  // Fallback will be handled in ExploreContent
+                                }
+                              );
+                            }
+                            setQuery(s); 
+                            setActiveSegment('budget'); 
+                          }}
+                          className={cn(
+                            "flex items-center gap-4 rounded-xl px-4 py-3 ty-body font-bold transition-all text-left group w-full",
+                            s === 'Near Me' ? "text-emerald-600 hover:bg-emerald-50" : "text-zinc-700 hover:bg-zinc-50"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                            s === 'Near Me' ? "bg-emerald-100 group-hover:bg-emerald-200" : "bg-zinc-100 group-hover:bg-zinc-200"
+                          )}>
+                             {s === 'Near Me' ? <Navigation className="h-5 w-5 text-emerald-600" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className={cn("truncate", s === 'Near Me' && "text-emerald-600")}>{s}</span>
+                            {s === 'Near Me' && <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Current location</span>}
+                          </div>
+                        </button>
+                      ));
+                    })()}
+                    {!query || allAreas.some(a => a.toLowerCase() === query.toLowerCase()) ? null : (
+                      allAreas.filter(a => a.toLowerCase().includes(query.toLowerCase())).length === 0 && (
+                        <div className="p-4 text-center ty-caption text-zinc-400">
+                          No matching areas found
+                        </div>
+                      )
+                    )}
+                  </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {!activeSegment && <div className="h-8 w-px bg-zinc-200 shrink-0" />}
@@ -110,7 +180,7 @@ export function HomeSearch() {
         <div 
           onClick={(e) => { e.stopPropagation(); setActiveSegment('budget'); }}
           className={cn(
-            "flex-1 flex flex-col items-start px-8 py-4 rounded-full transition-all text-left cursor-pointer group",
+            "relative flex-1 flex flex-col items-start px-8 py-4 rounded-full transition-all text-left cursor-pointer group",
             activeSegment === 'budget' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
@@ -128,6 +198,34 @@ export function HomeSearch() {
               </button>
             )}
           </div>
+
+          <AnimatePresence>
+            {activeSegment === 'budget' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 15 }}
+                className="absolute left-0 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
+              >
+                 <h3 className="mb-5 px-4 ty-label text-zinc-400">Select Budget</h3>
+                <div className="space-y-1">
+                  {BUDGET_OPTIONS.map((opt) => (
+                    <button 
+                      key={opt.label}
+                      onClick={(e) => { e.stopPropagation(); setBudget(opt); setActiveSegment('type'); }}
+                      className={cn(
+                        "flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left ty-body font-bold transition-all",
+                        budget.label === opt.label ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
+                      )}
+                    >
+                      <Wallet className={cn("h-4 w-4", budget.label === opt.label ? "text-zinc-300" : "text-zinc-400")} />
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {!activeSegment && <div className="h-8 w-px bg-zinc-200 shrink-0" />}
@@ -135,7 +233,7 @@ export function HomeSearch() {
         {/* Type Section */}
         <div 
           className={cn(
-            "flex-[1.2] flex items-center justify-between rounded-full transition-all",
+            "relative flex-[1.2] flex items-center justify-between rounded-full transition-all",
             activeSegment === 'type' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
@@ -156,6 +254,39 @@ export function HomeSearch() {
               )}
             </div>
           </div>
+
+          <AnimatePresence>
+            {activeSegment === 'type' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 15 }}
+                className="absolute right-0 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
+              >
+                 <h3 className="mb-5 px-4 ty-label text-zinc-400">Property Category</h3>
+                <div className="flex flex-col gap-1">
+                  {PROPERTY_TYPES.map((type) => (
+                    <button 
+                      key={type}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setPropertyType(type); 
+                        setActiveSegment(null); 
+                        handleSearch({ type });
+                      }}
+                      className={cn(
+                        "flex items-center gap-4 rounded-xl px-4 py-4 text-left ty-body font-bold transition-all",
+                        propertyType === type ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
+                      )}
+                    >
+                      {type === "Residential Plot" || type.includes("Land") ? <Trees className="h-5 w-5" /> : <HomeIcon className="h-5 w-5" />}
+                      <span className="ty-body font-bold">{type}</span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Search Button */}
           <button 
@@ -180,133 +311,6 @@ export function HomeSearch() {
             </AnimatePresence>
           </button>
         </div>
-
-        {/* Dropdowns */}
-        <AnimatePresence>
-          {activeSegment === 'location' && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="absolute left-0 top-[calc(100%+12px)] z-50 w-full max-w-sm rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
-            >
-                <h3 className="mb-5 px-4 ty-label text-zinc-400">
-                  {query ? 'Available Areas' : 'Popular Areas'}
-                </h3>
-                <div className="grid grid-cols-1 gap-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                  {(() => {
-                    const isNearMe = query.toLowerCase() === 'near me';
-                    const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
-                    const showNearby = !query || isExactMatch || 'near me'.includes(query.toLowerCase());
-                    
-                    if (!showNearby) return null;
-
-                    return (
-                      <button 
-                        onClick={() => { 
-                          if ('geolocation' in navigator) {
-                            navigator.geolocation.getCurrentPosition(() => {}, () => {});
-                          }
-                          setQuery('Near Me'); 
-                          setActiveSegment('budget'); 
-                        }}
-                        className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-emerald-600 hover:bg-emerald-50 transition-all group w-full text-left bg-emerald-50/20 mb-1"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-100 group-hover:bg-emerald-600 transition-colors">
-                          <Navigation className="h-5 w-5" strokeWidth={3} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="truncate">Near Me</span>
-                          <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Use current location</span>
-                        </div>
-                      </button>
-                    );
-                  })()}
-                  {(() => {
-                    const isNearMe = query.toLowerCase() === 'near me';
-                    const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
-                    const showDefault = !query || isExactMatch || isNearMe;
-                    
-                    const filtered = allAreas
-                      .filter(a => a.toLowerCase().includes(query.toLowerCase()))
-                      .slice(0, 10);
-
-                    return (showDefault ? SUGGESTIONS : filtered).map((s) => (
-                      <button 
-                        key={s} 
-                        onClick={() => { setQuery(s); setActiveSegment('budget'); }}
-                        className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-zinc-700 hover:bg-zinc-50 transition-all group w-full text-left"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 group-hover:bg-zinc-200 transition-colors">
-                          <MapPin className="h-5 w-5 text-zinc-500" />
-                        </div>
-                        <span className="truncate">{s}</span>
-                      </button>
-                    ));
-                  })()}
-                  {!query || allAreas.some(a => a.toLowerCase() === query.toLowerCase()) ? null : (
-                    allAreas.filter(a => a.toLowerCase().includes(query.toLowerCase())).length === 0 && (
-                      <div className="p-4 text-center ty-caption text-zinc-400">
-                        No matching areas found
-                      </div>
-                    )
-                  )}
-                </div>
-            </motion.div>
-          )}
-
-          {activeSegment === 'budget' && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="absolute left-1/4 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
-            >
-               <h3 className="mb-5 px-4 ty-label text-zinc-400">Select Budget</h3>
-              <div className="space-y-1">
-                {BUDGET_OPTIONS.map((opt) => (
-                  <button 
-                    key={opt.label}
-                    onClick={() => { setBudget(opt); setActiveSegment('type'); }}
-                    className={cn(
-                      "flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left ty-body font-bold transition-all",
-                      budget.label === opt.label ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
-                    )}
-                  >
-                    <Wallet className={cn("h-4 w-4", budget.label === opt.label ? "text-zinc-300" : "text-zinc-400")} />
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {activeSegment === 'type' && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="absolute right-0 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
-            >
-               <h3 className="mb-5 px-4 ty-label text-zinc-400">Property Category</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {PROPERTY_TYPES.map((type) => (
-                  <button 
-                    key={type}
-                    onClick={() => { setPropertyType(type); setActiveSegment(null); }}
-                    className={cn(
-                      "flex flex-col items-center gap-3 rounded-2xl border p-5 text-center transition-all",
-                      propertyType === type ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-100 hover:border-zinc-200 hover:bg-zinc-50 text-zinc-600"
-                    )}
-                  >
-                    {type === "Plot" || type === "Commercial" ? <Trees className="h-6 w-6" /> : <HomeIcon className="h-6 w-6" />}
-                    <span className="ty-caption font-black">{type}</span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );

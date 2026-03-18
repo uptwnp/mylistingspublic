@@ -7,9 +7,6 @@ import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
 import { getAreas } from '@/lib/supabase';
 
-const SUGGESTIONS = [
-  "TDI City", "Sector 13-17", "Sector 18", "Sector 25", "Ansal", "Sector 12", "Eldeco Estate", "Model Town", "Yamuna Enclave"
-];
 
 export const BUDGET_OPTIONS = [
   { label: "Any Budget", value: 0 },
@@ -42,6 +39,7 @@ interface HeaderSearchProps {
   onOpenFilters?: () => void;
   onSearch?: () => void;
   initialSegment?: string | null;
+  additionalFiltersCount?: number;
 }
 
 export function HeaderSearch({ 
@@ -56,7 +54,8 @@ export function HeaderSearch({
   onExpand,
   onOpenFilters,
   onSearch,
-  initialSegment = null
+  initialSegment = null,
+  additionalFiltersCount = 0
 }: HeaderSearchProps) {
   const [activeSegment, setActiveSegment] = useState<string | null>(initialSegment);
   const [allAreas, setAllAreas] = useState<string[]>([]);
@@ -90,12 +89,17 @@ export function HeaderSearch({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
     const params = new URLSearchParams();
     if (city) params.set('city', city);
-    if (query) params.set('area', query);
-    if (budget.value > 0) params.set('budget', budget.label);
-    if (propertyType !== "Any Type") params.set('type', propertyType);
+    
+    const finalArea = overrides?.area ?? query;
+    const finalBudget = overrides?.budget ?? budget;
+    const finalType = overrides?.type ?? propertyType;
+
+    if (finalArea) params.set('area', finalArea);
+    if (finalBudget.value > 0) params.set('budget', finalBudget.label);
+    if (finalType !== "Any Type") params.set('type', finalType);
 
     router.push(`/explore?${params.toString()}`);
     setActiveSegment(null);
@@ -147,6 +151,73 @@ export function HeaderSearch({
                     </button>
                   )}
                 </div>
+
+                {/* Dropdown: Location */}
+                <AnimatePresence>
+                  {activeSegment === 'location' && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      className="absolute left-0 top-[calc(100%+8px)] z-50 w-[400px] bg-white rounded-[24px] border border-zinc-100 shadow-2xl p-4 hidden sm:block"
+                    >
+                      <h3 className="mb-4 px-4 ty-label text-zinc-400">
+                        {query ? 'Available Areas' : 'Popular Areas'}
+                      </h3>
+                      <div className="flex flex-col gap-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                        {(() => {
+                          const isNearMe = query.toLowerCase() === 'near me';
+                          const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
+                          const showNearby = !query || isExactMatch || 'near me'.includes(query.toLowerCase());
+                          const showDefault = !query || isExactMatch || isNearMe;
+                          
+                          const filtered = allAreas
+                            .filter(a => a.toLowerCase().includes(query.toLowerCase()))
+                            .slice(0, 10);
+
+                          const areas = showDefault ? allAreas.slice(0, 10) : filtered;
+                          const displayAreas = showNearby ? ['Near Me', ...areas] : areas;
+
+                          return displayAreas.map((s) => (
+                            <button 
+                              key={s} 
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                if (s === 'Near Me' && 'geolocation' in navigator) {
+                                  navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                                }
+                                setQuery(s); 
+                                setActiveSegment('budget'); 
+                              }}
+                              className={cn(
+                                "flex items-center gap-4 rounded-xl px-4 py-3 ty-body font-bold transition-all text-left group",
+                                s === 'Near Me' ? "text-emerald-600 hover:bg-emerald-50" : "text-zinc-700 hover:bg-zinc-50"
+                              )}
+                            >
+                              <div className={cn(
+                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                                s === 'Near Me' ? "bg-emerald-100 group-hover:bg-emerald-200" : "bg-zinc-100 group-hover:bg-zinc-200"
+                              )}>
+                                 {s === 'Near Me' ? <Navigation className="h-5 w-5 text-emerald-600" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className={cn("truncate", s === 'Near Me' && "text-emerald-600")}>{s}</span>
+                                {s === 'Near Me' && <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Current location</span>}
+                              </div>
+                            </button>
+                          ));
+                        })()}
+                        {(!query || allAreas.some(a => a.toLowerCase() === query.toLowerCase())) ? null : (
+                          allAreas.filter(a => a.toLowerCase().includes(query.toLowerCase())).length === 0 && (
+                            <div className="p-8 text-center ty-caption text-zinc-400">
+                              No matching areas found in {city}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="h-10 w-px bg-zinc-200 shrink-0" />
@@ -173,6 +244,34 @@ export function HeaderSearch({
                     </button>
                   )}
                 </div>
+
+                {/* Dropdown: Budget */}
+                <AnimatePresence>
+                  {activeSegment === 'budget' && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      className="absolute left-0 top-[calc(100%+8px)] z-50 w-80 bg-white rounded-[24px] border border-zinc-100 shadow-2xl p-4 hidden sm:block"
+                    >
+                      <div className="flex flex-col gap-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                        {BUDGET_OPTIONS.map((opt) => (
+                          <button 
+                            key={opt.label}
+                            onClick={(e) => { e.stopPropagation(); setBudget(opt); setActiveSegment('type'); }}
+                            className={cn(
+                              "flex items-center gap-4 rounded-xl px-4 py-3 text-left ty-body font-bold transition-all border-2",
+                              budget.label === opt.label ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
+                            )}
+                          >
+                            <Wallet className="h-5 w-5 text-zinc-400" />
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="h-10 w-px bg-zinc-200 shrink-0" />
@@ -180,7 +279,7 @@ export function HeaderSearch({
               {/* PC: Property Type & Search Section */}
               <div 
                 className={cn(
-                  "flex flex-1 items-center justify-between w-[35%] h-full rounded-full transition-all pl-10 pr-2 group cursor-pointer",
+                  "relative flex flex-1 items-center justify-between w-[35%] h-full rounded-full transition-all pl-10 pr-2 group cursor-pointer",
                   activeSegment === 'type' && "bg-white shadow-xl ring-1 ring-zinc-200"
                 )}
                 onClick={(e) => { e.stopPropagation(); setActiveSegment('type'); }}
@@ -208,6 +307,39 @@ export function HeaderSearch({
                 >
                   <Search className="h-6 w-6" strokeWidth={3} />
                 </button>
+
+                {/* Dropdown: Property Type */}
+                <AnimatePresence>
+                  {activeSegment === 'type' && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      className="absolute right-0 top-[calc(100%+8px)] z-50 w-80 bg-white rounded-[24px] border border-zinc-100 shadow-2xl p-4 hidden sm:block"
+                    >
+                      <div className="flex flex-col gap-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                        {PROPERTY_TYPES.map((type) => (
+                          <button 
+                            key={type}
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setPropertyType(type); 
+                              setActiveSegment(null); 
+                              handleSearch({ type }); 
+                            }}
+                            className={cn(
+                              "flex items-center gap-4 rounded-xl px-4 py-3 text-left ty-body font-bold transition-all border-2",
+                              propertyType === type ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
+                            )}
+                          >
+                            <HomeIcon className="h-5 w-5 text-zinc-400" />
+                            <span>{type}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -226,123 +358,6 @@ export function HeaderSearch({
                   </div>
                </button>
             </div>
-
-            {/* PC Dropdowns */}
-            <AnimatePresence>
-              {activeSegment && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="absolute left-0 right-0 top-[calc(100%+12px)] z-50 flex justify-center hidden sm:flex"
-                >
-                  <div className="w-full max-w-2xl bg-white rounded-[32px] border border-zinc-100 shadow-2xl p-6">
-                    {activeSegment === 'location' && (
-                      <div>
-                        <h3 className="mb-4 px-4 ty-label text-zinc-400 text-center">
-                          {query ? 'Available Areas' : 'Popular Areas'}
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                          {(() => {
-                            const isNearMe = query.toLowerCase() === 'near me';
-                            const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
-                            const showNearby = !query || isExactMatch || 'near me'.includes(query.toLowerCase());
-                            
-                            if (!showNearby) return null;
-
-                            return (
-                              <button 
-                                onClick={() => { 
-                                  if ('geolocation' in navigator) {
-                                    navigator.geolocation.getCurrentPosition(() => {}, () => {});
-                                  }
-                                  setQuery('Near Me'); 
-                                  setActiveSegment('budget'); 
-                                }}
-                                className="col-span-2 flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-emerald-600 hover:bg-emerald-50 transition-all group w-full text-left bg-emerald-50/20 mb-1 border-2 border-emerald-100"
-                              >
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-100 group-hover:bg-emerald-600 transition-colors">
-                                  <Navigation className="h-5 w-5" strokeWidth={3} />
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="truncate">Near Me</span>
-                                  <span className="text-[10px] font-bold text-emerald-600/50 uppercase tracking-wider">Use current location</span>
-                                </div>
-                              </button>
-                            );
-                          })()}
-                          {(() => {
-                            const isNearMe = query.toLowerCase() === 'near me';
-                            const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
-                            const showDefault = !query || isExactMatch || isNearMe;
-                            
-                            const filtered = allAreas
-                              .filter(a => a.toLowerCase().includes(query.toLowerCase()))
-                              .slice(0, 10);
-
-                            return (showDefault ? SUGGESTIONS : filtered).map((s) => (
-                              <button 
-                                key={s} 
-                                onClick={() => { setQuery(s); setActiveSegment('budget'); }}
-                                className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-zinc-700 hover:bg-zinc-50 transition-all text-left group"
-                              >
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 group-hover:bg-zinc-200">
-                                   <MapPin className="h-5 w-5 text-zinc-500" />
-                                </div>
-                                <span className="truncate">{s}</span>
-                              </button>
-                            ));
-                          })()}
-                          {(!query || allAreas.some(a => a.toLowerCase() === query.toLowerCase())) ? null : (
-                            allAreas.filter(a => a.toLowerCase().includes(query.toLowerCase())).length === 0 && (
-                              <div className="col-span-2 p-8 text-center ty-caption text-zinc-400">
-                                No matching areas found in {city}
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {activeSegment === 'budget' && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {BUDGET_OPTIONS.map((opt) => (
-                          <button 
-                            key={opt.label}
-                            onClick={() => { setBudget(opt); setActiveSegment('type'); }}
-                            className={cn(
-                              "flex items-center gap-4 rounded-2xl px-4 py-4 text-left ty-body font-bold transition-all border-2",
-                              budget.label === opt.label ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
-                            )}
-                          >
-                            <Wallet className="h-5 w-5 text-zinc-400" />
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {activeSegment === 'type' && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {PROPERTY_TYPES.map((type) => (
-                          <button 
-                            key={type}
-                            onClick={() => { setPropertyType(type); setActiveSegment(null); }}
-                            className={cn(
-                              "flex items-center gap-4 rounded-2xl px-4 py-4 text-left ty-body font-bold transition-all border-2",
-                              propertyType === type ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
-                            )}
-                          >
-                            <HomeIcon className="h-5 w-5 text-zinc-400" />
-                            <span>{type}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
         ) : (
           /* COMPACT NAVBAR SEARCH */
@@ -375,9 +390,14 @@ export function HeaderSearch({
               {isExplorePage && onOpenFilters && (
                 <button
                   onClick={onOpenFilters}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md hover:shadow-lg transition-all"
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md hover:shadow-lg transition-all"
                 >
                   <SlidersHorizontal className="h-4 w-4" />
+                  {additionalFiltersCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-bold text-white border border-white">
+                      {additionalFiltersCount}
+                    </span>
+                  )}
                 </button>
               )}
             </div>

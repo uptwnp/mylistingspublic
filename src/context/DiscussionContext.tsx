@@ -9,6 +9,23 @@ interface DiscussionContextType {
   savedIds: string[];
   selectedCity: string;
   setSelectedCity: (city: string) => void;
+  // Global search filters
+  query: string;
+  setQuery: (q: string) => void;
+  budget: { label: string; value: number };
+  setBudget: (b: { label: string; value: number }) => void;
+  propertyType: string;
+  setPropertyType: (t: string) => void;
+  keywords: string;
+  setKeywords: (k: string) => void;
+  minSize: string;
+  setMinSize: (s: string) => void;
+  maxSize: string;
+  setMaxSize: (s: string) => void;
+  selectedHighlights: string[];
+  setSelectedHighlights: (h: string[]) => void;
+  clearFilters: () => void;
+  
   inquiries: Record<string, string>;
   inquiryProperty: any | null;
   setInquiryProperty: (property: any | null) => void;
@@ -26,6 +43,8 @@ interface DiscussionContextType {
   confirmAddToCart: (id: string, question: string) => void;
   isMobileSearchOpen: boolean;
   setIsMobileSearchOpen: (open: boolean) => void;
+  userLocation: {lat: number, lng: number, isFallback?: boolean} | null;
+  setUserLocation: (loc: {lat: number, lng: number, isFallback?: boolean} | null) => void;
 }
 
 const DiscussionContext = createContext<DiscussionContextType | undefined>(undefined);
@@ -33,24 +52,37 @@ const DiscussionContext = createContext<DiscussionContextType | undefined>(undef
 const CART_KEY = 'dealer_network_discussion_cart';
 const SAVED_KEY = 'dealer_network_saved_properties';
 const CITY_KEY = 'dealer_network_selected_city';
+const FILTERS_KEY = 'dealer_network_global_filters';
 const INQUIRIES_KEY = 'dealer_network_inquiries';
 
 export function DiscussionProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<string[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>('Panipat');
+  
+  // Search state
+  const [query, setQuery] = useState('');
+  const [keywords, setKeywords] = useState('');
+  const [budget, setBudget] = useState({ label: "Any Budget", value: 0 });
+  const [propertyType, setPropertyType] = useState("Any Type");
+  const [minSize, setMinSize] = useState('');
+  const [maxSize, setMaxSize] = useState('');
+  const [selectedHighlights, setSelectedHighlights] = useState<string[]>([]);
+
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | 'area' | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [inquiries, setInquiries] = useState<Record<string, string>>({});
   const [inquiryProperty, setInquiryProperty] = useState<any | null>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number, isFallback?: boolean} | null>(null);
 
-  // Initialize from localStorage on mount (to avoid SSR mismatch)
+  // Initialize from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_KEY);
     const savedProps = localStorage.getItem(SAVED_KEY);
     const savedCity = localStorage.getItem(CITY_KEY);
     const savedInquiries = localStorage.getItem(INQUIRIES_KEY);
+    const savedFilters = localStorage.getItem(FILTERS_KEY);
     
     if (savedCart) {
       try { setCartItems(JSON.parse(savedCart)); } catch (e) { console.error(e); }
@@ -64,7 +96,19 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
     if (savedInquiries) {
       try { setInquiries(JSON.parse(savedInquiries)); } catch (e) { console.error(e); }
     }
-
+    if (savedFilters) {
+      try { 
+        const f = JSON.parse(savedFilters);
+        if (f.query !== undefined) setQuery(f.query);
+        if (f.keywords !== undefined) setKeywords(f.keywords);
+        if (f.budget !== undefined) setBudget(f.budget);
+        if (f.propertyType !== undefined) setPropertyType(f.propertyType);
+        if (f.minSize !== undefined) setMinSize(f.minSize);
+        if (f.maxSize !== undefined) setMaxSize(f.maxSize);
+        if (f.selectedHighlights !== undefined) setSelectedHighlights(f.selectedHighlights);
+      } catch (e) { console.error(e); }
+    }
+    
     // Check for shared cart in URL
     const searchParams = new URLSearchParams(window.location.search);
     const sharedCart = searchParams.get('cart');
@@ -74,7 +118,6 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
         const ids = sharedCart.split(',').filter(id => id.trim() !== '');
         if (ids.length > 0) {
           setCartItems(ids);
-          // Remove the cart param from URL to prevent accidental overrides on refresh
           const newRelativePathQuery = window.location.pathname;
           window.history.replaceState(null, '', newRelativePathQuery);
         }
@@ -104,6 +147,30 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     localStorage.setItem(INQUIRIES_KEY, JSON.stringify(inquiries));
   }, [inquiries]);
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    const filters = {
+      query,
+      keywords,
+      budget,
+      propertyType,
+      minSize,
+      maxSize,
+      selectedHighlights
+    };
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
+  }, [query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights]);
+
+  const clearFilters = () => {
+    setQuery('');
+    setKeywords('');
+    setBudget({ label: "Any Budget", value: 0 });
+    setPropertyType("Any Type");
+    setMinSize('');
+    setMaxSize('');
+    setSelectedHighlights([]);
+  };
 
   const addToCart = (property: any) => {
     const id = typeof property === 'string' ? property : property.property_id;
@@ -154,6 +221,21 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
       savedIds,
       selectedCity,
       setSelectedCity,
+      query,
+      setQuery,
+      budget,
+      setBudget,
+      propertyType,
+      setPropertyType,
+      keywords,
+      setKeywords,
+      minSize,
+      setMinSize,
+      maxSize,
+      setMaxSize,
+      selectedHighlights,
+      setSelectedHighlights,
+      clearFilters,
       addToCart,
       removeFromCart,
       toggleSave,
@@ -171,13 +253,11 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
       confirmAddToCart,
       isMobileSearchOpen,
       setIsMobileSearchOpen,
+      userLocation,
+      setUserLocation,
     }}>
       {children}
       <InquiryModal />
-      
-      {/* Global Selection Sheets - Managed by context but need props from caller if we want to sync state */}
-      {/* NOTE: We'll keep the actual SelectionBottomSheet components in Navbar for now as it holds the search state, 
-          OR we move search state here too. Let's move them to Navbar but use context to trigger. */}
     </DiscussionContext.Provider>
   );
 }

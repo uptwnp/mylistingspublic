@@ -13,7 +13,20 @@ import { SelectionBottomSheet } from './SelectionBottomSheet';
 import { useCallback } from 'react';
 
 export default function Navbar() {
-  const { savedIds, cartItems, selectedCity, setSelectedCity, isFilterModalOpen, setIsFilterModalOpen, activeSelectionSheet, setActiveSelectionSheet, isMobileSearchOpen, setIsMobileSearchOpen } = useDiscussion();
+  const { 
+    savedIds, cartItems, selectedCity, setSelectedCity, 
+    isFilterModalOpen, setIsFilterModalOpen, 
+    activeSelectionSheet, setActiveSelectionSheet, 
+    isMobileSearchOpen, setIsMobileSearchOpen,
+    query, setQuery,
+    budget, setBudget,
+    propertyType, setPropertyType,
+    keywords, setKeywords,
+    minSize, setMinSize,
+    maxSize, setMaxSize,
+    selectedHighlights, setSelectedHighlights,
+    clearFilters
+  } = useDiscussion();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isForceExpanded, setIsForceExpanded] = useState(false);
@@ -42,15 +55,6 @@ export default function Navbar() {
     loadAreas();
   }, [selectedCity]);
   const shouldShowCompact = (isScrolled || !isHomePage) && !isForceExpanded;
-
-  // Search state
-  const [query, setQuery] = useState('');
-  const [keywords, setKeywords] = useState('');
-  const [budget, setBudget] = useState({ label: "Any Budget", value: 0 });
-  const [propertyType, setPropertyType] = useState("Any Type");
-  const [minSize, setMinSize] = useState('');
-  const [maxSize, setMaxSize] = useState('');
-  const [selectedHighlights, setSelectedHighlights] = useState<string[]>([]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,24 +86,30 @@ export default function Navbar() {
     };
   }, []);
 
-  const handleApplyFilters = useCallback(() => {
+  const handleApplyFilters = useCallback((overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
     const params = new URLSearchParams();
     if (selectedCity) params.set('city', selectedCity);
-    if (query) params.set('area', query);
+    
+    const finalArea = overrides?.area ?? query;
+    const finalBudget = overrides?.budget ?? budget;
+    const finalType = overrides?.type ?? propertyType;
+
+    if (finalArea) params.set('area', finalArea);
     if (keywords) params.set('keywords', keywords);
-    if (budget.value > 0) params.set('budget', budget.label);
-    if (propertyType !== "Any Type") params.set('type', propertyType);
+    if (finalBudget.value > 0) params.set('budget', finalBudget.label);
+    if (finalType !== "Any Type") params.set('type', finalType);
     if (minSize) params.set('minSize', minSize);
     if (maxSize) params.set('maxSize', maxSize);
     if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
 
     router.push(`/explore?${params.toString()}`);
-  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, pathname]);
+  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router]);
 
   // Sync search state from URL
   useEffect(() => {
-    // Only sync if we're on the /explore page or it's a direct URL hit
-    // This prevents clearing state when navigating back to Home
+    // Only sync if we're on the /explore page or /map page
+    // This prevents clearing global state when navigating back to Home
+    if (pathname !== '/explore' && pathname !== '/map') return;
     
     const area = searchParams.get('area') || '';
     if (area !== query) setQuery(area);
@@ -159,6 +169,13 @@ export default function Navbar() {
     }
   }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname]);
 
+  const additionalFiltersCount = [
+    keywords,
+    minSize,
+    maxSize,
+    selectedHighlights.length > 0 ? 'true' : ''
+  ].filter(Boolean).length;
+
   const searchProps = {
     city: selectedCity,
     query,
@@ -168,6 +185,7 @@ export default function Navbar() {
     propertyType,
     setPropertyType,
     onOpenFilters: () => setIsFilterModalOpen(true),
+    additionalFiltersCount,
     onSearch: () => {
       setIsForceExpanded(false);
       if (pathname !== '/explore') {
@@ -563,11 +581,7 @@ export default function Navbar() {
             {/* Overlay Bottom Bar */}
             <div className="border-t border-zinc-100 bg-white px-6 py-6 flex items-center justify-between shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
               <button 
-                onClick={() => {
-                  setQuery('');
-                  setBudget({ label: "Any Budget", value: 0 });
-                  setPropertyType("Any Type");
-                }}
+                onClick={clearFilters}
                 className="ty-caption font-black text-zinc-900 underline underline-offset-4"
               >
                 Clear all
@@ -607,7 +621,10 @@ export default function Navbar() {
         title="Your Budget"
         type="budget"
         selectedValue={budget}
-        onSelect={setBudget}
+        onSelect={(val) => {
+          setBudget(val);
+          setTimeout(() => setActiveSelectionSheet('type'), 100);
+        }}
       />
 
       <SelectionBottomSheet
@@ -616,7 +633,14 @@ export default function Navbar() {
         title="Property type?"
         type="propertyType"
         selectedValue={propertyType}
-        onSelect={setPropertyType}
+        onSelect={(val) => {
+          setPropertyType(val);
+          setTimeout(() => {
+            setActiveSelectionSheet(null);
+            setIsMobileSearchOpen(false);
+            handleApplyFilters({ type: val });
+          }, 100);
+        }}
       />
 
       <SelectionBottomSheet
@@ -625,7 +649,10 @@ export default function Navbar() {
         title="Where to?"
         type="area"
         selectedValue={query}
-        onSelect={setQuery}
+        onSelect={(val) => {
+          setQuery(val);
+          setTimeout(() => setActiveSelectionSheet('budget'), 100);
+        }}
         data={allAreas}
       />
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useDiscussion } from '@/context/DiscussionContext';
 
 const BUDGET_OPTIONS = [
   { label: "Any Budget", value: 0 },
@@ -46,6 +47,7 @@ export function SelectionBottomSheet({
   onSelect,
   data: areaData = []
 }: SelectionBottomSheetProps) {
+  const { setUserLocation } = useDiscussion();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredAreas = areaData.filter(area => 
@@ -133,7 +135,7 @@ export function SelectionBottomSheet({
                 )}
 
                 {type === 'propertyType' && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     {PROPERTY_TYPES.map((cat) => {
                       const Icon = cat.icon;
                       const isActive = selectedValue === cat.value;
@@ -145,19 +147,19 @@ export function SelectionBottomSheet({
                             onClose();
                           }}
                           className={cn(
-                            "flex flex-col items-start gap-4 rounded-2xl border-2 p-5 transition-all text-left",
+                            "flex items-center gap-4 rounded-2xl border-2 p-5 transition-all text-left",
                             isActive 
                               ? "border-zinc-900 bg-zinc-50" 
                               : "border-zinc-100 active:border-zinc-300"
                           )}
                         >
                           <div className={cn(
-                            "flex h-10 w-10 items-center justify-center rounded-xl mb-1 transition-colors",
+                            "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
                             isActive ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-400"
                           )}>
                             <Icon className="h-5 w-5" />
                           </div>
-                          <span className={cn("text-xs font-bold uppercase tracking-widest", isActive ? "text-zinc-900" : "text-zinc-500")}>
+                          <span className={cn("text-base font-bold", isActive ? "text-zinc-900" : "text-zinc-500")}>
                             {cat.label}
                           </span>
                         </button>
@@ -193,7 +195,18 @@ export function SelectionBottomSheet({
                         <button
                           onClick={() => {
                             if ('geolocation' in navigator) {
-                              navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                              navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                  setUserLocation({
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude,
+                                    isFallback: false
+                                  });
+                                },
+                                (error) => {
+                                  console.error("Error getting location:", error);
+                                }
+                              );
                             }
                             onSelect('Near Me');
                             onClose();
