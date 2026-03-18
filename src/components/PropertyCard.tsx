@@ -88,8 +88,8 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
 
         {/* Main Content Area */}
         <motion.div layout className="flex flex-1 flex-col min-w-0 py-0.5">
-          <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight">
-            {formatPrice(property.price_min)}
+          <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight truncate">
+            {formatSizeRange(property.size_min, property.size_max, property.size_unit)} {property.type}
           </h3>
 
           <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-medium text-zinc-500">
@@ -97,10 +97,15 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
             <span className="truncate">{property.area}, {property.city}</span>
           </div>
 
-          <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-medium text-zinc-500">
-            <Ruler className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-            <span>{formatSizeRange(property.size_min, property.size_max, property.size_unit)}</span>
-          </div>
+          {Array.isArray(property.tags) && property.tags.length > 0 ? (
+            <p className="mt-1 ty-micro font-black text-emerald-600 truncate uppercase tracking-widest opacity-90">
+              {property.tags.join(' • ')}
+            </p>
+          ) : property.description && (
+            <p className="mt-1 ty-caption text-zinc-400 truncate w-full italic font-medium opacity-80">
+              {property.description}
+            </p>
+          )}
 
           {showDistance && property.landmark_location_distance !== undefined && property.landmark_location_distance > 0 && (
             <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-bold text-rose-500">
@@ -114,8 +119,8 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
         </motion.div>
 
         <motion.div layout className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
-          <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 rounded-full ty-micro font-semibold text-zinc-700">
-            {property.type}
+          <span className="px-2 sm:px-3 py-1 bg-zinc-100 rounded-full ty-micro font-black text-zinc-900 shadow-sm border border-zinc-200">
+            {formatPrice(property.price_min)}
           </span>
 
           <motion.div
@@ -162,6 +167,32 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
 
               <div className="flex flex-col gap-2 pt-2">
                 <div className="flex gap-2">
+                  <a
+                    href={`/property/${property.property_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-2.5 ty-caption font-bold text-zinc-900 transition-all hover:bg-zinc-50 active:scale-[0.98]"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Full Property Page
+                  </a>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.share?.({
+                        title: `${property.type} in ${property.area}`,
+                        url: window.location.origin + `/property/${property.property_id}`
+                      });
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-95"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="flex gap-2">
                   <button
                     onClick={(e) => handleActionClick(e, () => inCart ? removeFromCart(property.property_id) : addToCart(property))}
                     className={cn(
@@ -194,32 +225,6 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
                     onClick={(e) => handleActionClick(e, () => toggleSave(property.property_id))}
                   >
                     <Heart className={cn("h-5 w-5", saved && "fill-current")} />
-                  </button>
-                </div>
-
-                <div className="flex gap-2">
-                  <a
-                    href={`/property/${property.property_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-2.5 ty-caption font-bold text-zinc-900 transition-all hover:bg-zinc-50 active:scale-[0.98]"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Full Property Page
-                  </a>
-                  
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigator.share?.({
-                        title: `${property.type} in ${property.area}`,
-                        url: window.location.origin + `/property/${property.property_id}`
-                      });
-                    }}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-95"
-                  >
-                    <Share2 className="h-5 w-5" />
                   </button>
                 </div>
               </div>

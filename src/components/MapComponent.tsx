@@ -73,7 +73,48 @@ function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom);
+    // Force a resize check whenever view changes
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 400);
   }, [center, zoom, map]);
+  return null;
+}
+
+// Handler for container resizing
+function InvalidateSize({ trigger }: { trigger?: any }) {
+  const map = useMap();
+  useEffect(() => {
+    // Initial invalidate
+    const timer1 = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
+    const timer2 = setTimeout(() => {
+      map.invalidateSize();
+    }, 400);
+
+    // Watch for window resize
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+    
+    // Also run it periodically for a bit to catch layout shifts
+    const interval = setInterval(() => {
+      map.invalidateSize();
+    }, 1000);
+
+    const timer3 = setTimeout(() => {
+      clearInterval(interval);
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearInterval(interval);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [map, trigger]);
   return null;
 }
 
@@ -199,6 +240,7 @@ export default function MapComponent({ properties, selectedProperty, onSelectPro
       style={{ height: '100%', width: '100%' }}
       zoomControl={false}
     >
+      <InvalidateSize trigger={properties} />
       <ChangeView center={center} zoom={selectedProperty ? 15 : 13} />
       <TileLayer
         attribution={isSatellite 

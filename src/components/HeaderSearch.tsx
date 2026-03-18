@@ -34,6 +34,7 @@ interface HeaderSearchProps {
   setPropertyType: (t: string) => void;
   onExpand?: (segment?: string) => void;
   onOpenFilters?: () => void;
+  onSearch?: () => void;
   initialSegment?: string | null;
 }
 
@@ -48,6 +49,7 @@ export function HeaderSearch({
   setPropertyType,
   onExpand,
   onOpenFilters,
+  onSearch,
   initialSegment = null
 }: HeaderSearchProps) {
   const [activeSegment, setActiveSegment] = useState<string | null>(initialSegment);
@@ -82,6 +84,7 @@ export function HeaderSearch({
 
     router.push(`/explore?${params.toString()}`);
     setActiveSegment(null);
+    if (onSearch) onSearch();
   };
 
   return (

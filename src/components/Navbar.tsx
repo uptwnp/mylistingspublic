@@ -98,7 +98,13 @@ export default function Navbar() {
     setBudget,
     propertyType,
     setPropertyType,
-    onOpenFilters: () => setIsFilterModalOpen(true)
+    onOpenFilters: () => setIsFilterModalOpen(true),
+    onSearch: () => {
+      setIsForceExpanded(false);
+      if (pathname !== '/explore') {
+        handleApplyFilters();
+      }
+    }
   };
 
   return (
