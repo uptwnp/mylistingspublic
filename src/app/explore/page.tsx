@@ -201,13 +201,13 @@ function ExploreContent() {
 
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">
-                  <h1 className="text-lg sm:text-xl font-bold tracking-tight text-zinc-900">Explore Properties</h1>
+                  <h1 className="ty-title font-bold tracking-tight text-zinc-900">Explore Properties</h1>
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">
+                    <span className="ty-micro font-bold text-zinc-400 leading-none">
                       {properties.length} Results Found
                     </span>
                     <div className="h-1 w-1 rounded-full bg-zinc-300" />
-                    <span className="text-[9px] sm:text-[10px] font-medium text-zinc-400 uppercase tracking-widest leading-none">
+                    <span className="ty-micro font-medium text-zinc-400 leading-none">
                       {selectedCity || "All Localities"}
                     </span>
                   </div>
@@ -217,7 +217,7 @@ function ExploreContent() {
                 <div className="relative">
                   <button 
                     onClick={() => setIsSortOpen(!isSortOpen)}
-                    className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-[11px] sm:text-xs font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
+                    className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
                   >
                     <div className="flex items-center gap-2">
                       <ArrowUpDown className="h-3.5 w-3.5" />
@@ -248,7 +248,7 @@ function ExploreContent() {
                                 setPage(0);
                               }}
                               className={cn(
-                                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[11px] sm:text-xs font-bold transition-all",
+                                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ty-caption font-bold transition-all",
                                 sortOption.label === option.label 
                                   ? "bg-zinc-900 text-white" 
                                   : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
@@ -296,20 +296,20 @@ function ExploreContent() {
                   <button
                     onClick={() => setPage(p => Math.max(0, p - 1))}
                     disabled={page === 0}
-                    className="flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl border border-zinc-200 px-4 py-2.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:hover:bg-transparent"
+                    className="flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl border border-zinc-200 px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:hover:bg-transparent"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     <span>Prev</span>
                   </button>
                   
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  <span className="ty-label text-zinc-400">
                     Page {page + 1}
                   </span>
 
                   <button
                     onClick={() => setPage(p => p + 1)}
                     disabled={properties.length < itemsPerPage}
-                    className="flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl border border-zinc-200 px-4 py-2.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:hover:bg-transparent"
+                    className="flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl border border-zinc-200 px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 disabled:hover:bg-transparent"
                   >
                     <span>Next</span>
                     <ChevronRight className="h-4 w-4" />

@@ -90,8 +90,8 @@ export function FilterModal({
               {/* Header */}
               <div className="flex items-center justify-between border-b border-zinc-100 p-5 sm:p-6">
                 <div>
-                  <h2 className="text-xl font-black text-zinc-900">Filters</h2>
-                  <p className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest">Fine-tune your search</p>
+                  <h2 className="ty-title font-black text-zinc-900">Filters</h2>
+                  <p className="ty-label text-zinc-400">Fine-tune your search</p>
                 </div>
                 <button
                   onClick={onClose}
@@ -105,7 +105,7 @@ export function FilterModal({
               <div className="flex-1 overflow-y-auto p-6 space-y-10">
                 {/* Search Keywords */}
                 <div>
-                  <label className="mb-4 block text-[10px] font-black uppercase tracking-widest text-secondary/50">Keywords</label>
+                  <label className="mb-4 block ty-label text-secondary/50">Keywords</label>
                   <div className="relative">
                     <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
                     <input
@@ -113,14 +113,14 @@ export function FilterModal({
                       value={localKeywords}
                       onChange={(e) => setLocalKeywords(e.target.value)}
                       placeholder="e.g. Near Market, Corner, 3BHK"
-                      className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-4 pl-12 pr-4 text-sm font-bold text-zinc-900 outline-none ring-zinc-900 transition-all focus:border-zinc-900 focus:bg-white focus:ring-1"
+                      className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-12 pr-4 ty-body font-bold text-zinc-900 outline-none ring-zinc-900 transition-all focus:border-zinc-900 focus:bg-white focus:ring-1"
                     />
                   </div>
                 </div>
 
                 {/* Size Range */}
                 <div>
-                  <label className="mb-4 block text-[10px] font-black uppercase tracking-widest text-secondary/50">Area / Size (Sq. Yards)</label>
+                  <label className="mb-4 block ty-label text-secondary/50">Area / Size (Sq. Yards)</label>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
                       <Ruler className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
@@ -129,7 +129,7 @@ export function FilterModal({
                         value={localMinSize}
                         onChange={(e) => setLocalMinSize(e.target.value)}
                         placeholder="Min Size"
-                        className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3.5 pl-10 pr-4 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white"
+                        className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-10 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white"
                       />
                     </div>
                     <div className="relative">
@@ -139,7 +139,7 @@ export function FilterModal({
                         value={localMaxSize}
                         onChange={(e) => setLocalMaxSize(e.target.value)}
                         placeholder="Max Size"
-                        className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3.5 pl-10 pr-4 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white"
+                        className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-10 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white"
                       />
                     </div>
                   </div>
@@ -147,7 +147,7 @@ export function FilterModal({
 
                 {/* Highlights / Amenities */}
                 <div>
-                  <label className="mb-4 block text-[10px] font-black uppercase tracking-widest text-secondary/50">Property Highlights</label>
+                  <label className="mb-4 block ty-label text-secondary/50">Property Highlights</label>
                   <div className="flex flex-wrap gap-2">
                     {AMENITIES.map((h) => (
                       <button
@@ -161,7 +161,7 @@ export function FilterModal({
                         )}
                       >
                         <Sparkles className={cn("h-3.5 w-3.5", localHighlights.includes(h) ? "text-emerald-500" : "text-zinc-300")} />
-                        <span className="text-xs">{h}</span>
+                        <span className="ty-caption">{h}</span>
                       </button>
                     ))}
                   </div>
@@ -172,7 +172,7 @@ export function FilterModal({
               <div className="border-t border-zinc-100 p-6 bg-zinc-50/50">
                 <button
                   onClick={handleApply}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-900 py-4 text-sm font-black text-white shadow-xl shadow-black/10 transition-all hover:bg-black active:scale-[0.98]"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-900 py-3.5 ty-label text-white shadow-xl shadow-black/10 transition-all hover:bg-black active:scale-[0.98]"
                 >
                   <Search className="h-5 w-5" />
                   Show Results

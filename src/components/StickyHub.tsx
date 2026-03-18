@@ -55,13 +55,13 @@ export function StickyHub() {
               <div className="relative">
                 <div className="absolute inset-0 bg-rose-500 blur-md opacity-20 scale-150 rounded-full" />
                 <ShoppingCart className="h-4 w-4 relative z-10" />
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[8px] font-black text-white shadow-lg shadow-rose-500/50">
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 ty-micro font-black text-white shadow-lg shadow-rose-500/50">
                   {cartItems.length}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] leading-none mb-0.5">Discuss</span>
-                <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Out Now</span>
+                <span className="ty-label leading-none mb-0.5">Discuss</span>
+                <span className="ty-micro font-bold text-zinc-400 leading-none">Out Now</span>
               </div>
             </div>
             <div className="h-6 w-[1px] bg-white/10" />

@@ -66,14 +66,14 @@ export function PropertySection({ title, city, type }: PropertySectionProps) {
     <div className="w-full space-y-4 sm:space-y-6 py-6 sm:py-12">
       <div className="flex items-center justify-between">
         <div className="min-w-0 pr-4">
-          <h2 className="text-xl sm:text-3xl font-black tracking-tight text-zinc-900 truncate">
+          <h2 className="ty-display font-black tracking-tight text-zinc-900 truncate">
             {title}
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium truncate">Hand-picked properties in {city}.</p>
+          <p className="ty-caption text-zinc-500 font-medium truncate">Hand-picked properties in {city}.</p>
         </div>
         <Link 
           href={`/explore?city=${city}&type=${type}`}
-          className="group flex items-center gap-2 text-sm font-bold text-zinc-900 hover:text-zinc-600 transition-colors"
+          className="group flex items-center gap-2 ty-caption font-bold text-zinc-900 hover:text-zinc-600 transition-colors"
         >
           View All
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

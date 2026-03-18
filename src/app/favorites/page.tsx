@@ -52,10 +52,10 @@ export default function FavoritesPage() {
           <Link href="/" className="mb-4 flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-black">
             <ArrowLeft className="h-4 w-4" /> Back to Discover
           </Link>
-          <h1 className="text-4xl font-black tracking-tight text-zinc-900">
+          <h1 className="ty-display font-black tracking-tight text-zinc-900">
             Saved Properties
           </h1>
-          <p className="mt-2 text-zinc-500">
+          <p className="mt-2 ty-body text-zinc-500">
             {properties.length} {properties.length === 1 ? 'property' : 'properties'} bookmarked for later.
           </p>
         </div>
@@ -65,9 +65,9 @@ export default function FavoritesPage() {
             <div className="mb-6 rounded-full bg-rose-50 p-6">
               <Heart className="h-12 w-12 text-rose-500" />
             </div>
-            <h2 className="text-xl font-bold">No saved properties</h2>
-            <p className="mt-2 text-zinc-500">Tap the heart icon on any property to save it here.</p>
-            <Link href="/" className="mt-8 rounded-full bg-black px-8 py-3 text-sm font-bold uppercase tracking-widest text-white">
+            <h2 className="ty-title font-bold">No saved properties</h2>
+            <p className="mt-2 ty-body text-zinc-500">Tap the heart icon on any property to save it here.</p>
+            <Link href="/" className="mt-8 rounded-full bg-black px-8 py-3 ty-caption font-bold uppercase tracking-widest text-white">
               Start Exploring
             </Link>
           </div>

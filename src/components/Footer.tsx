@@ -13,37 +13,37 @@ export default function Footer() {
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
                 <Home className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-black tracking-tighter text-zinc-900 uppercase">
+              <span className="ty-subtitle font-black tracking-tighter text-zinc-900 uppercase">
                 My<span className="text-zinc-400 font-medium">Listing</span>
               </span>
             </Link>
-            <p className="text-zinc-500 text-sm max-w-sm leading-relaxed font-bold">
+            <p className="text-zinc-500 ty-caption max-w-sm leading-relaxed font-medium">
               Direct access to premium inventory, managed with architectural precision. 
               The most exclusive internal property listings curated for you.
             </p>
           </div>
 
           <div>
-            <h4 className="text-[11px] font-black text-zinc-900 mb-6 uppercase tracking-widest">Discover</h4>
+            <h4 className="ty-label text-zinc-900 mb-6">Discover</h4>
             <ul className="space-y-4">
-              <li><Link href="/" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Featured Estates</Link></li>
-              <li><Link href="/explore" className="text-sm font-bold text-zinc-500 hover:text-rose-500 transition-colors">Explore Map</Link></li>
-              <li><Link href="/favorites" className="text-sm font-bold text-zinc-500 hover:text-rose-500 transition-colors">Saved Properties</Link></li>
+              <li><Link href="/" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Featured Estates</Link></li>
+              <li><Link href="/explore" className="ty-caption font-bold text-zinc-500 hover:text-rose-500 transition-colors">Explore Map</Link></li>
+              <li><Link href="/favorites" className="ty-caption font-bold text-zinc-500 hover:text-rose-500 transition-colors">Saved Properties</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-[11px] font-black text-zinc-900 mb-6 uppercase tracking-widest">Network</h4>
+            <h4 className="ty-label text-zinc-900 mb-6">Network</h4>
             <ul className="space-y-4">
-              <li><Link href="#" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Agent Portal</Link></li>
-              <li><Link href="/sell" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors">List Your Property</Link></li>
-              <li><Link href="#" className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Partner Program</Link></li>
+              <li><Link href="#" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Agent Portal</Link></li>
+              <li><Link href="/sell" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">List Your Property</Link></li>
+              <li><Link href="#" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Partner Program</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-zinc-200 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex flex-col md:flex-row items-center gap-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+          <div className="flex flex-col md:flex-row items-center gap-6 ty-label text-zinc-400">
             <span>© 2026 MyListing Network</span>
             <div className="flex gap-6">
               <Link href="#" className="hover:text-zinc-900">Privacy Policy</Link>
@@ -53,7 +53,7 @@ export default function Footer() {
           </div>
           
           <div className="flex items-center gap-8">
-            <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-900 hover:text-zinc-600 transition-colors">
+            <button className="flex items-center gap-2 ty-label text-zinc-900 hover:text-zinc-600 transition-colors">
               <Globe className="h-4 w-4" />
               English (IN)
             </button>

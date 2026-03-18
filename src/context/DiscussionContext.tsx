@@ -24,6 +24,8 @@ interface DiscussionContextType {
   activeSelectionSheet: 'budget' | 'type' | null;
   setActiveSelectionSheet: (type: 'budget' | 'type' | null) => void;
   confirmAddToCart: (id: string, question: string) => void;
+  isMobileSearchOpen: boolean;
+  setIsMobileSearchOpen: (open: boolean) => void;
 }
 
 const DiscussionContext = createContext<DiscussionContextType | undefined>(undefined);
@@ -39,6 +41,7 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
   const [selectedCity, setSelectedCity] = useState<string>('Panipat');
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | null>(null);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [inquiries, setInquiries] = useState<Record<string, string>>({});
   const [inquiryProperty, setInquiryProperty] = useState<any | null>(null);
 
@@ -165,7 +168,9 @@ export function DiscussionProvider({ children }: { children: React.ReactNode }) 
       inquiryProperty,
       setInquiryProperty,
       updateInquiry,
-      confirmAddToCart
+      confirmAddToCart,
+      isMobileSearchOpen,
+      setIsMobileSearchOpen,
     }}>
       {children}
       <InquiryModal />

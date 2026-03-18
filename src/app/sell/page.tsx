@@ -81,13 +81,13 @@ export default function SellPropertyPage() {
           <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-zinc-900 shadow-2xl shadow-zinc-200">
             <CheckCircle2 className="h-12 w-12 text-white" />
           </div>
-          <h1 className="mb-4 text-4xl font-black tracking-tight text-zinc-900">Listing Received!</h1>
-          <p className="mb-10 text-lg font-medium text-zinc-500 leading-relaxed">
+          <h1 className="mb-4 ty-hero font-black tracking-tighter text-zinc-900">Listing Received!</h1>
+          <p className="mb-10 ty-body font-medium text-zinc-500 leading-relaxed">
             Our architectural consultants will review your property within 24 hours to ensure it meets our premium catalog standards.
           </p>
           <button 
             onClick={() => window.location.href = '/'}
-            className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-900 py-5 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-black hover:shadow-xl active:scale-95"
+            className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-900 py-4 ty-label text-white transition-all hover:bg-black hover:shadow-xl active:scale-95"
           >
             Back to Catalog
             <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -116,13 +116,13 @@ export default function SellPropertyPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <span className="mb-6 inline-block rounded-full bg-white/10 px-6 py-2 text-xs font-black uppercase tracking-[0.3em] text-white backdrop-blur-md">
+            <span className="mb-6 inline-block rounded-full bg-white/10 px-6 py-2 ty-label text-white backdrop-blur-md">
               The Architecture of Selling
             </span>
-            <h1 className="mb-8 text-5xl font-black tracking-tighter text-white sm:text-7xl lg:text-8xl">
+            <h1 className="mb-6 ty-hero font-black tracking-tighter text-white">
               Showcase your <span className="text-zinc-400">Masterpiece.</span>
             </h1>
-            <p className="mx-auto max-w-2xl text-lg font-bold text-zinc-200 opacity-90 leading-relaxed">
+            <p className="mx-auto max-w-2xl ty-subtitle font-bold text-zinc-200 opacity-90 leading-relaxed">
               Join our exclusive network of premium properties. We connect architectural landmarks with the most discerning buyers in the country.
             </p>
           </motion.div>
@@ -140,8 +140,8 @@ export default function SellPropertyPage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 mb-6">
                   <Building2 className="text-white h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-black text-white tracking-tight">Sell with MyListing</h3>
-                <p className="text-zinc-400 text-sm font-bold mt-2 leading-relaxed">Only 3 steps away from reaching 1M+ active investors.</p>
+                <h3 className="ty-subtitle font-black text-white tracking-tight">Sell with MyListing</h3>
+                <p className="text-zinc-400 ty-caption font-bold mt-2 leading-relaxed">Only 3 steps away from reaching 1M+ active investors.</p>
               </div>
 
               <div className="space-y-8">
@@ -157,10 +157,10 @@ export default function SellPropertyPage() {
                     </div>
                     <div>
                       <h4 className={cn(
-                        "text-[11px] font-black uppercase tracking-widest leading-none mb-1",
+                        "ty-label leading-none mb-1",
                         activeStep >= idx ? "text-white" : "text-zinc-600"
                       )}>{step.title}</h4>
-                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-tighter">{step.subtitle}</p>
+                      <p className="ty-micro font-black text-zinc-500">{step.subtitle}</p>
                     </div>
                   </div>
                 ))}
@@ -186,8 +186,8 @@ export default function SellPropertyPage() {
                     className="space-y-10"
                   >
                     <div>
-                      <h2 className="text-3xl font-black tracking-tight text-zinc-900 mb-2">What kind of masterpiece is this?</h2>
-                      <p className="text-sm font-bold text-zinc-400">Select the property category to get started.</p>
+                      <h2 className="ty-display font-black tracking-tight text-zinc-900 mb-2">What kind of masterpiece is this?</h2>
+                      <p className="ty-caption font-bold text-zinc-400">Select the property category to get started.</p>
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -205,7 +205,7 @@ export default function SellPropertyPage() {
                             )}
                           >
                             <Icon className={cn("h-8 w-8", formData.type === type.label ? "text-white" : "text-zinc-400")} />
-                            <span className="text-[11px] font-black uppercase tracking-tight">{type.label}</span>
+                            <span className="ty-caption font-black">{type.label}</span>
                           </button>
                         );
                       })}
@@ -213,7 +213,7 @@ export default function SellPropertyPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">City</label>
+                        <label className="ty-label text-zinc-400 px-1">City</label>
                         <div className="relative group">
                           <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                           <input 
@@ -221,12 +221,12 @@ export default function SellPropertyPage() {
                             placeholder="e.g. Panipat"
                             value={formData.city}
                             onChange={(e) => updateFormData('city', e.target.value)}
-                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-4 pl-14 pr-6 text-sm font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
+                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-3 pl-14 pr-6 ty-body font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
                           />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Area / Landmark</label>
+                        <label className="ty-label text-zinc-400 px-1">Area / Landmark</label>
                         <div className="relative group">
                           <Landmark className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                           <input 
@@ -234,7 +234,7 @@ export default function SellPropertyPage() {
                             placeholder="e.g. Model Town"
                             value={formData.area}
                             onChange={(e) => updateFormData('area', e.target.value)}
-                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-4 pl-14 pr-6 text-sm font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
+                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-3 pl-14 pr-6 ty-body font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
                           />
                         </div>
                       </div>
@@ -251,13 +251,13 @@ export default function SellPropertyPage() {
                     className="space-y-10"
                   >
                     <div>
-                      <h2 className="text-3xl font-black tracking-tight text-zinc-900 mb-2">The Scale & Value</h2>
-                      <p className="text-sm font-bold text-zinc-400">Help us understand the architectural magnitude.</p>
+                      <h2 className="ty-display font-black tracking-tight text-zinc-900 mb-2">The Scale & Value</h2>
+                      <p className="ty-caption font-bold text-zinc-400">Help us understand the architectural magnitude.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Expected Price (Cr)</label>
+                        <label className="ty-label text-zinc-400 px-1">Expected Price (Cr)</label>
                         <div className="relative group">
                           <IndianRupee className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                           <input 
@@ -265,12 +265,12 @@ export default function SellPropertyPage() {
                             placeholder="e.g. 5.5"
                             value={formData.price}
                             onChange={(e) => updateFormData('price', e.target.value)}
-                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-4 pl-14 pr-6 text-sm font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
+                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-3 pl-14 pr-6 ty-body font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
                           />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Plot / Built Area (Sq.Yds)</label>
+                        <label className="ty-label text-zinc-400 px-1">Plot / Built Area (Sq.Yds)</label>
                         <div className="relative group">
                           <Maximize2 className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                           <input 
@@ -278,18 +278,18 @@ export default function SellPropertyPage() {
                             placeholder="e.g. 500"
                             value={formData.size}
                             onChange={(e) => updateFormData('size', e.target.value)}
-                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-4 pl-14 pr-6 text-sm font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
+                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-3 pl-14 pr-6 ty-body font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="rounded-[32px] bg-zinc-50 p-8 border border-zinc-100">
-                      <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900 mb-4">
+                      <h4 className="flex items-center gap-2 ty-label text-zinc-900 mb-4">
                         <CheckCircle2 className="h-4 w-4" />
                         Professional Appraisal
                       </h4>
-                      <p className="text-sm font-bold text-zinc-500 leading-relaxed">
+                      <p className="ty-caption font-bold text-zinc-500 leading-relaxed">
                         Our internal pricing engine will analyze these details against current market trends in <span className="text-zinc-900">{formData.city || "your city"}</span> to provide an accurate valuation.
                       </p>
                     </div>
@@ -305,13 +305,13 @@ export default function SellPropertyPage() {
                     className="space-y-10"
                   >
                     <div>
-                      <h2 className="text-3xl font-black tracking-tight text-zinc-900 mb-2">The Host Details</h2>
-                      <p className="text-sm font-bold text-zinc-400">Discretion is our priority. Your info remains private.</p>
+                      <h2 className="ty-display font-black tracking-tight text-zinc-900 mb-2">The Host Details</h2>
+                      <p className="ty-caption font-bold text-zinc-400">Discretion is our priority. Your info remains private.</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Full Name</label>
+                        <label className="ty-label text-zinc-400 px-1">Full Name</label>
                         <div className="relative group">
                           <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                           <input 
@@ -319,14 +319,14 @@ export default function SellPropertyPage() {
                             placeholder="John Doe"
                             value={formData.name}
                             onChange={(e) => updateFormData('name', e.target.value)}
-                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-4 pr-6 text-sm font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900 pl-14"
+                            className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-3 pr-6 ty-body font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900 pl-14"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Phone Number</label>
+                          <label className="ty-label text-zinc-400 px-1">Phone Number</label>
                           <div className="relative group">
                             <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                             <input 
@@ -334,12 +334,12 @@ export default function SellPropertyPage() {
                               placeholder="+91 98765 43210"
                               value={formData.phone}
                               onChange={(e) => updateFormData('phone', e.target.value)}
-                              className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-4 pl-14 pr-6 text-sm font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
+                              className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-3 pl-14 pr-6 ty-body font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
                             />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-1">Email (Optional)</label>
+                          <label className="ty-label text-zinc-400 px-1">Email (Optional)</label>
                           <div className="relative group">
                             <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                             <input 
@@ -347,7 +347,7 @@ export default function SellPropertyPage() {
                               placeholder="john@example.com"
                               value={formData.email}
                               onChange={(e) => updateFormData('email', e.target.value)}
-                              className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-4 pl-14 pr-6 text-sm font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
+                              className="w-full rounded-2xl border-2 border-zinc-100 bg-white py-3 pl-14 pr-6 ty-body font-bold text-zinc-900 outline-none transition-all focus:border-zinc-900"
                             />
                           </div>
                         </div>
@@ -358,7 +358,7 @@ export default function SellPropertyPage() {
                       <div className="h-10 w-10 shrink-0 rounded-full bg-rose-100 flex items-center justify-center">
                         <CheckCircle2 className="h-5 w-5 text-rose-600" />
                       </div>
-                      <p className="text-[11px] font-bold text-rose-900 leading-tight">
+                      <p className="ty-caption font-bold text-rose-900 leading-tight">
                         By listing, you agree to our <span className="underline cursor-pointer">Premium Listing Agreement</span> and represent that you are the rightful owner/authorized agent.
                       </p>
                     </div>
@@ -371,7 +371,7 @@ export default function SellPropertyPage() {
                 <button
                   onClick={handlePrev}
                   className={cn(
-                    "px-8 py-3 text-sm font-black uppercase tracking-widest text-zinc-400 transition-all hover:text-zinc-900",
+                    "px-8 py-2.5 ty-caption font-black uppercase tracking-widest text-zinc-400 transition-all hover:text-zinc-900",
                     activeStep === 0 && "opacity-0 pointer-events-none"
                   )}
                 >
@@ -381,7 +381,7 @@ export default function SellPropertyPage() {
                   onClick={handleNext}
                   disabled={activeStep === 0 && !formData.type}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl bg-zinc-900 px-10 py-5 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-black hover:shadow-xl active:scale-95 disabled:opacity-30 disabled:pointer-events-none",
+                    "flex items-center gap-3 rounded-2xl bg-zinc-900 px-10 py-3.5 ty-label text-white transition-all hover:bg-black hover:shadow-xl active:scale-95 disabled:opacity-30 disabled:pointer-events-none",
                   )}
                 >
                   {activeStep === STEPS.length - 1 ? 'Finish Listing' : 'Next Step'}
@@ -396,8 +396,8 @@ export default function SellPropertyPage() {
       {/* Why Choose Us Section */}
       <section className="mx-auto max-w-[1440px] px-6 lg:px-12 py-32">
         <div className="mb-20 text-center">
-          <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-6">Network Advantage</h2>
-          <h3 className="text-4xl font-black tracking-tight text-zinc-900 sm:text-5xl">Why Sell with MyListing?</h3>
+          <h2 className="ty-label text-zinc-400 mb-6">Network Advantage</h2>
+          <h3 className="ty-display font-black tracking-tight text-zinc-900 sm:text-4xl">Why Sell with MyListing?</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -422,8 +422,8 @@ export default function SellPropertyPage() {
               <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-[24px] bg-zinc-100 transition-colors group-hover:bg-zinc-900">
                 <item.icon className="h-7 w-7 text-zinc-900 transition-colors group-hover:text-white" />
               </div>
-              <h4 className="text-xl font-black text-zinc-900 mb-4 tracking-tight">{item.title}</h4>
-              <p className="text-sm font-bold text-zinc-500 leading-relaxed group-hover:text-zinc-700 transition-colors">{item.desc}</p>
+              <h4 className="ty-title font-black text-zinc-900 mb-4 tracking-tight">{item.title}</h4>
+              <p className="ty-caption font-bold text-zinc-500 leading-relaxed group-hover:text-zinc-700 transition-colors">{item.desc}</p>
             </div>
           ))}
         </div>

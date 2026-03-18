@@ -88,22 +88,22 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
 
         {/* Main Content Area */}
         <motion.div layout className="flex flex-1 flex-col min-w-0 py-0.5">
-          <h3 className="text-base sm:text-lg font-bold text-zinc-900 leading-tight">
+          <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight">
             {formatPrice(property.price_min)}
           </h3>
 
-          <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 text-[11px] sm:text-[13px] font-medium text-zinc-500">
+          <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-medium text-zinc-500">
             <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
             <span className="truncate">{property.area}, {property.city}</span>
           </div>
 
-          <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 text-[11px] sm:text-[13px] font-medium text-zinc-500">
+          <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-medium text-zinc-500">
             <Ruler className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
             <span>{formatSizeRange(property.size_min, property.size_max, property.size_unit)}</span>
           </div>
 
           {showDistance && property.landmark_location_distance !== undefined && property.landmark_location_distance > 0 && (
-            <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 text-[9px] sm:text-[11px] font-bold text-rose-500">
+            <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-bold text-rose-500">
               <Navigation className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
               <span>
                 {property.landmark_location_distance.toFixed(1)} km 
@@ -130,7 +130,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
           </div>
 
           <div className="flex items-center gap-1">
-             <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 rounded-full text-[8px] sm:text-[9px] font-semibold text-zinc-700 uppercase tracking-tight">
+             <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 rounded-full ty-micro font-semibold text-zinc-700">
               {property.type}
             </span>
             <motion.div
@@ -156,7 +156,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
             <div className="space-y-4">
               {/* Description */}
               {property.description && (
-                <p className="text-sm text-zinc-600 leading-relaxed line-clamp-3">
+                <p className="ty-caption text-zinc-600 leading-relaxed line-clamp-3">
                   {property.description}
                 </p>
               )}
@@ -167,7 +167,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
                   {property.tags.map((tag, i) => (
                     <span 
                       key={i} 
-                      className="px-2 py-0.5 bg-zinc-50 text-[10px] font-medium text-zinc-500 rounded-lg border border-zinc-100"
+                      className="px-2 py-0.5 bg-zinc-50 ty-caption font-medium text-zinc-500 rounded-lg border border-zinc-100"
                     >
                       {tag}
                     </span>
@@ -182,7 +182,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-black active:scale-[0.98]"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 py-2.5 ty-caption font-bold text-white shadow-lg transition-all hover:bg-black active:scale-[0.98]"
                 >
                   <ExternalLink className="h-4 w-4" />
                   View Full Property Page

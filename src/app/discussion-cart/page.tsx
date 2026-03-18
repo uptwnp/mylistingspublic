@@ -75,9 +75,9 @@ export default function DiscussionCartPage() {
             <div className="mb-4 sm:mb-6 rounded-full bg-zinc-100 p-4 sm:p-6">
               <Home className="h-8 w-8 sm:h-12 sm:w-12 text-zinc-400" />
             </div>
-            <h2 className="text-lg sm:text-xl font-bold">Your cart is empty</h2>
-            <p className="mt-2 text-sm text-zinc-500">Add properties you're interested in to start a discussion.</p>
-            <Link href="/" className="mt-6 sm:mt-8 rounded-full bg-black px-6 sm:px-8 py-2.5 sm:py-3 text-[12px] sm:text-sm font-bold uppercase tracking-widest text-white">
+            <h2 className="ty-title font-bold">Your cart is empty</h2>
+            <p className="mt-2 ty-caption text-zinc-500">Add properties you're interested in to start a discussion.</p>
+            <Link href="/" className="mt-6 sm:mt-8 rounded-full bg-black px-6 sm:px-8 py-2.5 sm:py-3 ty-caption font-bold uppercase tracking-widest text-white">
               Explore Properties
             </Link>
           </div>
@@ -89,10 +89,10 @@ export default function DiscussionCartPage() {
                 <Link href="/" className="mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-500 hover:text-black">
                   <ArrowLeft className="h-3.5 w-3.5" /> Back to Discover
                 </Link>
-                <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-zinc-900 leading-tight">
+                <h1 className="ty-display font-bold tracking-tight text-zinc-900 leading-tight">
                   Discussion Cart
                 </h1>
-                <p className="mt-2 text-sm sm:text-lg font-medium text-zinc-500">
+                <p className="mt-2 ty-caption font-medium text-zinc-500">
                   {properties.length} {properties.length === 1 ? 'property' : 'properties'} selected for consultation.
                 </p>
               </div>
@@ -141,7 +141,7 @@ export default function DiscussionCartPage() {
                                   <Icon className={cn("h-3 w-3", config.color)} />
                                   {property.type}
                                 </h3>
-                                <p className="text-xs sm:text-sm font-bold text-black mt-0.5 sm:mt-1">{formatPrice(property.price_min)}</p>
+                                <p className="ty-caption font-bold text-black mt-0.5 sm:mt-1">{formatPrice(property.price_min)}</p>
                               </div>
                             </Link>
                           );
@@ -190,7 +190,7 @@ export default function DiscussionCartPage() {
             {/* Discussion Options */}
             <div className="space-y-6 lg:block pb-24 lg:pb-0">
               <aside className="rounded-3xl bg-white p-6 shadow-xl shadow-zinc-200/50 border border-zinc-100 lg:sticky lg:top-32">
-                <h2 className="mb-6 text-xl font-bold tracking-tight">Consultation Type</h2>
+                <h2 className="mb-6 ty-title font-bold tracking-tight">Consultation Type</h2>
                 
                 <div className="space-y-3">
                   <button 
@@ -201,8 +201,8 @@ export default function DiscussionCartPage() {
                       <Phone className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-zinc-900">Phone Callback</h3>
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Expert call within 15 mins</p>
+                      <h3 className="ty-caption font-bold text-zinc-900">Phone Callback</h3>
+                      <p className="ty-micro font-medium uppercase tracking-wider text-zinc-400">Expert call within 15 mins</p>
                     </div>
                   </button>
 
@@ -214,8 +214,8 @@ export default function DiscussionCartPage() {
                       <Home className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-zinc-900">At-Home Consultation</h3>
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Physical visit by our expert</p>
+                      <h3 className="ty-caption font-bold text-zinc-900">At-Home Consultation</h3>
+                      <p className="ty-micro font-medium uppercase tracking-wider text-zinc-400">Physical visit by our expert</p>
                     </div>
                   </button>
 
@@ -227,8 +227,8 @@ export default function DiscussionCartPage() {
                       <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-zinc-900">In-Office Meeting</h3>
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Visit our HQ for briefing</p>
+                      <h3 className="ty-caption font-bold text-zinc-900">In-Office Meeting</h3>
+                      <p className="ty-micro font-medium uppercase tracking-wider text-zinc-400">Visit our HQ for briefing</p>
                     </div>
                   </button>
                 </div>

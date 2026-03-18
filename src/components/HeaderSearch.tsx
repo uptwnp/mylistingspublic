@@ -110,14 +110,14 @@ export function HeaderSearch({
                   activeSegment === 'location' && "bg-white shadow-xl ring-1 ring-zinc-200"
                 )}
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-900 mb-0.5 whitespace-nowrap">Where to?</span>
+                <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Where to?</span>
                 <input 
                   ref={inputRef}
                   type="text" 
                   placeholder="Search areas..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="w-full bg-transparent text-[15px] font-bold text-zinc-900 outline-none placeholder:text-zinc-400"
+                  className="w-full bg-transparent ty-body font-bold text-zinc-900 outline-none placeholder:text-zinc-400"
                 />
               </button>
 
@@ -131,8 +131,8 @@ export function HeaderSearch({
                   activeSegment === 'budget' && "bg-white shadow-xl ring-1 ring-zinc-200"
                 )}
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-900 mb-0.5 whitespace-nowrap">Your Budget</span>
-                <span className={cn("text-[14px] font-bold truncate w-full group-hover:text-zinc-900 transition-colors", budget.value === 0 ? "text-zinc-300" : "text-zinc-900")}>
+                <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Your Budget</span>
+                <span className={cn("ty-body font-bold truncate w-full group-hover:text-zinc-900 transition-colors", budget.value === 0 ? "text-zinc-300" : "text-zinc-900")}>
                   {budget.value === 0 ? "Select budget" : budget.label}
                 </span>
               </button>
@@ -148,8 +148,8 @@ export function HeaderSearch({
                 onClick={(e) => { e.stopPropagation(); setActiveSegment('type'); }}
               >
                 <div className="flex flex-col items-start min-w-0 overflow-hidden cursor-pointer">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-900 mb-0.5 whitespace-nowrap">Property Type</span>
-                  <span className={cn("text-[14px] font-bold truncate w-full group-hover:text-zinc-900 transition-colors", propertyType === "Any Type" ? "text-zinc-300" : "text-zinc-900")}>
+                  <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Property Type</span>
+                  <span className={cn("ty-body font-bold truncate w-full group-hover:text-zinc-900 transition-colors", propertyType === "Any Type" ? "text-zinc-300" : "text-zinc-900")}>
                     {propertyType === "Any Type" ? "What are you looking for?" : propertyType}
                   </span>
                 </div>
@@ -173,8 +173,8 @@ export function HeaderSearch({
                     <Search className="h-5 w-5" strokeWidth={3} />
                   </div>
                   <div className="flex flex-col items-start">
-                    <span className="text-sm font-bold text-zinc-900 uppercase">Start your search</span>
-                    <span className="text-[11px] font-bold text-zinc-400">{query ? `${query}, ${city}` : city}</span>
+                    <span className="ty-body font-bold text-zinc-900 uppercase">Start your search</span>
+                    <span className="ty-caption font-bold text-zinc-400">{query ? `${query}, ${city}` : city}</span>
                   </div>
                </button>
             </div>
@@ -191,13 +191,13 @@ export function HeaderSearch({
                   <div className="w-full max-w-2xl bg-white rounded-[32px] border border-zinc-100 shadow-2xl p-6">
                     {activeSegment === 'location' && (
                       <div>
-                        <h3 className="mb-4 px-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-center">Popular Areas</h3>
+                        <h3 className="mb-4 px-4 ty-label text-zinc-400 text-center">Popular Areas</h3>
                         <div className="grid grid-cols-2 gap-2">
                           {SUGGESTIONS.map((s) => (
                             <button 
                               key={s} 
                               onClick={() => { setQuery(s); setActiveSegment('budget'); }}
-                              className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[14px] font-bold text-zinc-700 hover:bg-zinc-50 transition-all text-left"
+                              className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-zinc-700 hover:bg-zinc-50 transition-all text-left"
                             >
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 group-hover:bg-zinc-200">
                                  <MapPin className="h-5 w-5 text-zinc-500" />
@@ -216,7 +216,7 @@ export function HeaderSearch({
                             key={opt.label}
                             onClick={() => { setBudget(opt); setActiveSegment('type'); }}
                             className={cn(
-                              "flex items-center gap-4 rounded-2xl px-4 py-4 text-left text-[14px] font-bold transition-all border-2",
+                              "flex items-center gap-4 rounded-2xl px-4 py-4 text-left ty-body font-bold transition-all border-2",
                               budget.label === opt.label ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
                             )}
                           >
@@ -234,7 +234,7 @@ export function HeaderSearch({
                             key={type}
                             onClick={() => { setPropertyType(type); setActiveSegment(null); }}
                             className={cn(
-                              "flex items-center gap-4 rounded-2xl px-4 py-4 text-left text-[14px] font-bold transition-all border-2",
+                              "flex items-center gap-4 rounded-2xl px-4 py-4 text-left ty-body font-bold transition-all border-2",
                               propertyType === type ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
                             )}
                           >
@@ -264,13 +264,13 @@ export function HeaderSearch({
                 className="flex items-center divide-x divide-zinc-200 rounded-full border border-zinc-200 bg-white py-1.5 pl-4 pr-1.5 shadow-md hover:shadow-lg transition-all"
               >
                 <div className="flex items-center px-4 min-w-0">
-                  <span className="text-[13px] font-bold text-zinc-900 truncate tracking-tight">{query || "Anywhere"}</span>
+                  <span className="ty-caption font-bold text-zinc-900 truncate tracking-tight">{query || "Anywhere"}</span>
                 </div>
                 <div className="flex items-center px-4 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); onExpand?.('budget'); }}>
-                  <span className="text-[13px] font-bold text-zinc-900 truncate tracking-tight">{budget.label === "Any Budget" ? "Any Budget" : budget.label}</span>
+                  <span className="ty-caption font-bold text-zinc-900 truncate tracking-tight">{budget.label === "Any Budget" ? "Any Budget" : budget.label}</span>
                 </div>
                 <div className="flex items-center px-4 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); onExpand?.('type'); }}>
-                  <span className="text-[13px] font-bold text-zinc-400 truncate tracking-tight">{propertyType === "Any Type" ? "Any Type" : propertyType}</span>
+                  <span className="ty-caption font-bold text-zinc-400 truncate tracking-tight">{propertyType === "Any Type" ? "Any Type" : propertyType}</span>
                 </div>
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white ml-2">
                   <Search className="h-4 w-4" strokeWidth={3} />
@@ -293,7 +293,7 @@ export function HeaderSearch({
               className="sm:hidden flex items-center gap-3 rounded-full border border-zinc-200 bg-white py-2 px-4 shadow-md"
             >
               <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
-              <span className="text-[13px] font-bold text-zinc-900">{query ? `${query}, ${city}` : city}</span>
+              <span className="ty-caption font-bold text-zinc-900">{query ? `${query}, ${city}` : city}</span>
             </button>
           </motion.div>
         )}

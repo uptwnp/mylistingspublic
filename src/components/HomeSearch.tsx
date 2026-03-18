@@ -65,14 +65,14 @@ export function HomeSearch() {
             activeSegment === 'location' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
-          <span className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-900 mb-0.5">Location</span>
+          <span className="ty-label text-zinc-900 mb-0.5">Location</span>
           <input 
             type="text"
             placeholder="Search destinations"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setActiveSegment('location')}
-            className="w-full bg-transparent text-[13px] font-semibold text-zinc-500 outline-none placeholder:text-zinc-400"
+            className="w-full bg-transparent ty-caption font-semibold text-zinc-500 outline-none placeholder:text-zinc-400"
           />
         </button>
 
@@ -86,8 +86,8 @@ export function HomeSearch() {
             activeSegment === 'budget' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
-          <span className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-900 mb-0.5">Budget</span>
-          <span className="text-[13px] font-semibold text-zinc-400 truncate w-full">
+          <span className="ty-label text-zinc-900 mb-0.5">Budget</span>
+          <span className="ty-caption font-semibold text-zinc-400 truncate w-full">
             {budget.value === 0 ? "Any Budget" : budget.label}
           </span>
         </button>
@@ -105,8 +105,8 @@ export function HomeSearch() {
             onClick={(e) => { e.stopPropagation(); setActiveSegment('type'); }}
             className="flex flex-col items-start px-8 py-4 text-left w-full h-full"
           >
-            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-900 mb-0.5 whitespace-nowrap">Property Type</span>
-            <span className="text-[13px] font-semibold text-zinc-400">{propertyType === "Any Type" ? "Add guests" : propertyType}</span>
+            <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Property Type</span>
+            <span className="ty-caption font-semibold text-zinc-400">{propertyType === "Any Type" ? "Add guests" : propertyType}</span>
           </button>
 
           {/* Search Button */}
@@ -142,13 +142,13 @@ export function HomeSearch() {
               exit={{ opacity: 0, y: 15 }}
               className="absolute left-0 top-[calc(100%+12px)] z-50 w-full max-w-sm rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
             >
-               <h3 className="mb-5 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Popular Areas</h3>
+                <h3 className="mb-5 px-4 ty-label text-zinc-400">Popular Areas</h3>
                <div className="grid grid-cols-1 gap-1">
                  {SUGGESTIONS.map((s) => (
                    <button 
                     key={s} 
                     onClick={() => { setQuery(s); setActiveSegment('budget'); }}
-                    className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[14px] font-bold text-zinc-700 hover:bg-zinc-50 transition-all group"
+                    className="flex items-center gap-4 rounded-2xl px-4 py-3 ty-body font-bold text-zinc-700 hover:bg-zinc-50 transition-all group"
                    >
                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 group-hover:bg-zinc-200 transition-colors">
                         <MapPin className="h-5 w-5 text-zinc-500" />
@@ -167,14 +167,14 @@ export function HomeSearch() {
               exit={{ opacity: 0, y: 15 }}
               className="absolute left-1/4 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
             >
-              <h3 className="mb-5 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Select Budget</h3>
+               <h3 className="mb-5 px-4 ty-label text-zinc-400">Select Budget</h3>
               <div className="space-y-1">
                 {BUDGET_OPTIONS.map((opt) => (
                   <button 
                     key={opt.label}
                     onClick={() => { setBudget(opt); setActiveSegment('type'); }}
                     className={cn(
-                      "flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left text-[14px] font-bold transition-all",
+                      "flex w-full items-center gap-4 rounded-xl px-4 py-4 text-left ty-body font-bold transition-all",
                       budget.label === opt.label ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
                     )}
                   >
@@ -193,7 +193,7 @@ export function HomeSearch() {
               exit={{ opacity: 0, y: 15 }}
               className="absolute right-0 top-[calc(100%+12px)] z-50 w-80 rounded-[32px] border border-zinc-100 bg-white p-6 shadow-2xl"
             >
-              <h3 className="mb-5 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Property Category</h3>
+               <h3 className="mb-5 px-4 ty-label text-zinc-400">Property Category</h3>
               <div className="grid grid-cols-2 gap-2">
                 {PROPERTY_TYPES.map((type) => (
                   <button 
@@ -205,7 +205,7 @@ export function HomeSearch() {
                     )}
                   >
                     {type === "Plot" || type === "Commercial" ? <Trees className="h-6 w-6" /> : <HomeIcon className="h-6 w-6" />}
-                    <span className="text-[11px] font-black uppercase tracking-tight">{type}</span>
+                    <span className="ty-caption font-black">{type}</span>
                   </button>
                 ))}
               </div>

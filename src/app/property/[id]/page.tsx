@@ -114,9 +114,9 @@ function PropertyDetailContent() {
   if (!property) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center">
-        <h1 className="text-3xl font-black">Property Not Found</h1>
-        <p className="text-zinc-500">The listing you're looking for might have been removed or is unavailable.</p>
-        <Link href="/" className="rounded-full bg-black px-8 py-3 font-bold text-white">
+        <h1 className="ty-display font-black">Property Not Found</h1>
+        <p className="ty-body text-zinc-500">The listing you're looking for might have been removed or is unavailable.</p>
+        <Link href="/" className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white">
           Back to Listings
         </Link>
       </div>
@@ -133,7 +133,7 @@ function PropertyDetailContent() {
     <div className="min-h-screen bg-white pb-32">
       {/* Top Section: Only for Heading on Desktop, everything for Mobile */}
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 pt-28 sm:pt-32 pb-4 sm:pb-6 lg:px-12">
-        <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 ty-label text-zinc-400 mb-3 sm:mb-4">
           <Link href={`/explore?city=${property.city}`} className="hover:text-zinc-900 transition-colors">
             {property.city}
           </Link>
@@ -142,7 +142,7 @@ function PropertyDetailContent() {
             {property.area}
           </Link>
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 leading-tight">
+        <h1 className="ty-title font-bold text-zinc-900 leading-tight">
           {formatSizeRange(property.size_min, property.size_max, '')} {property.size_unit} {property.type} for sale in {property.area}, {property.city}
         </h1>
       </section>
@@ -158,7 +158,7 @@ function PropertyDetailContent() {
                {/* Request Photo/Video Button - Always show on top right overlay */}
                <button 
                   onClick={() => setIsPhotoModalOpen(true)}
-                  className="absolute top-4 right-4 z-10 flex items-center gap-2 rounded-xl bg-white/95 backdrop-blur-md px-3 py-2 text-[10px] sm:text-xs font-black shadow-xl transition-all hover:bg-white active:scale-95 border border-zinc-100 text-zinc-900 group"
+                  className="absolute top-4 right-4 z-10 flex items-center gap-2 rounded-xl bg-white/95 backdrop-blur-md px-3 py-2 ty-label shadow-xl transition-all hover:bg-white active:scale-95 border border-zinc-100 text-zinc-900 group"
                 >
                   <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-400 group-hover:text-zinc-900" />
                   <span className="truncate">Request Photos & Videos</span>
@@ -249,14 +249,14 @@ function PropertyDetailContent() {
 
             {/* Share and Save Buttons */}
             <div className="flex items-center gap-3 py-4 border-b border-zinc-100 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0">
-              <button className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap">
+              <button className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap">
                 <Share2 className="h-4 w-4" />
                 Share
               </button>
               <button 
                 onClick={() => toggleSave(property.property_id)}
                 className={cn(
-                    "flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap",
+                    "flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap",
                     saved && "bg-rose-50 border-rose-100 text-rose-600"
                 )}
               >
@@ -265,7 +265,7 @@ function PropertyDetailContent() {
               </button>
               <button 
                 onClick={scrollToMap}
-                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap"
               >
                 <MapIcon className="h-4 w-4" />
                 Map
@@ -275,14 +275,14 @@ function PropertyDetailContent() {
             {/* Highlights Section */}
             {Array.isArray(property.highlights) && property.highlights.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-lg font-bold">Key Highlights</h2>
+                <h2 className="ty-title font-bold">Key Highlights</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {property.highlights.map((h, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-xl bg-zinc-50 p-4">
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm">
                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                       </div>
-                      <span className="font-semibold text-sm">{h}</span>
+                      <span className="ty-caption font-semibold">{h}</span>
                     </div>
                   ))}
                 </div>
@@ -291,15 +291,15 @@ function PropertyDetailContent() {
 
             {/* Description Section */}
             <div className="space-y-4 pt-4">
-              <h2 className="text-lg font-bold">About this listing</h2>
-              <p className="text-base leading-relaxed text-zinc-600">
+              <h2 className="ty-title font-bold">About this listing</h2>
+              <p className="ty-body leading-relaxed text-zinc-600">
                 {property.description}
               </p>
             </div>
 
             {/* Modern Details Table */}
             <div className="space-y-6 pt-8 border-t border-zinc-100">
-                <h2 className="text-lg font-bold">Listing Details</h2>
+                <h2 className="ty-title font-bold">Listing Details</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/50">
                     {[
                         { label: 'Property Type', value: property.type },
@@ -317,8 +317,8 @@ function PropertyDetailContent() {
                             "flex items-center justify-between p-4 border-b border-zinc-100 md:odd:border-r",
                             i >= 8 ? "border-b-0" : ""
                         )}>
-                            <span className="text-sm font-medium text-zinc-500 uppercase tracking-wider">{item.label}</span>
-                            <span className="text-sm font-bold text-zinc-900">{item.value}</span>
+                            <span className="ty-caption font-medium text-zinc-500 uppercase tracking-wider">{item.label}</span>
+                            <span className="ty-caption font-bold text-zinc-900">{item.value}</span>
                         </div>
                     ))}
                 </div>
@@ -327,7 +327,7 @@ function PropertyDetailContent() {
             {/* Map Section */}
             <div ref={mapSectionRef} className="space-y-6 pt-8 border-t border-zinc-100">
               <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold">Where you'll be</h2>
+                  <h2 className="ty-title font-bold">Where you'll be</h2>
                   <div className="flex items-center gap-2 text-sm font-medium text-zinc-600">
                       <MapPin className="h-4 w-4" />
                       <span>{property.area}, {property.city}</span>
@@ -346,7 +346,7 @@ function PropertyDetailContent() {
                       Landmark: {property.landmark_location} {property.landmark_location_distance ? `(${property.landmark_location_distance} km away)` : ''}
                   </p>
               )}
-              <p className="text-[11px] text-zinc-400 italic leading-relaxed">
+              <p className="ty-caption text-zinc-400 italic leading-relaxed">
                 * The location shown on the map is an approximate area for privacy reasons. The exact property location will be shared during the site visit or upon verification.
               </p>
             </div>
@@ -354,7 +354,7 @@ function PropertyDetailContent() {
             {/* Similar Properties Section */}
             {similarProperties.length > 0 && (
               <div className="space-y-8 pt-12 border-t border-zinc-100">
-                <h2 className="text-xl font-bold italic tracking-tight">Similar properties for you</h2>
+                <h2 className="ty-display font-bold italic tracking-tight">Similar properties for you</h2>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   {similarProperties.map((p) => (
                     <PropertyCard key={p.property_id} property={p} />
@@ -364,7 +364,7 @@ function PropertyDetailContent() {
                 <div className="pt-8 flex justify-center">
                   <Link 
                     href={`/explore?city=${property.city}&area=${property.area}&type=${property.type}`}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 py-4 text-sm font-bold text-zinc-900 transition-all hover:bg-zinc-50 hover:border-zinc-300 md:w-auto md:px-12"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 py-3 ty-caption font-bold text-zinc-900 transition-all hover:bg-zinc-50 hover:border-zinc-300 md:w-auto md:px-12"
                   >
                     Show more {property.type}s in {property.area}
                     <ArrowLeft className="h-4 w-4 rotate-180" />
@@ -385,7 +385,7 @@ function PropertyDetailContent() {
               <div className="space-y-3">
                 <button 
                   onClick={() => inCart ? removeFromCart(property.property_id) : addToCart(property)}
-                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-3.5 font-bold uppercase tracking-widest transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-black' : 'bg-black text-white'}`}
+                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-3 ty-label transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-black' : 'bg-black text-white'}`}
                 >
                   <ShoppingCart className="h-4 w-4" />
                   {inCart ? 'Remove from Discussion' : 'Add to Discussion'}
@@ -399,7 +399,7 @@ function PropertyDetailContent() {
                       addToCart(property);
                     }
                   }}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-3.5 font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98]"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98]"
                 >
                   Discuss Now
                 </button>
@@ -409,8 +409,8 @@ function PropertyDetailContent() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Listing Type</p>
-                    <p className="font-bold text-zinc-900">Direct Listing</p>
+                    <p className="ty-label text-zinc-400">Listing Type</p>
+                    <p className="ty-caption font-bold text-zinc-900">Direct Listing</p>
                 </div>
                 <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                     <ShieldCheck className="h-6 w-6" />
@@ -418,7 +418,7 @@ function PropertyDetailContent() {
               </div>
 
               {property.approved_on && (
-                <div className="pt-4 border-t border-zinc-50 text-center text-[10px] text-zinc-400 font-medium italic">
+                <div className="pt-4 border-t border-zinc-50 text-center ty-micro text-zinc-400 font-medium italic">
                     Last updated on {formatDate(property.approved_on)}
                 </div>
               )}
@@ -432,8 +432,8 @@ function PropertyDetailContent() {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] md:hidden">
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Price</span>
-            <p className="text-base font-bold text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
+            <span className="ty-label text-zinc-400">Price</span>
+            <p className="ty-subtitle font-bold text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
           </div>
           <button 
             onClick={() => {
@@ -443,7 +443,7 @@ function PropertyDetailContent() {
                 addToCart(property);
               }
             }}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3 text-[11px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
           >
             Discuss Now
           </button>
@@ -474,20 +474,20 @@ function PropertyDetailContent() {
                   <ShieldCheck className="h-8 w-8 text-amber-600" />
                 </div>
                 
-                <h3 className="mb-4 text-xl font-bold text-zinc-900">Request Photos & Videos</h3>
+                <h3 className="mb-4 ty-title font-bold text-zinc-900">Request Photos & Videos</h3>
                 
                 <div className="space-y-4 text-left">
-                  <p className="text-zinc-600 leading-relaxed font-medium">
+                  <p className="ty-body text-zinc-600 leading-relaxed font-medium">
                     Our platform is designed to be highly transparent. If it was possible for us to add photos and videos, we would have definitely linked them here.
                   </p>
                   
                   <div className="rounded-2xl bg-zinc-50 p-5 border border-zinc-100 italic">
-                    <p className="text-sm text-zinc-600 leading-relaxed">
+                    <p className="ty-caption text-zinc-600 leading-relaxed">
                       "Many owners & Partners do not allow us to make their property photos public to protect their privacy and exclusivity."
                     </p>
                   </div>
 
-                  <p className="text-zinc-600 leading-relaxed font-medium">
+                  <p className="ty-body text-zinc-600 leading-relaxed font-medium">
                     However, if you are <span className="text-zinc-900 font-bold underline">highly serious</span> about your purchase, we can help. By depositing a <span className="text-emerald-600 font-bold">fully refundable token</span> with us, we can arrange exclusive photos and videos for you without requiring a physical site visit.
                   </p>
                 </div>
@@ -495,13 +495,13 @@ function PropertyDetailContent() {
                 <div className="mt-8 flex w-full flex-col gap-3">
                   <button 
                     onClick={() => setIsPhotoModalOpen(false)}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-800 active:scale-[0.98]"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-3.5 ty-caption font-bold text-white transition-all hover:bg-zinc-800 active:scale-[0.98]"
                   >
                     Proceed with Token Request
                   </button>
                   <button 
                     onClick={() => setIsPhotoModalOpen(false)}
-                    className="flex w-full items-center justify-center py-4 text-sm font-bold text-zinc-400 hover:text-zinc-600 transition-colors"
+                    className="flex w-full items-center justify-center py-3 ty-caption font-bold text-zinc-400 hover:text-zinc-600 transition-colors"
                   >
                     Maybe later
                   </button>
