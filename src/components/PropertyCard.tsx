@@ -119,10 +119,10 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearbyF
             <button
               onClick={(e) => handleActionClick(e, () => inCart ? removeFromCart(property.property_id) : addToCart(property))}
               className={cn(
-                "flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition-all active:scale-90",
+                "flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition-all active:scale-95 shadow-lg",
                 inCart
-                  ? "bg-zinc-900 text-white shadow-md"
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                  ? "bg-zinc-100 text-zinc-400 border border-zinc-200 shadow-none"
+                  : "bg-zinc-900 text-white shadow-black/10 hover:bg-black"
               )}
             >
               {inCart ? <Minus className="h-4 w-4 sm:h-5 sm:w-5" /> : <Plus className="h-4 w-4 sm:h-5 sm:w-5" />}

@@ -18,10 +18,10 @@ export default function Home() {
       {/* Mobile-only Hero Section — hidden on sm+ where navbar shows the full hero */}
       <section className="sm:hidden px-4 pt-8 pb-4 text-center">
         <h1 className="ty-hero font-bold tracking-tight text-zinc-900 leading-[1.05]">
-          Find your perfect space in {selectedCity}
+          Find your dream property
         </h1>
         <p className="mt-3 ty-label text-zinc-400 opacity-80">
-          Curated listings for premium living
+          Choose from biggest property pool
         </p>
         <div className="mt-8 px-0">
           <button
