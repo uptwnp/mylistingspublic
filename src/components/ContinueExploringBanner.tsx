@@ -7,6 +7,7 @@ import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useShortlist } from '@/context/ShortlistContext';
+import { BUDGET_OPTIONS } from '@/components/HeaderSearch';
 
 export function ContinueExploringBanner() {
   const { recentlyVisitedIds } = useShortlist();
@@ -29,23 +30,36 @@ export function ContinueExploringBanner() {
 
   const hasImage = Array.isArray(lastProperty.image_urls) && lastProperty.image_urls.length > 0;
   
-  // Create search URL based on last property
-  const searchUrl = `/explore?city=${lastProperty.city}&area=${lastProperty.area}&type=${lastProperty.type}`;
-
   // Formatting strings
   const typeParts = (lastProperty.type || '').split(/[/\s]/);
   let baseType = typeParts[typeParts.length - 1] || 'property';
   if (!baseType.endsWith('s')) baseType += 's'; // e.g., 'plots', 'apartments', 'villas'
 
   let priceText = "";
+  let budgetQuery = "";
+
   if (lastProperty.price_max) {
-      if (lastProperty.price_max < 100) {
-          priceText = `under ${lastProperty.price_max} Lakh`;
-      } else {
-          const cr = (lastProperty.price_max / 100).toFixed(1).replace('.0', '');
-          priceText = `under ${cr} Cr`;
+      const match = BUDGET_OPTIONS.find(opt => opt.value >= lastProperty.price_max && opt.value > 0);
+      if (match) {
+          budgetQuery = match.label;
+          if (match.label.toLowerCase().startsWith('under')) {
+             priceText = match.label.toLowerCase();
+          } else if (match.label.includes('+')) {
+             priceText = "over " + match.label.replace('+', '').toLowerCase();
+          } else {
+             priceText = "in " + match.label.toLowerCase(); // "in 40 to 80 lakh"
+          }
       }
   }
+
+  // Create search URL based on last property
+  const queryParams = new URLSearchParams();
+  if (lastProperty.city) queryParams.set('city', lastProperty.city);
+  if (lastProperty.area) queryParams.set('area', lastProperty.area);
+  if (lastProperty.type) queryParams.set('type', lastProperty.type);
+  if (budgetQuery) queryParams.set('budget', budgetQuery);
+
+  const searchUrl = `/explore?${queryParams.toString()}`;
 
   return (
     <div className="flex w-full justify-center px-4 sm:px-0 py-2 sm:py-4">
