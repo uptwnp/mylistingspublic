@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { syncShortlist, submitConsultationRequest } from '@/lib/supabase';
+import { syncShortlist, submitConsultationRequest, getAreaCenters } from '@/lib/supabase';
 
 import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
 
@@ -90,6 +90,7 @@ interface ShortlistContextType {
   addConsultationRequest: (request: Omit<ConsultationRequest, 'id' | 'timestamp'>) => void;
   updateConsultationRequest: (id: string, updates: Partial<ConsultationRequest>) => void;
   removeConsultationRequest: (id: string) => void;
+  areaCenters: any[];
 }
 
 const ShortlistContext = createContext<ShortlistContextType | undefined>(undefined);
@@ -132,6 +133,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [onContactSuccess, setOnContactSuccess] = useState<(() => void) | null>(null);
 
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
+  const [areaCenters, setAreaCenters] = useState<any[]>([]);
 
   // Initialize from localStorage on mount
   useEffect(() => {
@@ -213,6 +215,11 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     if (savedRequests) {
       try { setConsultationRequests(JSON.parse(savedRequests)); } catch (e) { console.error(e); }
     }
+
+    // Fetch master area centers
+    getAreaCenters().then(data => {
+      if (data) setAreaCenters(data);
+    });
   }, []);
 
   // Update localStorage when state changes
@@ -431,6 +438,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       addConsultationRequest,
       updateConsultationRequest,
       removeConsultationRequest,
+      areaCenters,
     }}>
       {children}
     </ShortlistContext.Provider>

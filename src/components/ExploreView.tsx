@@ -60,13 +60,13 @@ export function ExploreView({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const areaParam = searchParams.get('area');
+  const activeArea = overrideArea || searchParams.get('area');
 
   const { 
     shortlistItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
     setActiveSelectionSheet, setKeywords, setMinSize, setMaxSize, 
     setSelectedHighlights, clearFilters, userLocation, setUserLocation,
-    sortField, sortOrder, setSortField, setSortOrder
+    sortField, sortOrder, setSortField, setSortOrder, areaCenters
   } = useShortlist();
 
   // Re-derive active category from context strings:
@@ -75,17 +75,17 @@ export function ExploreView({
 
   useEffect(() => {
     // If we entered 'Near me' for the first time and sort isn't updated
-    if (areaParam === 'Near Me' && sortField === 'approved_on') {
+    if (activeArea === 'Near Me' && sortField === 'approved_on') {
       setSortField('distance');
       setSortOrder('asc');
     }
-  }, [areaParam]);
+  }, [activeArea]);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const itemsPerPage = 20;
 
   // Request location if nearby is selected
   useEffect(() => {
-    if ((areaParam === 'Near Me' || sortField === 'distance') && !userLocation) {
+    if ((activeArea === 'Near Me' || sortField === 'distance') && !userLocation) {
       const cityCenters: Record<string, {lat: number, lng: number}> = {
         'Panipat': { lat: 29.3909, lng: 76.9635 },
         'Karnal': { lat: 29.6857, lng: 76.9907 }
@@ -94,7 +94,7 @@ export function ExploreView({
       const setFallback = () => {
         const coords = cityCenters[selectedCity] || cityCenters['Panipat'];
         setUserLocation({ ...coords, isFallback: true });
-        if (areaParam === 'Near Me' && sortField !== 'distance') {
+        if (activeArea === 'Near Me' && sortField !== 'distance') {
           setSortField('distance');
           setSortOrder('asc');
         }
@@ -109,7 +109,7 @@ export function ExploreView({
               isFallback: false
             });
             
-            if (areaParam === 'Near Me' && sortField !== 'distance') {
+            if (activeArea === 'Near Me' && sortField !== 'distance') {
               setSortField('distance');
               setSortOrder('asc');
             }
@@ -124,7 +124,7 @@ export function ExploreView({
         setFallback();
       }
     }
-  }, [areaParam, sortField, userLocation, selectedCity]);
+  }, [activeArea, userLocation, selectedCity]); // Removed sortField from here to stop the 'sorting trap'
 
   // Reset page when any core search filter changes
   useEffect(() => {
@@ -151,51 +151,30 @@ export function ExploreView({
         false, 
         city === 'All' ? undefined : city,
         type || undefined,
-        sortField === 'distance' ? 'approved_on' : sortField,
+        sortField === 'distance' ? 'distance' : sortField,
         sortOrder,
         area || undefined,
         budget || undefined,
         minSize || undefined,
         maxSize || undefined,
         highlights || undefined,
-        keywords || undefined
+        keywords || undefined,
+        userLocation?.lat,
+        userLocation?.lng
       );
       
       let finalData = [...data];
       setTotalCount(count);
 
-      // Client-side distance sorting and calculation if needed
-      if ((sortField === 'distance' || areaParam === 'Near Me')) {
-        if (userLocation) {
-          finalData.sort((a, b) => {
-            const [latA, lngA] = getPropertyCoords(a, finalData);
-            const [latB, lngB] = getPropertyCoords(b, finalData);
-            
-            const distA = calculateDistance(userLocation.lat, userLocation.lng, latA, lngA);
-            const distB = calculateDistance(userLocation.lat, userLocation.lng, latB, lngB);
-            
-            return sortOrder === 'asc' ? distA - distB : distB - distA;
-          });
-
-          // Add real calculated distance property to cards
-          finalData = finalData.map(p => {
-            const [pLat, pLng] = getPropertyCoords(p, finalData);
-            return {
-              ...p,
-              landmark_location_distance: calculateDistance(
-                userLocation.lat, 
-                userLocation.lng, 
-                pLat,
-                pLng
-              )
-            };
-          });
-        } else {
-          finalData = finalData.map(p => ({
+      // Calculate distances locally only for card labels ("1.2 km away")
+      if (userLocation) {
+        finalData = finalData.map(p => {
+          const [pLat, pLng] = getPropertyCoords(p, finalData, areaCenters);
+          return {
             ...p,
-            landmark_location_distance: undefined
-          }));
-        }
+            landmark_location_distance: calculateDistance(userLocation.lat, userLocation.lng, pLat, pLng)
+          };
+        });
       }
 
       setProperties(finalData);
@@ -223,21 +202,24 @@ export function ExploreView({
             <div className="pt-2 sm:pt-4 pb-2">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">
-                  <h1 className="ty-title font-bold tracking-tight text-zinc-900 capitalize">
+                  <h1 className="ty-title font-bold tracking-tight text-zinc-900 capitalize" suppressHydrationWarning={true}>
                     {(() => {
                       const type = overrideType || searchParams.get('type');
                       const area = overrideArea || searchParams.get('area');
                       const budget = overrideBudget || searchParams.get('budget');
                       const city = overrideCity || searchParams.get('city') || selectedCity;
 
-                      const displayType = type && type !== 'Any Type' && type !== 'All' ? type : 'Properties';
-                      const displayArea = area && area !== 'All' && area !== 'Any' && area !== 'any' && area !== 'anywhere' ? area : '';
-                      const displayBudget = budget && budget !== 'Any Budget' && budget !== 'any-budget' ? budget : '';
+                      const isPlaceholder = (v: any) => !v || typeof v !== 'string' || 
+                        ['all', 'any', 'all-types', 'any-type', 'any-budget', 'any budget', 'any-area', 'anywhere', 'nothing', 'undefined', 'null'].includes(v.toLowerCase());
+
+                      const displayType = !isPlaceholder(type) ? type : 'Properties';
+                      const displayArea = !isPlaceholder(area) ? area : '';
+                      const displayBudget = !isPlaceholder(budget) ? budget : '';
 
                       let titleParts = [displayType, "for sale"];
                       
                       if (displayArea) {
-                        if (displayArea.toLowerCase() === 'near me') titleParts.push("Near Me");
+                        if (displayArea.toLowerCase() === 'near me' || displayArea.toLowerCase() === 'near-me') titleParts.push("Near Me");
                         else titleParts.push(`in ${displayArea}, ${city}`);
                       } else if (city && city !== 'All') {
                         titleParts.push(`in ${city}`);
@@ -247,7 +229,7 @@ export function ExploreView({
                         titleParts.push(displayBudget);
                       }
 
-                      return titleParts.join(' ');
+                      return titleParts.filter(Boolean).join(' ');
                     })()}
                   </h1>
                   <div className="flex items-center gap-2">
@@ -291,7 +273,7 @@ export function ExploreView({
                     isExpanded={selectedProperty?.property_id === property.property_id}
                     onToggle={() => setSelectedProperty(selectedProperty?.property_id === property.property_id ? null : property)}
                     isNearMeFallback={userLocation?.isFallback}
-                    showDistance={areaParam === 'Near Me' || sortField === 'distance'}
+                    showDistance={activeArea === 'Near Me' || sortField === 'distance'}
                   />
                 ))
               ) : (
@@ -364,7 +346,7 @@ export function ExploreView({
                 selectedProperty={selectedProperty}
                 onSelectProperty={setSelectedProperty}
                 userLocation={userLocation}
-                showDistance={areaParam === 'Near Me' || sortField === 'distance'}
+                showDistance={activeArea === 'Near Me' || sortField === 'distance'}
               />
             </div>
           </div>

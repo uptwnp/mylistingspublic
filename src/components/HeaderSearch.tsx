@@ -66,6 +66,7 @@ export function HeaderSearch({
   const { setUserLocation, sortField, sortOrder, setSortField, setSortOrder, userLocation } = useShortlist();
   const [isSortOpen, setIsSortOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -89,6 +90,9 @@ export function HeaderSearch({
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setActiveSegment(null);
+      }
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -432,9 +436,12 @@ export function HeaderSearch({
                     )}
                   </button>
 
-                  <div className="relative">
+                  <div className="relative" ref={sortRef}>
                     <button 
-                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsSortOpen(!isSortOpen);
+                      }}
                       className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white h-10 px-4 whitespace-nowrap shrink-0 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 shadow-md hover:shadow-lg"
                     >
                       {(() => {
@@ -453,12 +460,7 @@ export function HeaderSearch({
 
                     <AnimatePresence>
                       {isSortOpen && (
-                        <>
-                          <div 
-                            className="fixed inset-0 z-40 bg-transparent" 
-                            onClick={() => setIsSortOpen(false)} 
-                          />
-                          <motion.div
+                        <motion.div
                             initial={{ opacity: 0, y: 5, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 5, scale: 0.95 }}
@@ -495,8 +497,7 @@ export function HeaderSearch({
                                 </button>
                               );
                             })}
-                          </motion.div>
-                        </>
+                        </motion.div>
                       )}
                     </AnimatePresence>
                   </div>

@@ -132,7 +132,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
               <Locate className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
               <span>
                 {property.landmark_location_distance.toFixed(1)} km 
-                {isNearMeFallback ? ' from city center' : ' away'}
+                {property.loc_fallback ? ' from area center' : ' away'}
               </span>
             </div>
           )}
@@ -140,7 +140,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
         <motion.div layout className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
           <span className="px-2 sm:px-3 py-1 bg-zinc-100 rounded-full ty-micro font-black text-zinc-900 shadow-sm border border-zinc-200">
-            {formatPrice(property.price_min)}
+            {property.formatted_price || formatPrice(property.price_min)}
           </span>
 
           <motion.div

@@ -12,6 +12,7 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
 const CACHE_KEY = 'property_platform_results_v5';
 const AREAS_CACHE_KEY = 'property_platform_areas_v1';
 const CITIES_CACHE_KEY = 'property_platform_cities_v1';
+const CENTERS_CACHE_KEY = 'property_platform_centers_v1';
 const CACHE_TTL = 3600000; // 1 hour
 
 // Simple in-memory deduplication for pending requests
@@ -37,43 +38,25 @@ const formatPropertyData = (property: Record<string, unknown>) => {
     property_id: String(property.property_id ?? ''),
     tags: typeof property.tags === 'string' 
       ? property.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-      : Array.isArray(property.tags) ? property.tags : [],
+      : Array.isArray(property.tags) ? (property.tags as any).filter(Boolean) : [],
     highlights: typeof property.highlights === 'string'
       ? property.highlights.split(',').map((h: string) => h.trim()).filter(Boolean)
-      : Array.isArray(property.highlights) ? property.highlights : [],
+      : Array.isArray(property.highlights) ? (property.highlights as any).filter(Boolean) : [],
     image_urls: (typeof property.image_urls === 'string' 
       ? property.image_urls.split(',').map((url: string) => url.trim()).filter(Boolean)
       : Array.isArray(property.image_urls) ? property.image_urls : []
     ).map((url: string) => {
-      if (url.includes('r2.cloudflarestorage.com')) {
+      if (typeof url === 'string' && url.includes('r2.cloudflarestorage.com')) {
         return url.replace('c60696ba6ea91f21fe51c590227fc61d.r2.cloudflarestorage.com/properties', 'pub-9e00030e294c40efa96642db5ba7f437.r2.dev');
       }
       return url;
     })
   } as any;
-
-  // Extract latitude and longitude from landmark_location if it's in "lat,lng" format
-  if (property.landmark_location && typeof property.landmark_location === 'string') {
-    const parts = property.landmark_location.split(',');
-    if (parts.length === 2) {
-      const lat = parseFloat(parts[0].trim());
-      const lng = parseFloat(parts[1].trim());
-      if (!isNaN(lat) && !isNaN(lng)) {
-        formatted.latitude = lat;
-        formatted.longitude = lng;
-      }
-    }
-  }
-
-  // Fallback for size_unit
-  if (!formatted.size_unit || formatted.size_unit === 'null' || formatted.size_unit === 'undefined') {
-    formatted.size_unit = getFallbackUnit(formatted.price_min || formatted.price_max, formatted.size_min || formatted.size_max);
-  }
   
   return formatted;
 };
 
-const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,tags,highlights,image_urls,is_photos_public,landmark_location,landmark_location_distance,approved_on,status';
+const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,tags,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status';
 
 export async function getProperties(
   page = 0, 
@@ -88,12 +71,14 @@ export async function getProperties(
   minSize?: string,
   maxSize?: string,
   highlights?: string,
-  keywords?: string
+  keywords?: string,
+  userLat?: number | null,
+  userLng?: number | null
 ) {
   if (!supabase) return [];
 
   const safeLimit = Math.min(limit, 1000);
-  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${page}`;
+  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${userLat || 'noLat'}_${userLng || 'noLng'}_${page}`;
   
   // Try to get from localStorage first for "Perceived Instant" speed
   if (useCache && typeof window !== 'undefined' && page === 0) {
@@ -114,9 +99,17 @@ export async function getProperties(
   const to = from + safeLimit - 1;
 
   try {
-    let query = supabase
-      .from('public_properties_view')
-      .select(PUBLIC_FIELDS, { count: 'exact' });
+    let query: any;
+    if (sortField === 'distance' && userLat && userLng) {
+      // Use the new Golden RPC for true database-side distance sorting
+      query = supabase
+        .rpc('get_nearby_listing_data', { user_lat: userLat, user_lng: userLng })
+        .select(PUBLIC_FIELDS, { count: 'exact' });
+    } else {
+      query = supabase
+        .from('website_public_listing')
+        .select(PUBLIC_FIELDS, { count: 'exact' });
+    }
 
     if (city && city !== 'All') {
       query = query.ilike('city', `%${city.trim()}%`);
@@ -192,12 +185,12 @@ export async function getProperties(
     }
 
     if (keywords) {
-      query = query.or(`description.ilike.%${keywords}%,tags.ilike.%${keywords}%,area.ilike.%${keywords}%,type.ilike.%${keywords}%,city.ilike.%${keywords}%`);
+      query = query.ilike('search_text', `%${keywords.toLowerCase().trim()}%`);
     }
 
     const { data, error, count } = await query
       .range(from, to)
-      .order(sortField, { ascending: sortOrder === 'asc', nullsFirst: false })
+      .order(sortField === 'distance' ? 'approved_on' : sortField, { ascending: sortOrder === 'asc', nullsFirst: false })
       .order('property_id', { ascending: true });
 
     if (error) {
@@ -226,7 +219,7 @@ export async function getPropertyById(id: string | number) {
 
   try {
     const { data, error } = await supabase
-      .from('public_properties_view')
+      .from('website_public_listing')
       .select(PUBLIC_FIELDS)
       .or(`property_id.eq.${cleanId},public_id.eq.${cleanId}`)
       .limit(1);
@@ -254,7 +247,7 @@ export async function getPropertiesByIds(ids: string[]) {
 
   try {
     const { data, error } = await supabase
-      .from('public_properties_view')
+      .from('website_public_listing')
       .select(PUBLIC_FIELDS)
       .in('property_id', cleanIds);
 
@@ -274,7 +267,7 @@ export async function getPropertyCount(city?: string) {
   if (!supabase) return 0;
   try {
     let query = supabase
-      .from('public_properties_view')
+      .from('website_public_listing')
       .select('*', { count: 'exact', head: true });
 
     if (city && city !== 'All') {
@@ -312,7 +305,7 @@ export async function getCities() {
 
     try {
       const { data, error } = await supabase
-        .from('public_properties_view')
+        .from('website_public_listing')
         .select('city');
       
       if (error) throw error;
@@ -352,7 +345,7 @@ export async function getAreas(city?: string) {
 
     try {
       let query = supabase
-        .from('public_properties_view')
+        .from('website_public_listing')
         .select('area');
 
       if (city && city !== 'All') {
@@ -371,6 +364,42 @@ export async function getAreas(city?: string) {
       return areas;
     } catch (err) {
       console.error('Error in getAreas:', err);
+      return [];
+    }
+  });
+}
+
+export async function getAreaCenters() {
+  if (!supabase) return [];
+  
+  return dedupeRequest('area_centers', async () => {
+    // Try cache first
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(CENTERS_CACHE_KEY);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_TTL) return data;
+        } catch (e) {
+          localStorage.removeItem(CENTERS_CACHE_KEY);
+        }
+      }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('area_locations')
+        .select('city, area, center_location');
+      
+      if (error) throw error;
+      
+      if (typeof window !== 'undefined' && data.length > 0) {
+        localStorage.setItem(CENTERS_CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('Error in getAreaCenters:', err);
       return [];
     }
   });

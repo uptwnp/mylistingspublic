@@ -184,13 +184,13 @@ interface MapComponentProps {
 }
 
 // Component to handle map center and zoom changes only when selected property changes
-function MapController({ selectedProperty, zoomLevel, properties }: { selectedProperty: Property | null; zoomLevel: number; properties: Property[] }) {
+function MapController({ selectedProperty, zoomLevel, properties, areaCenters }: { selectedProperty: Property | null; zoomLevel: number; properties: Property[]; areaCenters: any[] }) {
   const map = useMap();
   const prevPropertyIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (selectedProperty && selectedProperty.property_id !== prevPropertyIdRef.current) {
-      const coords = getPropertyCoords(selectedProperty, properties);
+      const coords = getPropertyCoords(selectedProperty, properties, areaCenters);
       
       // Intelligent zoom logic:
       // If the property is already visible in the current view, don't zoom out.
@@ -207,11 +207,9 @@ function MapController({ selectedProperty, zoomLevel, properties }: { selectedPr
       });
       prevPropertyIdRef.current = selectedProperty.property_id;
     } else if (!selectedProperty && prevPropertyIdRef.current !== null) {
-      // Return to default view if property is deselected
-      // map.flyTo([29.3909, 76.9635], 13);
       prevPropertyIdRef.current = null;
     }
-  }, [selectedProperty, zoomLevel, map, properties]);
+  }, [selectedProperty, zoomLevel, map, properties, areaCenters]);
 
   return null;
 }
@@ -254,7 +252,7 @@ function InvalidateSize({ trigger }: { trigger?: any }) {
 }
 
 // getCoords helper is now getPropertyCoords in utils.ts
-const getCoords = (property: Property, allProps?: Property[]): [number, number] => getPropertyCoords(property, allProps);
+const getCoords = (property: Property, allProps?: Property[], areaCenters?: any[]): [number, number] => getPropertyCoords(property, allProps, areaCenters);
 
 function MapControls({ 
   isSatellite, 
@@ -367,12 +365,14 @@ function CollisionAwareMarkers({
   properties, 
   selectedProperty, 
   onSelectProperty, 
-  zoom 
+  zoom,
+  areaCenters
 }: { 
   properties: Property[], 
   selectedProperty: Property | null, 
   onSelectProperty: (p: Property | null) => void, 
-  zoom: number 
+  zoom: number,
+  areaCenters: any[]
 }) {
   const map = useMap();
   
@@ -381,7 +381,7 @@ function CollisionAwareMarkers({
     if (!map) return properties.map(p => ({ 
       type: 'marker' as const, 
       props: [p], 
-      center: getPropertyCoords(p, properties), 
+      center: getPropertyCoords(p, properties, areaCenters), 
       hideLabel: false 
     }));
     
@@ -402,7 +402,7 @@ function CollisionAwareMarkers({
     const groups: { type: 'marker' | 'cluster', props: Property[], center: [number, number] }[] = [];
 
     sortedProps.forEach(prop => {
-      const coords = getPropertyCoords(prop, properties);
+      const coords = getPropertyCoords(prop, properties, areaCenters);
       const point = map.project(L.latLng(coords[0], coords[1]), zoom);
       const isSelected = prop.property_id === selectedProperty?.property_id;
 
@@ -481,13 +481,13 @@ function CollisionAwareMarkers({
       }
       return { ...g, hideLabel: true };
     });
-  }, [properties, selectedProperty, zoom, map]);
+  }, [properties, selectedProperty, zoom, map, areaCenters]);
 
   const onClusterClick = (clusterProps: Property[]) => {
     if (clusterProps.length <= 1) return;
     
-    const lats = clusterProps.map(p => getPropertyCoords(p, properties)[0]);
-    const lngs = clusterProps.map(p => getPropertyCoords(p, properties)[1]);
+    const lats = clusterProps.map(p => getPropertyCoords(p, properties, areaCenters)[0]);
+    const lngs = clusterProps.map(p => getPropertyCoords(p, properties, areaCenters)[1]);
     
     const bounds = L.latLngBounds(
       [Math.min(...lats), Math.min(...lngs)],
@@ -547,7 +547,7 @@ export default function MapComponent({
   disableCard = false
 }: MapComponentProps) {
   const router = useRouter();
-  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave } = useShortlist();
+  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave, areaCenters } = useShortlist();
   const [isSatellite, setIsSatellite] = useState(false);
   const [zoom, setZoom] = useState(13);
 
@@ -566,24 +566,24 @@ export default function MapComponent({
     return null;
   }
   const center: [number, number] = selectedProperty 
-    ? getCoords(selectedProperty, properties)
+    ? getCoords(selectedProperty, properties, areaCenters)
     : [29.3909, 76.9635]; // Panipat center
 
-  const propertyCoords = selectedProperty ? getCoords(selectedProperty, properties) : null;
+  const propertyCoords = selectedProperty ? getCoords(selectedProperty, properties, areaCenters) : null;
   const userCoords: [number, number] | null = userLocation ? [userLocation.lat, userLocation.lng] : null;
   const curvedPath = (userCoords && propertyCoords) ? getCurvedPath(userCoords, propertyCoords) : null;
 
   return (
     <div className="relative h-full w-full">
       <MapContainer 
-        center={selectedProperty ? getCoords(selectedProperty, properties) : [29.3909, 76.9635]} 
+        center={selectedProperty ? getCoords(selectedProperty, properties, areaCenters) : [29.3909, 76.9635]} 
         zoom={13} 
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
         <MapEvents />
         <InvalidateSize trigger={properties} />
-        <MapController selectedProperty={selectedProperty} zoomLevel={15} properties={properties} />
+        <MapController selectedProperty={selectedProperty} zoomLevel={15} properties={properties} areaCenters={areaCenters} />
         <TileLayer
           attribution={isSatellite 
             ? '&copy; <a href="https://www.esri.com/">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
@@ -631,7 +631,7 @@ export default function MapComponent({
         )}
         {selectedProperty && selectedProperty.landmark_location_distance && selectedProperty.landmark_location_distance > 0 && (
           <Circle
-            center={getCoords(selectedProperty, properties)}
+            center={getCoords(selectedProperty, properties, areaCenters)}
             radius={selectedProperty.landmark_location_distance}
             pathOptions={{
               color: '#3b82f6', // blue-500
@@ -647,6 +647,7 @@ export default function MapComponent({
           selectedProperty={selectedProperty} 
           onSelectProperty={onSelectProperty} 
           zoom={zoom} 
+          areaCenters={areaCenters}
         />
       </MapContainer>
 

@@ -18,6 +18,9 @@ export type Property = {
   landmark_location_distance?: number;
   latitude?: number;
   longitude?: number;
+  loc_fallback?: boolean;
+  formatted_price?: string;
+  search_text?: string;
   status: string;
   approved_on: string;
 };

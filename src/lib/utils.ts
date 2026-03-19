@@ -37,10 +37,7 @@ export function getFallbackUnit(price: number | null | undefined, size: number |
 export function formatSizeRange(min: number, max: number, unit: string | null, price?: number) {
   if (!min && !max) return 'N/A';
   
-  let unitStr = unit;
-  if (!unitStr || unitStr === 'null' || unitStr === 'undefined') {
-    unitStr = getFallbackUnit(price, min || max);
-  }
+  const unitStr = unit || 'Sq.Yds';
   
   if (min === max || !max) return `${min} ${unitStr}`.trim();
   return `${min} - ${max} ${unitStr}`.trim();
@@ -60,55 +57,43 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
   return d;
 }
 
-export function getPropertyCoords(property: Partial<Property>, allProperties?: Partial<Property>[]): [number, number] {
-  if (property.latitude && property.longitude) {
-    return [property.latitude, property.longitude];
+function getMedian(arr: number[]) {
+  if (arr.length === 0) return 0;
+  const sorted = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+export function getPropertyCoords(property: Partial<Property>, allProperties?: Partial<Property>[], areaCenters?: any[]): [number, number] {
+  // Use pre-parsed coordinates from our new view
+  const lat = property.latitude;
+  const lng = property.longitude;
+
+  if (!lat || !lng) {
+    // Absolute Fallback to City Center (should theoretically rarely happen now)
+    const hash = (property.property_id || property.area || 'unknown').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const baseLat = property.city?.toLowerCase() === 'karnal' ? 29.6857 : 29.3909;
+    const baseLng = property.city?.toLowerCase() === 'karnal' ? 76.9907 : 76.9635;
+    const lOff = ((hash % 100) / 5000) - 0.01;
+    const gOff = (((hash * 13) % 100) / 5000) - 0.01;
+    return [baseLat + lOff, baseLng + gOff];
   }
 
-  // Generate a predictable scatter based on area name
-  const areaName = property.area || 'unknown';
-  const hash = (property.property_id || areaName).split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-  const scatterLat = ((hash % 100) / 10000) - 0.005; // ~500m scatter
-  const scatterLng = (((hash * 13) % 100) / 10000) - 0.005;
-
-  // 1. Try to find the average of other properties in the EXACT SAME city and area
-  if (allProperties && property.city && property.area) {
-    const sameAreaProps = allProperties.filter(
-      p => p.city?.toLowerCase() === property.city?.toLowerCase() &&
-           p.area?.toLowerCase() === property.area?.toLowerCase() &&
-           p.latitude && p.longitude &&
-           p.property_id !== property.property_id
-    );
-
-    if (sameAreaProps.length > 0) {
-      const avgLat = sameAreaProps.reduce((sum, p) => sum + (p.latitude || 0), 0) / sameAreaProps.length;
-      const avgLng = sameAreaProps.reduce((sum, p) => sum + (p.longitude || 0), 0) / sameAreaProps.length;
-      return [avgLat + scatterLat, avgLng + scatterLng];
-    }
+  // If this is a fallback location (from the area center), we apply a stable scatter
+  // so properties in the same area don't overlap completely on the map.
+  if (property.loc_fallback) {
+    const hashStr = `${property.property_id || ''}-${property.area || 'unknown'}`;
+    const hash = hashStr.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
     
-    // 2. Fallback to city average if area has no properties with lat/long
-    const sameCityProps = allProperties.filter(
-      p => p.city?.toLowerCase() === property.city?.toLowerCase() &&
-           p.latitude && p.longitude &&
-           p.property_id !== property.property_id
-    );
-
-    if (sameCityProps.length > 0) {
-      const avgLat = sameCityProps.reduce((sum, p) => sum + (p.latitude || 0), 0) / sameCityProps.length;
-      const avgLng = sameCityProps.reduce((sum, p) => sum + (p.longitude || 0), 0) / sameCityProps.length;
-      return [avgLat + scatterLat, avgLng + scatterLng];
-    }
+    // ~500m randomization
+    const scatterLat = ((hash % 100) / 10000) - 0.005; 
+    const scatterLng = (((hash * 13) % 100) / 10000) - 0.005;
+    
+    return [lat + scatterLat, lng + scatterLng];
   }
 
-  // 3. Absolute Fallback to City Center
-  const baseLat = property.city?.toLowerCase() === 'karnal' ? 29.6857 : 29.3909;
-  const baseLng = property.city?.toLowerCase() === 'karnal' ? 76.9907 : 76.9635;
-
-  // We spread the points tighter around the static fallback
-  const fallbackLatOffset = ((hash % 100) / 5000) - 0.01;
-  const fallbackLngOffset = (((hash * 13) % 100) / 5000) - 0.01;
-
-  return [baseLat + fallbackLatOffset, baseLng + fallbackLngOffset];
+  // Exact location - return as is
+  return [lat, lng];
 }
 
 function deg2rad(deg: number) {
