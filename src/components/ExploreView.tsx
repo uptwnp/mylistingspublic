@@ -9,9 +9,10 @@ import { Loader2, SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, M
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { calculateDistance, getPropertyCoords } from '@/lib/utils';
 import { ArrowDown, ArrowUp } from 'lucide-react';
+import { parseSeoSlug } from '@/lib/seo-utils';
 
 import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 
@@ -57,6 +58,8 @@ export function ExploreView({
 
   const [page, setPage] = useState(0);
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const areaParam = searchParams.get('area');
 
   const { 
@@ -296,7 +299,13 @@ export function ExploreView({
                   <p className="mb-8 max-w-[280px] ty-body text-zinc-500">
                     We couldn't find any properties matching your search.
                   </p>
-                  <button onClick={clearFilters} className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-95">
+                  <button 
+                    onClick={() => {
+                      clearFilters();
+                      router.push('/explore');
+                    }} 
+                    className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-95"
+                  >
                     Clear all filters
                   </button>
                 </div>

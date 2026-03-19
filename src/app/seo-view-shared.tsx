@@ -6,44 +6,37 @@ import { ExploreView } from '@/components/ExploreView';
 import { parseSeoSlug } from '@/lib/seo-utils';
 import { Metadata } from 'next';
 
-type Props = {
-  params: Promise<{ slug: string }>;
-};
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+export async function generateSeoMetadata(slug: string[]): Promise<Metadata> {
   const seoData = parseSeoSlug(slug);
 
-  if (!seoData) {
-    return {};
+  if (!seoData || !seoData.city) {
+    return { title: 'Properties | Dealer Network' };
   }
 
   const { city, type, area, budget } = seoData;
   const titleParts = [];
+  
   if (type) titleParts.push(type);
-  if (area) {
-     titleParts.push(`in ${area}`);
-  } else if (city) {
-     titleParts.push(`in ${city}`);
-  }
+  else titleParts.push("Properties");
+
+  if (area) titleParts.push(`in ${area}`);
+  else if (city) titleParts.push(`in ${city}`);
+  
   if (budget) titleParts.push(`(${budget})`);
 
-  const title = titleParts.join(' ') || 'Properties';
-
   return {
-    title: `${title} | Dealer Network`,
-    description: `Explore verified listings of ${title}. Find your dream property with instant maps and premium selection.`,
+    title: `${titleParts.join(' ')} | Dealer Network`,
+    description: `Explore verified listings in ${city}. Find your dream property with instant maps and premium selection.`,
     alternates: {
-      canonical: `/${slug}`,
+      canonical: `/${slug.join('/')}`,
     },
   };
 }
 
-export default async function SeoExplorePage({ params }: Props) {
-  const { slug } = await params;
+export function SeoExploreView({ slug }: { slug: string[] }) {
   const seoData = parseSeoSlug(slug);
 
-  if (!seoData) {
+  if (!seoData || !seoData.city) {
     notFound();
   }
 
@@ -55,9 +48,9 @@ export default async function SeoExplorePage({ params }: Props) {
     }>
       <ExploreView 
         overrideCity={seoData.city} 
-        overrideType={seoData.type} 
-        overrideArea={seoData.area} 
-        overrideBudget={seoData.budget} 
+        overrideType={seoData.type || undefined} 
+        overrideArea={seoData.area || undefined} 
+        overrideBudget={seoData.budget || undefined} 
       />
     </Suspense>
   );

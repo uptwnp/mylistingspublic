@@ -96,26 +96,25 @@ export function HeaderSearch({
   }, []);
 
   const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
-    const params = new URLSearchParams();
-    if (city) params.set('city', city);
-    
     const finalArea = overrides?.area ?? query;
     const finalBudget = overrides?.budget ?? budget;
     const finalType = overrides?.type ?? propertyType;
 
+    // Prioritize hierarchical SEO URL for primary search parameters
+    const seoUrl = getSeoUrl(city, finalType, finalArea, finalBudget.label);
+    if (seoUrl) {
+      router.push(seoUrl);
+      setActiveSegment(null);
+      if (onSearch) onSearch();
+      return;
+    }
+
+    // Fallback to query params only for complex filters not covered by SEO structure
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
     if (finalArea) params.set('area', finalArea);
     if (finalBudget.value > 0) params.set('budget', finalBudget.label);
     if (finalType !== "Any Type") params.set('type', finalType);
-
-    if (!finalArea && finalBudget.value === 0) {
-      const seoUrl = getSeoUrl(city, finalType);
-      if (seoUrl) {
-        router.push(seoUrl);
-        setActiveSegment(null);
-        if (onSearch) onSearch();
-        return;
-      }
-    }
 
     router.push(`/explore?${params.toString()}`);
     setActiveSegment(null);

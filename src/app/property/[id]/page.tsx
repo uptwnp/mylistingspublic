@@ -181,6 +181,10 @@ function PropertyDetailContent() {
           
           {/* COLUMN 1: Main Content */}
           <div className="lg:col-span-8 space-y-8">
+            <div className="flex items-center gap-2 text-zinc-400 ty-micro font-bold uppercase tracking-widest bg-zinc-50/50 w-fit px-3 py-1.5 rounded-lg border border-zinc-100">
+                <Calendar className="h-4 w-4" />
+                Last Updated: {formatDate(property.approved_on)}
+            </div>
             {/* Photo Gallery Area */}
             <div className="relative overflow-hidden md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border-b md:border border-zinc-100 -mx-4 md:mx-0 bg-zinc-50">
               {hasImage ? (
@@ -432,97 +436,54 @@ function PropertyDetailContent() {
             </div>
 
             {/* Map Section */}
-            <div ref={mapSectionRef} className="space-y-8 pt-10 border-t border-zinc-100">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-                  <div className="space-y-1">
-                    <h2 className="ty-title font-bold text-zinc-900">Neighborhood Explorer</h2>
-                    <p className="ty-caption text-zinc-500 font-medium">Explore surroundings and estimated location area</p>
-                  </div>
-                  <a 
-                    href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2 rounded-xl bg-blue-50/50 px-5 py-2.5 ty-caption font-bold text-blue-600 transition-all hover:bg-blue-50 hover:scale-[1.02]"
-                  >
-                    Open in Google Maps
-                    <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </a>
+            <div ref={mapSectionRef} className="space-y-6 pt-10 border-t border-zinc-100">
+              <div className="flex items-center justify-between">
+                <h2 className="ty-title font-bold text-zinc-900">On Map</h2>
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 ty-caption font-bold text-blue-600 hover:underline hover:underline-offset-4 transition-all"
+                >
+                  Open in Google Maps
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
               </div>
 
-              <div className="relative">
-                  <div className="h-[400px] sm:h-[480px] w-full overflow-hidden rounded-[32px] border border-zinc-100 bg-white p-1.5 shadow-2xl shadow-zinc-200/50">
-                    <div className="h-full w-full overflow-hidden rounded-[26px]">
-                        <MapComponent 
-                            properties={[property]}
-                            selectedProperty={property}
-                            onSelectProperty={() => {}}
-                            userLocation={userLocation}
-                            showDistance={true}
-                            disableCard={true}
-                        />
-                    </div>
-                  </div>
-                  
-                  {/* Floating Legend for Map */}
-                  {property.landmark_location_distance && (
-                    <div className="absolute bottom-6 left-6 z-[400] hidden sm:flex">
-                       <div className="flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-2.5 shadow-xl backdrop-blur-md border border-white/50 ring-1 ring-zinc-900/5">
-                          <div className="relative flex h-3 w-3">
-                            <div className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></div>
-                            <div className="relative inline-flex h-3 w-3 rounded-full bg-blue-500/30 border border-blue-500 border-dashed"></div>
-                          </div>
-                          <span className="ty-micro font-black text-zinc-900 uppercase tracking-wider">Estimated Privacy Area</span>
-                       </div>
-                    </div>
-                  )}
+              <div className="h-[400px] sm:h-[450px] w-full overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-50">
+                <MapComponent 
+                  properties={[property]}
+                  selectedProperty={property}
+                  onSelectProperty={() => {}}
+                  userLocation={userLocation}
+                  showDistance={true}
+                  disableCard={true}
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="flex items-center gap-4 rounded-3xl bg-zinc-50/80 p-5 border border-zinc-100 transition-all hover:bg-zinc-100">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-zinc-50">
-                        <MapPin className="h-5 w-5 text-zinc-400" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="ty-micro font-bold uppercase tracking-widest text-zinc-400">Local Area</span>
-                        <span className="ty-caption font-bold text-zinc-900 truncate">
-                            {property.area}, {property.city}
-                        </span>
+              <div className="flex flex-wrap items-center gap-y-3 gap-x-6">
+                {property.landmark_location_distance && (
+                  <div className="flex items-center gap-2 text-zinc-600">
+                    <Ruler className="h-4 w-4 text-zinc-400" />
+                    <span className="ty-caption font-bold">Within {(property.landmark_location_distance / 1000).toFixed(1)} km radius</span>
+                  </div>
+                )}
+
+                {userLocation && (
+                  <div className="flex items-center gap-6">
+                    {property.landmark_location_distance && <div className="hidden sm:block h-4 w-px bg-zinc-200" />}
+                    <div className="flex items-center gap-2 text-emerald-600">
+                      <Locate className="h-4 w-4 text-emerald-500" />
+                      <span className="ty-caption font-bold">{calculateDistance(userLocation.lat, userLocation.lng, lat, lng).toFixed(1)} km from you</span>
                     </div>
                   </div>
-
-                  {property.landmark_location_distance && (
-                    <div className="flex items-center gap-4 rounded-3xl bg-blue-50/50 p-5 border border-blue-100/50 transition-all hover:bg-blue-50">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-blue-50">
-                            <Ruler className="h-5 w-5 text-blue-500" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="ty-micro font-bold uppercase tracking-widest text-blue-400">Privacy Circle</span>
-                            <span className="ty-caption font-bold text-zinc-900">
-                                Within {(property.landmark_location_distance / 1000).toFixed(1)} km radius
-                            </span>
-                        </div>
-                    </div>
-                  )}
-
-                  {userLocation && (
-                    <div className="flex items-center gap-4 rounded-3xl bg-emerald-50/50 p-5 border border-emerald-100/50 transition-all hover:bg-emerald-50 lg:col-span-1 sm:col-span-2 lg:col-span-1">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-emerald-50">
-                            <Locate className="h-5 w-5 text-emerald-500" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="ty-micro font-bold uppercase tracking-widest text-emerald-400">Travel Distance</span>
-                            <span className="ty-caption font-bold text-zinc-900">
-                                Approximately {calculateDistance(userLocation.lat, userLocation.lng, lat, lng).toFixed(1)} km from you
-                            </span>
-                        </div>
-                    </div>
-                  )}
+                )}
               </div>
 
-              <div className="flex gap-4 rounded-2x p-1">
-                 <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                 <p className="ty-micro font-bold text-zinc-400 leading-relaxed uppercase tracking-tighter">
-                    Marker indicates general neighborhood. Exact location mapping and site visits are coordinated exclusively following verification.
+              <div className="flex items-center gap-2">
+                 <ShieldCheck className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                 <p className="text-[11px] text-zinc-400 italic leading-none font-medium">
+                    Location shown is approximate for seller privacy. Exact details shared upon verification.
                  </p>
               </div>
             </div>

@@ -91,31 +91,33 @@ export default function Navbar() {
   }, []);
 
   const handleApplyFilters = useCallback((overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
-    const params = new URLSearchParams();
-    if (selectedCity) params.set('city', selectedCity);
-    
     const finalArea = overrides?.area ?? query;
     const finalBudget = overrides?.budget ?? budget;
     const finalType = overrides?.type ?? propertyType;
 
-    if (finalArea) params.set('area', finalArea);
-    if (keywords) params.set('keywords', keywords);
-    if (finalBudget.value > 0) params.set('budget', finalBudget.label);
-    if (finalType !== "Any Type") params.set('type', finalType);
+    const params = new URLSearchParams();
+    if (keywords) params.set('q', keywords);
     if (minSize) params.set('minSize', minSize);
     if (maxSize) params.set('maxSize', maxSize);
     if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
 
-    // Try SEO URL for simple city+type searches
-    if (!keywords && !minSize && !maxSize && selectedHighlights.length === 0) {
-      const seoUrl = getSeoUrl(selectedCity, finalType, finalArea, finalBudget.label);
-      if (seoUrl) {
-        router.push(seoUrl);
-        return;
-      }
+    // Try SEO URL as base
+    const seoUrl = getSeoUrl(selectedCity, finalType, finalArea, finalBudget.label);
+    if (seoUrl) {
+      const queryString = params.toString();
+      router.push(queryString ? `${seoUrl}${queryString ? `?${queryString}` : ''}` : seoUrl);
+      setIsFilterModalOpen(false);
+      return;
     }
 
+    // Fallback to traditional explore page
+    if (selectedCity) params.set('city', selectedCity);
+    if (finalArea) params.set('area', finalArea);
+    if (finalBudget.value > 0) params.set('budget', finalBudget.label);
+    if (finalType !== "Any Type") params.set('type', finalType);
+
     router.push(`/explore?${params.toString()}`);
+    setIsFilterModalOpen(false);
   }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router]);
 
   // Sync search state from URL
@@ -128,7 +130,7 @@ export default function Navbar() {
     if (!isStandardExplore && !seoData) return;
     
     if (seoData) {
-      // Sync from SEO slug
+      // Priority: Hierarchical SEO segments
       if (seoData.city && seoData.city !== selectedCity) setSelectedCity(seoData.city);
       if (seoData.type && seoData.type !== propertyType) setPropertyType(seoData.type);
       if (seoData.area && seoData.area !== query) setQuery(seoData.area);
@@ -136,7 +138,22 @@ export default function Navbar() {
         const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === seoData.budget) || BUDGET_OPTIONS[0];
         if (foundBudget.label !== budget.label) setBudget(foundBudget);
       }
-      return;
+    }
+
+    // Secondary: Sync other filters from search params (supports combination)
+    const keywordsParam = searchParams.get('q') || '';
+    if (keywordsParam && keywordsParam !== keywords) setKeywords(keywordsParam);
+    
+    const minSizeParam = searchParams.get('minSize') || '';
+    if (minSizeParam && minSizeParam !== minSize) setMinSize(minSizeParam);
+    
+    const maxSizeParam = searchParams.get('maxSize') || '';
+    if (maxSizeParam && maxSizeParam !== maxSize) setMaxSize(maxSizeParam);
+    
+    const highlightsParam = searchParams.get('highlights') || '';
+    if (highlightsParam) {
+      const hList = highlightsParam.split(',').filter(Boolean);
+      setSelectedHighlights(hList);
     }
 
     // Standard sync from search params
@@ -629,7 +646,12 @@ export default function Navbar() {
             {/* Overlay Bottom Bar */}
             <div className="border-t border-zinc-100 bg-white px-6 py-6 flex items-center justify-between shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
               <button 
-                onClick={clearFilters}
+                onClick={() => {
+                  clearFilters();
+                  if (pathname !== '/explore') {
+                    router.push('/explore');
+                  }
+                }}
                 className="ty-caption font-black text-zinc-900 underline underline-offset-4"
               >
                 Clear all
