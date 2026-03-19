@@ -9,7 +9,7 @@ import { Plus, Minus, Satellite, Map as MapIcon, Navigation, MapPin, ExternalLin
 import { Property } from '@/types';
 import { formatPrice, getPropertyCoords, cn, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
-import { renderToStaticMarkup } from 'react-dom/server';
+import * as ReactDOMServer from 'react-dom/server';
 import Link from 'next/link';
 import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,7 +31,7 @@ const createCustomIcon = (property: Property, isSelected: boolean, zoom: number,
   const totalWidth = 160 * scale;
   const totalHeight = 80 * scale;
 
-  const html = renderToStaticMarkup(
+  const html = ReactDOMServer.renderToStaticMarkup(
     <div style={{ 
       position: 'relative', 
       width: '100%',
@@ -127,7 +127,7 @@ const createClusterIcon = (count: number, zoom: number) => {
   const scale = zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85);
   const size = 52 * scale; // Increased for better visibility
   
-  const html = renderToStaticMarkup(
+  const html = ReactDOMServer.renderToStaticMarkup(
     <div style={{
       width: size,
       height: size,
@@ -602,7 +602,7 @@ export default function MapComponent({
               <Marker 
                 position={userCoords}
                 icon={L.divIcon({
-                  html: renderToStaticMarkup(
+                  html: ReactDOMServer.renderToStaticMarkup(
                     <div className="flex items-center justify-center h-8 w-8 bg-black rounded-full border-2 border-white shadow-lg">
                       <Navigation className="h-4 w-4 text-white rotate-45" />
                     </div>

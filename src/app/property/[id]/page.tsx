@@ -11,9 +11,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, formatPriceRange, formatSizeRange, cn, calculateDistance, getPropertyCoords } from '@/lib/utils';
-import { getPropertyConfig } from '@/lib/property-icons';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard } from '@/components/PropertyCard';
+import { NoPhotosPlaceholder } from '@/components/NoPhotosPlaceholder';
 import dynamic from 'next/dynamic';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { 
@@ -35,6 +35,7 @@ function PropertyDetailContent() {
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
 
   useEffect(() => {
     // Attempt to get location for distance display
@@ -126,8 +127,6 @@ function PropertyDetailContent() {
 
   const inCart = isInShortlist(property.property_id);
   const saved = isSaved(property.property_id);
-  const config = getPropertyConfig(property.type);
-  const Icon = config.icon;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
   const [lat, lng] = getPropertyCoords(property, similarProperties);
 
@@ -157,15 +156,6 @@ function PropertyDetailContent() {
           <div className="lg:col-span-8 space-y-8">
             {/* Photo Gallery Area */}
             <div className="relative overflow-hidden md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border-b md:border border-zinc-100 -mx-4 md:mx-0">
-               {/* Request Photo/Video Button - Always show on top right overlay */}
-               <button 
-                  onClick={() => setIsPhotoModalOpen(true)}
-                  className="absolute top-4 right-4 z-10 flex items-center gap-2 rounded-xl bg-white/95 backdrop-blur-md px-3 py-2 ty-label shadow-xl transition-all hover:bg-white active:scale-95 border border-zinc-100 text-zinc-900 group"
-                >
-                  <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-400 group-hover:text-zinc-900" />
-                  <span className="truncate">Request Photos & Videos</span>
-                </button>
-
               {hasImage ? (
                 property.image_urls.length === 1 ? (
                   // Single Photo Full View
@@ -184,68 +174,117 @@ function PropertyDetailContent() {
                   </div>
                 ) : (
                   // Multi Photo Grid (Airbnb Style)
-                  <div className="h-full relative">
-                    <div className="flex md:grid md:grid-cols-4 md:grid-rows-2 h-full gap-2 md:gap-3 overflow-x-auto md:overflow-hidden snap-x snap-mandatory no-scrollbar">
-                      {/* Main Large Photo / First Photo on Mobile */}
-                      <div 
-                        onClick={() => openGallery(0)}
-                        className="relative min-w-full md:min-w-0 md:col-span-2 md:row-span-2 bg-zinc-100 overflow-hidden cursor-pointer group snap-center"
-                      >
-                        <Image
-                          src={property.image_urls[0]}
-                          alt={property.description || 'Property Image'}
-                          fill
-                          unoptimized
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                          priority
-                        />
+                  <div className="h-full relative group">
+                    <div className="relative h-full w-full overflow-hidden">
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                          key={heroImageIndex}
+                          initial={{ opacity: 0.5, y: 10, scale: 0.98, filter: 'brightness(1.5) blur(4px)' }}
+                          animate={{ opacity: 1, y: 0, scale: 1, filter: 'brightness(1) blur(0px)' }}
+                          exit={{ opacity: 0, y: -10, scale: 1.02, filter: 'brightness(0.8) blur(4px)' }}
+                          transition={{ 
+                            duration: 0.5, 
+                            ease: [0.22, 1, 0.36, 1], // Custom cubic-bezier for a "premium" feel
+                            opacity: { duration: 0.4 }
+                          }}
+                          className="h-full w-full bg-zinc-100 cursor-pointer"
+                        >
+                          {heroImageIndex < property.image_urls.length ? (
+                            <Image
+                              src={property.image_urls[heroImageIndex]}
+                              alt={property.description || 'Property Image'}
+                              fill
+                              unoptimized
+                              className="object-cover"
+                              onClick={() => openGallery(heroImageIndex)}
+                              priority
+                            />
+                          ) : (
+                            <NoPhotosPlaceholder 
+                              onClick={() => setIsPhotoModalOpen(true)}
+                              propertyType={property.type}
+                            />
+                          )}
+                        </motion.div>
+                      </AnimatePresence>
+
+                      {/* Navigation Arrows - Main Gallery View */}
+                      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[50] flex justify-between pointer-events-none">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const totalSlides = property.image_urls.length + 1;
+                            setHeroImageIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+                          }}
+                          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl transition-all hover:bg-white active:scale-90 pointer-events-auto border border-white/50"
+                        >
+                          <ChevronLeft className="h-6 w-6" />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const totalSlides = property.image_urls.length + 1;
+                            setHeroImageIndex((prev) => (prev + 1) % totalSlides);
+                          }}
+                          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl transition-all hover:bg-white active:scale-90 pointer-events-auto border border-white/50"
+                        >
+                          <ChevronRight className="h-6 w-6" />
+                        </button>
                       </div>
-                      {/* Sub Photos */}
-                      {property.image_urls.slice(1).map((url, i) => (
-                        <div 
-                          key={i} 
-                          onClick={() => openGallery(i + 1)}
+                    </div>
+                    
+                    {/* Floating Counter */}
+                    <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white ty-micro font-bold px-3 py-1.5 rounded-full z-10">
+                      {heroImageIndex < property.image_urls.length ? `${heroImageIndex + 1} / ${property.image_urls.length}` : 'Request More'}
+                    </div>
+
+                    {/* Desktop Thumbnail Preview Strip */}
+                    <div className="absolute bottom-4 left-4 hidden md:flex gap-2 z-10">
+                      {property.image_urls.slice(0, 5).map((url, i) => (
+                        <button
+                          key={i}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setHeroImageIndex(i);
+                          }}
                           className={cn(
-                            "relative shrink-0 w-4/5 md:w-auto md:shrink bg-zinc-100 overflow-hidden cursor-pointer group snap-center",
-                            i >= 4 ? "md:hidden" : "md:block"
+                            "relative h-12 w-16 overflow-hidden rounded-lg border-2 transition-all active:scale-95",
+                            heroImageIndex === i ? "border-white shadow-xl scale-110" : "border-transparent opacity-60 hover:opacity-100"
                           )}
                         >
                           <Image
                             src={url}
-                            alt={`Property image ${i + 2}`}
-                            unoptimized
+                            alt={`Thumb ${i + 1}`}
                             fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            unoptimized
+                            className="object-cover"
                           />
-                        </div>
+                        </button>
                       ))}
-                    </div>
-                    
-                    {/* Floating Counter for Mobile */}
-                    <div className="absolute bottom-4 right-4 md:hidden bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full z-10">
-                      1 / {property.image_urls.length}
+                      {property.image_urls.length > 5 && (
+                        <button 
+                          onClick={() => openGallery(0)}
+                          className="h-12 w-16 flex items-center justify-center rounded-lg bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest transition-all hover:bg-black/60"
+                        >
+                          +{property.image_urls.length - 5}
+                        </button>
+                      )}
                     </div>
 
                     <button 
                       onClick={() => openGallery(0)}
-                      className="absolute bottom-6 left-6 hidden md:flex items-center gap-2 rounded-lg border border-black/10 bg-black/5 backdrop-blur-md px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-black/20 active:scale-95"
+                      className="absolute bottom-4 left-4 md:hidden flex items-center gap-2 rounded-lg bg-black/40 backdrop-blur-md px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-white transition-all active:scale-95"
                     >
-                      <svg viewBox="0 0 16 16" className="h-4 w-4 fill-white" aria-hidden="true" focusable="false"><path d="M5 2a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-6 6a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm-6 6a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm6 0a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"></path></svg>
-                      Show all {property.image_urls.length} photos
+                      Show all {property.image_urls.length}
                     </button>
                   </div>
                 )
               ) : (
-                <div className={cn("flex h-full w-full flex-col items-center justify-center gap-6", config.bgColor)}>
-                   <div className="flex flex-col items-center">
-                    <Icon className={cn("h-32 w-32 opacity-20", config.color)} />
-                    <div className="text-center mt-4">
-                      <span className={cn("text-xs font-black uppercase tracking-[0.3em] opacity-40", config.color)}>Premium Listing</span>
-                      <p className={cn("mt-2 text-sm font-bold opacity-30", config.color)}>No Property Photos Available</p>
-                    </div>
-                   </div>
-                   <div className="h-10" /> {/* Spacer for the overlay button */}
-                </div>
+                <NoPhotosPlaceholder 
+                  onClick={() => setIsPhotoModalOpen(true)}
+                  className="md:rounded-3xl"
+                  propertyType={property.type}
+                />
               )}
             </div>
 

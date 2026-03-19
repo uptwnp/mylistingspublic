@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatPrice, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import { useRouter } from 'next/navigation';
+import { NoPhotosPlaceholder } from './NoPhotosPlaceholder';
 
 interface PropertyCardProps {
   property: Property;
@@ -75,9 +76,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
               sizes="(max-width: 640px) 64px, 80px"
             />
           ) : (
-            <div className={cn("flex h-full w-full items-center justify-center", config.bgColor)}>
-              <Icon className={cn("h-6 w-6 sm:h-8 sm:w-8", config.color)} />
-            </div>
+            <NoPhotosPlaceholder isMini propertyType={property.type} />
           )}
           
           {/* Selection Indicator for Cart */}

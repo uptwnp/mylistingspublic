@@ -2,8 +2,12 @@
 
 import Link from 'next/link';
 import { Globe, Instagram, Twitter, Mail, Home } from 'lucide-react';
+import { useBrand } from '@/context/BrandContext';
+
 
 export default function Footer() {
+  const brand = useBrand();
+
   return (
     <footer className="bg-zinc-50 border-t border-zinc-200 pt-16 pb-8">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
@@ -14,7 +18,13 @@ export default function Footer() {
                 <Home className="h-6 w-6 text-white" />
               </div>
               <span className="ty-subtitle font-black tracking-tighter text-zinc-900 uppercase">
-                My<span className="text-zinc-400 font-medium">Listing</span>
+                {brand.logoText.styled ? (
+                  <>
+                    {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
+                  </>
+                ) : (
+                  <span>{brand.logoText.text}</span>
+                )}
               </span>
             </Link>
             <p className="text-zinc-500 ty-caption max-w-sm leading-relaxed font-medium">
@@ -44,7 +54,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-zinc-200 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col md:flex-row items-center gap-6 ty-label text-zinc-400">
-            <span>© 2026 MyListing Network</span>
+            <span>© 2026 {brand.name} Network</span>
             <div className="flex gap-6">
               <Link href="#" className="hover:text-zinc-900">Privacy Policy</Link>
               <Link href="#" className="hover:text-zinc-900">Terms of Service</Link>

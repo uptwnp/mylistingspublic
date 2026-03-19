@@ -12,6 +12,8 @@ import { FilterModal } from './FilterModal';
 import { SelectionBottomSheet } from './SelectionBottomSheet';
 import { useCallback } from 'react';
 import { getSeoUrl } from '@/lib/seo-utils';
+import { useBrand } from '@/context/BrandContext';
+
 
 export default function Navbar() {
   const { 
@@ -28,6 +30,7 @@ export default function Navbar() {
     selectedHighlights, setSelectedHighlights,
     clearFilters
   } = useShortlist();
+  const brand = useBrand();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isForceExpanded, setIsForceExpanded] = useState(false);
@@ -228,7 +231,13 @@ export default function Navbar() {
                   "ty-subtitle font-bold tracking-tighter text-zinc-900 truncate",
                   shouldShowCompact ? "hidden lg:block" : "block"
                 )}>
-                  My<span className="text-zinc-400 font-medium">Listing</span>
+                  {brand.logoText.styled ? (
+                    <>
+                      {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
+                    </>
+                  ) : (
+                    <span className="uppercase">{brand.logoText.text}</span>
+                  )}
                 </span>
               </Link>
 

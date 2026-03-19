@@ -32,6 +32,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
+import { useBrand } from '@/context/BrandContext';
+
 import { getAreas, getCities, submitPropertyForSale } from '@/lib/supabase';
 import dynamic from 'next/dynamic';
 
@@ -56,6 +58,8 @@ const PROPERTY_TYPES = [
 
 export default function SellPropertyPage() {
   const { contactDetails, requireContactDetails, selectedCity: globalCity } = useShortlist();
+  const brand = useBrand();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -249,7 +253,7 @@ export default function SellPropertyPage() {
                 <h2 className="ty-title font-black text-zinc-900 uppercase tracking-tight mb-6 leading-none">Haryana's Premier <br/> Property Network</h2>
                 <div className="space-y-4">
                   <p className="ty-caption font-medium text-zinc-500 leading-relaxed">
-                    Based in Panipat, MyListing is focused on creating a transparent real estate marketplace for the North Indian market.
+                    Based in Panipat, {brand.name} is focused on creating a transparent real estate marketplace for the North Indian market.
                   </p>
                   <p className="ty-caption font-medium text-zinc-500 leading-relaxed">
                     We exclusively list premium plots, residences, and commercial assets. Our growing network of agents ensures that your listing reaches qualified buyers directly.
@@ -297,7 +301,7 @@ export default function SellPropertyPage() {
 
       {/* FOOTER */}
       <footer className="py-12 border-t border-zinc-100 text-center">
-         <p className="ty-micro font-bold text-zinc-400 uppercase tracking-[0.2em]">MyListing Private Property Network &copy; 2026</p>
+         <p className="ty-micro font-bold text-zinc-400 uppercase tracking-[0.2em]">{brand.name} Private Property Network &copy; 2026</p>
       </footer>
 
 
@@ -325,7 +329,7 @@ export default function SellPropertyPage() {
                       <h2 className="text-2xl font-black text-zinc-900 uppercase tracking-tight mb-2">Listing Submitted</h2>
                       <p className="mb-10 text-zinc-500 font-medium max-w-xs mx-auto">Please finalize your listing by sharing authentic property photos.</p>
                       <a 
-                        href={`https://wa.me/919518091945?text=${encodeURIComponent(`Hi, I've listed my property on MyListing.\nType: ${formData.type}\nLocation: ${formData.area}, ${formData.city}`)}`}
+                        href={`https://wa.me/919518091945?text=${encodeURIComponent(`Hi, I've listed my property on ${brand.name}.\nType: ${formData.type}\nLocation: ${formData.area}, ${formData.city}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex w-full sm:w-auto items-center justify-center gap-3 rounded-xl bg-[#25D366] py-4 px-10 text-sm font-black text-white shadow-lg shadow-emerald-100 transition-all active:scale-95"
