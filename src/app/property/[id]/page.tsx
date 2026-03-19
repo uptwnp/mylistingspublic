@@ -6,14 +6,14 @@ import { getPropertyById } from '@/lib/supabase';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
 import { useRef } from 'react';
-import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Navigation, Map as MapIcon, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, Loader2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, formatPriceRange, formatSizeRange, cn, calculateDistance, getPropertyCoords } from '@/lib/utils';
+import { getPropertyConfig } from '@/lib/property-icons';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard } from '@/components/PropertyCard';
-import { NoPhotosPlaceholder } from '@/components/NoPhotosPlaceholder';
 import dynamic from 'next/dynamic';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { 
@@ -36,6 +36,15 @@ function PropertyDetailContent() {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [heroImageIndex, setHeroImageIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const paginate = (newDirection: number) => {
+    if (!property) return;
+    const totalSlides = property.image_urls.length + 1; // +1 for the placeholder
+    setDirection(newDirection);
+    setHeroImageIndex((prev) => (prev + newDirection + totalSlides) % totalSlides);
+  };
 
   useEffect(() => {
     // Attempt to get location for distance display
@@ -77,6 +86,22 @@ function PropertyDetailContent() {
 
     fetchProperty();
   }, [id]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isGalleryOpen) {
+        if (e.key === 'ArrowRight') nextPhoto();
+        if (e.key === 'ArrowLeft') prevPhoto();
+        if (e.key === 'Escape') setIsGalleryOpen(false);
+      } else if (!isPhotoModalOpen) {
+        if (e.key === 'ArrowRight') paginate(1);
+        if (e.key === 'ArrowLeft') paginate(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGalleryOpen, isPhotoModalOpen, property, activePhotoIndex, heroImageIndex]);
 
   const scrollToMap = () => {
     mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -127,6 +152,8 @@ function PropertyDetailContent() {
 
   const inCart = isInShortlist(property.property_id);
   const saved = isSaved(property.property_id);
+  const config = getPropertyConfig(property.type);
+  const Icon = config.icon;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
   const [lat, lng] = getPropertyCoords(property, similarProperties);
 
@@ -144,7 +171,7 @@ function PropertyDetailContent() {
           </Link>
         </div>
         <h1 className="ty-title font-bold text-zinc-900 leading-tight">
-          {formatSizeRange(property.size_min, property.size_max, '')} {property.size_unit} {property.type} for sale in {property.area}, {property.city}
+          {formatSizeRange(property.size_min, property.size_max, property.size_unit)} {property.type} for sale in {property.area}, {property.city}
         </h1>
       </section>
 
@@ -155,136 +182,159 @@ function PropertyDetailContent() {
           {/* COLUMN 1: Main Content */}
           <div className="lg:col-span-8 space-y-8">
             {/* Photo Gallery Area */}
-            <div className="relative overflow-hidden md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border-b md:border border-zinc-100 -mx-4 md:mx-0">
+            <div className="relative overflow-hidden md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border-b md:border border-zinc-100 -mx-4 md:mx-0 bg-zinc-50">
               {hasImage ? (
-                property.image_urls.length === 1 ? (
-                  // Single Photo Full View
-                  <div 
-                    onClick={() => openGallery(0)}
-                    className="relative h-full w-full bg-zinc-100 cursor-pointer group"
-                  >
-                    <Image
-                      src={property.image_urls[0]}
-                      alt={property.description || 'Property Image'}
-                      fill
-                      unoptimized
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      priority
-                    />
-                  </div>
-                ) : (
-                  // Multi Photo Grid (Airbnb Style)
-                  <div className="h-full relative group">
-                    <div className="relative h-full w-full overflow-hidden">
-                      <AnimatePresence mode="wait" initial={false}>
-                        <motion.div
-                          key={heroImageIndex}
-                          initial={{ opacity: 0.5, y: 10, scale: 0.98, filter: 'brightness(1.5) blur(4px)' }}
-                          animate={{ opacity: 1, y: 0, scale: 1, filter: 'brightness(1) blur(0px)' }}
-                          exit={{ opacity: 0, y: -10, scale: 1.02, filter: 'brightness(0.8) blur(4px)' }}
-                          transition={{ 
-                            duration: 0.5, 
-                            ease: [0.22, 1, 0.36, 1], // Custom cubic-bezier for a "premium" feel
-                            opacity: { duration: 0.4 }
-                          }}
-                          className="h-full w-full bg-zinc-100 cursor-pointer"
-                        >
-                          {heroImageIndex < property.image_urls.length ? (
-                            <Image
-                              src={property.image_urls[heroImageIndex]}
-                              alt={property.description || 'Property Image'}
-                              fill
-                              unoptimized
-                              className="object-cover"
-                              onClick={() => openGallery(heroImageIndex)}
-                              priority
-                            />
-                          ) : (
-                            <NoPhotosPlaceholder 
-                              onClick={() => setIsPhotoModalOpen(true)}
-                              propertyType={property.type}
-                            />
-                          )}
-                        </motion.div>
-                      </AnimatePresence>
-
-                      {/* Navigation Arrows - Main Gallery View */}
-                      <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[50] flex justify-between pointer-events-none">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const totalSlides = property.image_urls.length + 1;
-                            setHeroImageIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
-                          }}
-                          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl transition-all hover:bg-white active:scale-90 pointer-events-auto border border-white/50"
-                        >
-                          <ChevronLeft className="h-6 w-6" />
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const totalSlides = property.image_urls.length + 1;
-                            setHeroImageIndex((prev) => (prev + 1) % totalSlides);
-                          }}
-                          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl transition-all hover:bg-white active:scale-90 pointer-events-auto border border-white/50"
-                        >
-                          <ChevronRight className="h-6 w-6" />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Floating Counter */}
-                    <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white ty-micro font-bold px-3 py-1.5 rounded-full z-10">
-                      {heroImageIndex < property.image_urls.length ? `${heroImageIndex + 1} / ${property.image_urls.length}` : 'Request More'}
-                    </div>
-
-                    {/* Desktop Thumbnail Preview Strip */}
-                    <div className="absolute bottom-4 left-4 hidden md:flex gap-2 z-10">
-                      {property.image_urls.slice(0, 5).map((url, i) => (
-                        <button
-                          key={i}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setHeroImageIndex(i);
-                          }}
-                          className={cn(
-                            "relative h-12 w-16 overflow-hidden rounded-lg border-2 transition-all active:scale-95",
-                            heroImageIndex === i ? "border-white shadow-xl scale-110" : "border-transparent opacity-60 hover:opacity-100"
-                          )}
-                        >
+                <div className="h-full relative group">
+                  <div className="relative h-full w-full overflow-hidden">
+                    <AnimatePresence initial={false} custom={direction} mode="popLayout">
+                      <motion.div
+                        key={heroImageIndex}
+                        custom={direction}
+                        variants={{
+                          enter: (direction: number) => ({
+                            x: direction > 0 ? '100%' : '-100%',
+                            opacity: 0,
+                          }),
+                          center: {
+                            zIndex: 1,
+                            x: 0,
+                            opacity: 1,
+                          },
+                          exit: (direction: number) => ({
+                            zIndex: 0,
+                            x: direction < 0 ? '100%' : '-100%',
+                            opacity: 0,
+                          })
+                        }}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{
+                          x: { type: "spring", stiffness: 300, damping: 30 },
+                          opacity: { duration: 0.2 }
+                        }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.8}
+                        onDragStart={() => setIsDragging(true)}
+                        onDragEnd={(e, { offset, velocity }) => {
+                          const swipe = Math.abs(offset.x) > 50 || Math.abs(velocity.x) > 500;
+                          if (swipe) {
+                            if (offset.x > 0) {
+                              paginate(-1);
+                            } else {
+                              paginate(1);
+                            }
+                          }
+                          // Delay resetting isDragging to catch subsequent tap events
+                          setTimeout(() => setIsDragging(false), 100);
+                        }}
+                        onTap={() => {
+                          if (!isDragging) {
+                            openGallery(heroImageIndex);
+                          }
+                        }}
+                        whileDrag={{ cursor: 'grabbing' }}
+                        className="absolute inset-0 h-full w-full bg-zinc-100 cursor-grab"
+                      >
+                        {heroImageIndex < property.image_urls.length ? (
                           <Image
-                            src={url}
-                            alt={`Thumb ${i + 1}`}
+                            src={property.image_urls[heroImageIndex]}
+                            alt={property.description || 'Property Image'}
                             fill
                             unoptimized
                             className="object-cover"
+                            draggable={false}
+                            priority
                           />
-                        </button>
-                      ))}
-                      {property.image_urls.length > 5 && (
-                        <button 
-                          onClick={() => openGallery(0)}
-                          className="h-12 w-16 flex items-center justify-center rounded-lg bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest transition-all hover:bg-black/60"
-                        >
-                          +{property.image_urls.length - 5}
-                        </button>
-                      )}
-                    </div>
+                        ) : (
+                          // Extra Slide for Placeholder
+                          <div 
+                            onClick={() => setIsPhotoModalOpen(true)}
+                            className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
+                          >
+                            <ShieldCheck className="h-16 w-16 mb-6 text-zinc-300" />
+                            <p className="ty-title font-bold text-zinc-900 mb-2">Not enough to get idea?</p>
+                            <p className="ty-caption text-zinc-500 max-w-sm mb-6">Request more exclusive photos and videos for this property.</p>
+                            <button className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-95 transition-all">
+                              Request more photos
+                            </button>
+                          </div>
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
 
-                    <button 
-                      onClick={() => openGallery(0)}
-                      className="absolute bottom-4 left-4 md:hidden flex items-center gap-2 rounded-lg bg-black/40 backdrop-blur-md px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-white transition-all active:scale-95"
-                    >
-                      Show all {property.image_urls.length}
-                    </button>
+                    {/* Navigation Arrows */}
+                    <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[50] flex justify-between pointer-events-none">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          paginate(-1);
+                        }}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-xl backdrop-blur-md transition-all hover:bg-white active:scale-90 pointer-events-auto border border-zinc-100"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          paginate(1);
+                        }}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-xl backdrop-blur-md transition-all hover:bg-white active:scale-90 pointer-events-auto border border-zinc-100"
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
-                )
+                  
+                  {/* Counter */}
+                  <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full z-10">
+                    {heroImageIndex < property.image_urls.length ? `${heroImageIndex + 1} / ${property.image_urls.length}` : 'Request More'}
+                  </div>
+
+                  {/* Desktop Thumbnail Strips (Subtle) */}
+                  <div className="absolute bottom-4 left-4 hidden md:flex gap-2 z-10">
+                    {property.image_urls.slice(0, 4).map((url, i) => (
+                      <button
+                        key={i}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDirection(i > heroImageIndex ? 1 : -1);
+                          setHeroImageIndex(i);
+                        }}
+                        className={cn(
+                          "relative h-12 w-16 overflow-hidden rounded-lg border-2 transition-all active:scale-95",
+                          heroImageIndex === i ? "border-white shadow-lg" : "border-transparent opacity-50 hover:opacity-100"
+                        )}
+                      >
+                        <Image
+                          src={url}
+                          alt={`Thumb ${i + 1}`}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ) : (
-                <NoPhotosPlaceholder 
+                // No Photos at all
+                <div 
                   onClick={() => setIsPhotoModalOpen(true)}
-                  className="md:rounded-3xl"
-                  propertyType={property.type}
-                />
+                  className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
+                >
+                  <div className="flex flex-col items-center">
+                    <Icon className={cn("h-32 w-32 opacity-20", config.color)} />
+                    <div className="text-center mt-4">
+                      <p className="ty-title font-bold text-zinc-900">No photos available</p>
+                      <p className="mt-2 ty-caption text-zinc-500 max-w-sm mb-6">Owner has restricted public photos. You can request exclusive access.</p>
+                      <button className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-95">
+                        Request photos
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -382,59 +432,99 @@ function PropertyDetailContent() {
             </div>
 
             {/* Map Section */}
-            <div ref={mapSectionRef} className="space-y-6 pt-8 border-t border-zinc-100">
-              <div className="flex items-center justify-between">
-                  <h2 className="ty-title font-bold">Where you'll be</h2>
-                  <div className="flex items-center gap-2 text-sm font-medium text-zinc-600">
-                      <MapPin className="h-4 w-4" />
-                      <span>{property.area}, {property.city}</span>
+            <div ref={mapSectionRef} className="space-y-8 pt-10 border-t border-zinc-100">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                  <div className="space-y-1">
+                    <h2 className="ty-title font-bold text-zinc-900">Neighborhood Explorer</h2>
+                    <p className="ty-caption text-zinc-500 font-medium">Explore surroundings and estimated location area</p>
                   </div>
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2 rounded-xl bg-blue-50/50 px-5 py-2.5 ty-caption font-bold text-blue-600 transition-all hover:bg-blue-50 hover:scale-[1.02]"
+                  >
+                    Open in Google Maps
+                    <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </a>
               </div>
-              <div className="h-[400px] w-full overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-50">
-                  <MapComponent 
-                      properties={[property]}
-                      selectedProperty={property}
-                      onSelectProperty={() => {}}
-                      userLocation={userLocation}
-                      showDistance={true}
-                      disableCard={true}
-                  />
+
+              <div className="relative">
+                  <div className="h-[400px] sm:h-[480px] w-full overflow-hidden rounded-[32px] border border-zinc-100 bg-white p-1.5 shadow-2xl shadow-zinc-200/50">
+                    <div className="h-full w-full overflow-hidden rounded-[26px]">
+                        <MapComponent 
+                            properties={[property]}
+                            selectedProperty={property}
+                            onSelectProperty={() => {}}
+                            userLocation={userLocation}
+                            showDistance={true}
+                            disableCard={true}
+                        />
+                    </div>
+                  </div>
+                  
+                  {/* Floating Legend for Map */}
+                  {property.landmark_location_distance && (
+                    <div className="absolute bottom-6 left-6 z-[400] hidden sm:flex">
+                       <div className="flex items-center gap-2.5 rounded-2xl bg-white/90 px-4 py-2.5 shadow-xl backdrop-blur-md border border-white/50 ring-1 ring-zinc-900/5">
+                          <div className="relative flex h-3 w-3">
+                            <div className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></div>
+                            <div className="relative inline-flex h-3 w-3 rounded-full bg-blue-500/30 border border-blue-500 border-dashed"></div>
+                          </div>
+                          <span className="ty-micro font-black text-zinc-900 uppercase tracking-wider">Estimated Privacy Area</span>
+                       </div>
+                    </div>
+                  )}
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {property.landmark_location && (
-                    <div className="flex items-center gap-2 rounded-xl bg-zinc-50 px-4 py-2.5 border border-zinc-100">
-                        <MapPin className="h-4 w-4 text-zinc-400" />
-                        <span className="ty-caption font-bold text-zinc-600">
-                            {property.landmark_location} 
-                            {property.landmark_location_distance ? (
-                                <span className="ml-1 text-zinc-400 font-medium">({property.landmark_location_distance} km away)</span>
-                            ) : null}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex items-center gap-4 rounded-3xl bg-zinc-50/80 p-5 border border-zinc-100 transition-all hover:bg-zinc-100">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-zinc-50">
+                        <MapPin className="h-5 w-5 text-zinc-400" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="ty-micro font-bold uppercase tracking-widest text-zinc-400">Local Area</span>
+                        <span className="ty-caption font-bold text-zinc-900 truncate">
+                            {property.area}, {property.city}
                         </span>
                     </div>
-                )}
-                
-                {userLocation && (
-                  <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 border border-emerald-100">
-                    <Navigation className="h-4 w-4 text-emerald-600" />
-                    <span className="ty-caption font-bold text-emerald-700">
-                      {calculateDistance(userLocation.lat, userLocation.lng, lat, lng).toFixed(1)} km from you
-                    </span>
                   </div>
-                )}
 
-                <a 
-                  href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 border border-blue-100 text-blue-600 hover:bg-blue-100 transition-colors"
-                >
-                  <Navigation className="h-4 w-4" />
-                  <span className="ty-caption font-bold">Open in Google Maps</span>
-                </a>
+                  {property.landmark_location_distance && (
+                    <div className="flex items-center gap-4 rounded-3xl bg-blue-50/50 p-5 border border-blue-100/50 transition-all hover:bg-blue-50">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-blue-50">
+                            <Ruler className="h-5 w-5 text-blue-500" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="ty-micro font-bold uppercase tracking-widest text-blue-400">Privacy Circle</span>
+                            <span className="ty-caption font-bold text-zinc-900">
+                                Within {(property.landmark_location_distance / 1000).toFixed(1)} km radius
+                            </span>
+                        </div>
+                    </div>
+                  )}
+
+                  {userLocation && (
+                    <div className="flex items-center gap-4 rounded-3xl bg-emerald-50/50 p-5 border border-emerald-100/50 transition-all hover:bg-emerald-50 lg:col-span-1 sm:col-span-2 lg:col-span-1">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-emerald-50">
+                            <Locate className="h-5 w-5 text-emerald-500" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="ty-micro font-bold uppercase tracking-widest text-emerald-400">Travel Distance</span>
+                            <span className="ty-caption font-bold text-zinc-900">
+                                Approximately {calculateDistance(userLocation.lat, userLocation.lng, lat, lng).toFixed(1)} km from you
+                            </span>
+                        </div>
+                    </div>
+                  )}
               </div>
-              <p className="ty-caption text-zinc-400 italic leading-relaxed">
-                * The location shown on the map is an approximate area for privacy reasons. The exact property location will be shared during the site visit or upon verification.
-              </p>
+
+              <div className="flex gap-4 rounded-2x p-1">
+                 <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                 <p className="ty-micro font-bold text-zinc-400 leading-relaxed uppercase tracking-tighter">
+                    Marker indicates general neighborhood. Exact location mapping and site visits are coordinated exclusively following verification.
+                 </p>
+              </div>
             </div>
 
             {/* Similar Properties Section */}
@@ -479,15 +569,14 @@ function PropertyDetailContent() {
                 
                 <button 
                   onClick={() => {
-                    if (inCart) {
-                      router.push('/shortlist');
-                    } else {
+                    if (!inCart) {
                       addToShortlist(property);
                     }
+                    router.push('/shortlist');
                   }}
                   className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98]"
                 >
-                  {inCart ? 'Go to Shortlist' : 'Consult Now'}
+                  {inCart ? 'Go to Shortlist' : 'Proceed with it'}
                 </button>
               </div>
 
@@ -523,15 +612,14 @@ function PropertyDetailContent() {
           </div>
           <button 
             onClick={() => {
-              if (inCart) {
-                router.push('/shortlist');
-              } else {
+              if (!inCart) {
                 addToShortlist(property);
               }
+              router.push('/shortlist');
             }}
             className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
           >
-            {inCart ? 'Go to Shortlist' : 'Consult Now'}
+            {inCart ? 'Go to Shortlist' : 'Proceed with it'}
           </button>
         </div>
       </div>
@@ -560,11 +648,15 @@ function PropertyDetailContent() {
                   <ShieldCheck className="h-8 w-8 text-amber-600" />
                 </div>
                 
-                <h3 className="mb-4 ty-title font-bold text-zinc-900">Request Photos & Videos</h3>
+                <h3 className="mb-4 ty-title font-bold text-zinc-900">
+                  {hasImage ? 'Request More Photos & Videos' : 'Request Photos & Videos'}
+                </h3>
                 
                 <div className="space-y-4 text-left">
                   <p className="ty-body text-zinc-600 leading-relaxed font-medium">
-                    Our platform is designed to be highly transparent. If it was possible for us to add photos and videos, we would have definitely linked them here.
+                    {hasImage 
+                      ? "Want to see more details? We can help you get exclusive interior shots or specific area videos." 
+                      : "Our platform is designed to be highly transparent. We link all available media, but some owners prefer to keep photos private until a serious interest is shown."}
                   </p>
                   
                   <div className="rounded-2xl bg-zinc-50 p-5 border border-zinc-100 italic">
@@ -574,7 +666,7 @@ function PropertyDetailContent() {
                   </div>
 
                   <p className="ty-body text-zinc-600 leading-relaxed font-medium">
-                    However, if you are <span className="text-zinc-900 font-bold underline">highly serious</span> about your purchase, we can help. By depositing a <span className="text-emerald-600 font-bold">fully refundable token</span> with us, we can arrange exclusive photos and videos for you without requiring a physical site visit.
+                    However, if you are <span className="text-zinc-900 font-bold underline">highly serious</span> about your purchase, we can help. By depositing a <span className="text-emerald-600 font-bold">fully refundable token</span> with us, we can arrange exclusive content for you.
                   </p>
                 </div>
 
@@ -656,13 +748,28 @@ function PropertyDetailContent() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.05 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className="relative h-full w-full max-w-5xl"
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={1}
+                  onDragEnd={(e, { offset, velocity }) => {
+                    const swipe = Math.abs(offset.x) > 50 || Math.abs(velocity.x) > 500;
+                    if (swipe) {
+                      if (offset.x > 0) {
+                        prevPhoto();
+                      } else {
+                        nextPhoto();
+                      }
+                    }
+                  }}
+                  onTap={() => {}}
+                  className="relative h-full w-full max-w-5xl cursor-grab"
                 >
                   <Image
                     src={property.image_urls[activePhotoIndex]}
                     alt={`Property Photo ${activePhotoIndex + 1}`}
                     fill
                     unoptimized
+                    draggable={false}
                     className="object-contain"
                     priority
                   />

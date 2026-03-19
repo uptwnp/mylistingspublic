@@ -17,7 +17,7 @@ import {
   Home,
   Trees,
   Search,
-  Navigation,
+  Locate,
   MessageCircle,
   ArrowLeft,
   Store,
@@ -464,7 +464,7 @@ export default function SellPropertyPage() {
                           <motion.div key="st5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                              <div className="relative rounded-2xl overflow-hidden border-2 border-zinc-100 shadow-md">
                                <MapPicker center={formData.location} onPick={(loc: any) => updateFormData('location', loc)} city={formData.city} />
-                               {!formData.location && <div className="absolute inset-0 z-10 bg-black/5 pointer-events-none flex items-center justify-center"><div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg flex items-center gap-2 shadow-xl border border-white"><Navigation className="h-3 w-3 animate-pulse text-brand-primary" /><span className="text-[10px] font-black uppercase text-zinc-900 tracking-widest">Mark Location</span></div></div>}
+                               {!formData.location && <div className="absolute inset-0 z-10 bg-black/5 pointer-events-none flex items-center justify-center"><div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg flex items-center gap-2 shadow-xl border border-white"><Locate className="h-3 w-3 animate-pulse text-brand-primary" /><span className="text-[10px] font-black uppercase text-zinc-900 tracking-widest">Mark Location</span></div></div>}
                              </div>
                           </motion.div>
                         )}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Navigation } from 'lucide-react';
+import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Locate } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 
@@ -223,7 +223,7 @@ export function SelectionBottomSheet({
                             "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
                             selectedValue === 'Near Me' ? "bg-brand-primary text-white" : "bg-brand-primary text-white shadow-lg shadow-blue-200"
                           )}>
-                            <Navigation className="h-5 w-5" />
+                            <Locate className="h-5 w-5" />
                           </div>
                           <div className="flex flex-col">
                             <span className={cn("text-base font-bold", selectedValue === 'Near Me' ? "text-brand-primary" : "text-blue-700")}>

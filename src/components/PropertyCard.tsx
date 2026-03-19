@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
-import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Navigation } from 'lucide-react';
+import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Locate } from 'lucide-react';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,7 +64,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
         {/* Left Image/Icon Box */}
         <motion.div 
           layout
-          className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-[14px] sm:rounded-[18px]"
+          className="group/image relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-[14px] sm:rounded-[18px]"
         >
           {hasImage ? (
             <Image
@@ -81,12 +81,29 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
           
           {/* Selection Indicator for Cart */}
           {inCart && (
-            <motion.div layout className="absolute inset-0 bg-zinc-900/40 flex items-center justify-center backdrop-blur-[1px]">
+            <motion.div layout className={cn(
+              "absolute inset-0 bg-zinc-900/40 flex items-center justify-center backdrop-blur-[1px] transition-opacity duration-200",
+              "group-hover/image:opacity-0"
+            )}>
               <div className="bg-white rounded-full p-1 shadow-lg">
                 <Check className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-zinc-900" strokeWidth={4} />
               </div>
             </motion.div>
           )}
+
+          {/* Open in New Tab Overlay */}
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-all duration-200 z-10">
+            <a 
+              href={`/property/${property.property_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white/95 hover:bg-white text-zinc-900 p-2 rounded-full shadow-lg transform scale-50 group-hover/image:scale-110 transition-all duration-200"
+              title="Open property in new tab"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
         </motion.div>
 
         {/* Main Content Area */}
@@ -112,7 +129,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
           {showDistance && property.landmark_location_distance !== undefined && property.landmark_location_distance > 0 && (
             <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-bold text-rose-500">
-              <Navigation className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+              <Locate className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
               <span>
                 {property.landmark_location_distance.toFixed(1)} km 
                 {isNearMeFallback ? ' from city center' : ' away'}

@@ -269,7 +269,7 @@ export function ExploreView({
             </div>
             
             <div className={cn(
-              "grid w-full gap-4 py-4 sm:py-6 items-start flex-1",
+              "grid w-full gap-4 py-4 sm:py-6 items-start content-start",
               viewMode === 'list' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'
             )}>
               {loading ? (
@@ -278,15 +278,14 @@ export function ExploreView({
                 ))
               ) : properties.length > 0 ? (
                 properties.map((property) => (
-                  <div key={property.property_id}>
-                    <PropertyCard 
-                      property={property} 
-                      isExpanded={selectedProperty?.property_id === property.property_id}
-                      onToggle={() => setSelectedProperty(selectedProperty?.property_id === property.property_id ? null : property)}
-                      isNearMeFallback={userLocation?.isFallback}
-                      showDistance={areaParam === 'Near Me' || sortField === 'distance'}
-                    />
-                  </div>
+                  <PropertyCard 
+                    key={property.property_id} 
+                    property={property} 
+                    isExpanded={selectedProperty?.property_id === property.property_id}
+                    onToggle={() => setSelectedProperty(selectedProperty?.property_id === property.property_id ? null : property)}
+                    isNearMeFallback={userLocation?.isFallback}
+                    showDistance={areaParam === 'Near Me' || sortField === 'distance'}
+                  />
                 ))
               ) : (
                 <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">

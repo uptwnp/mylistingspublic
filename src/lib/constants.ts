@@ -1,4 +1,4 @@
-import { Clock, Tag, Ruler, Navigation } from 'lucide-react';
+import { Clock, Tag, Ruler, Locate } from 'lucide-react';
 
 export const SORT_CATEGORIES = [
   { id: 'time', field: 'approved_on', defaultOrder: 'desc' as const, label: 'Time', icon: Clock, canToggle: false },
@@ -7,5 +7,5 @@ export const SORT_CATEGORIES = [
 ];
 
 export const NEARBY_SORT_CATEGORY = [
-  { id: 'distance', field: 'distance', defaultOrder: 'asc' as const, label: 'Near Me', icon: Navigation, canToggle: false },
+  { id: 'distance', field: 'distance', defaultOrder: 'asc' as const, label: 'Near Me', icon: Locate, canToggle: false },
 ];

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, MapPin, Wallet, Home as HomeIcon, Trees, Navigation } from 'lucide-react';
+import { Search, X, MapPin, Wallet, Home as HomeIcon, Trees, Locate } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -159,7 +159,7 @@ export function HomeSearch() {
                             "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
                             s === 'Near Me' ? "bg-blue-50 group-hover:bg-blue-100" : "bg-zinc-100 group-hover:bg-zinc-200"
                           )}>
-                             {s === 'Near Me' ? <Navigation className="h-5 w-5 text-brand-primary" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
+                             {s === 'Near Me' ? <Locate className="h-5 w-5 text-brand-primary" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
                           </div>
                           <div className="flex flex-col min-w-0">
                             <span className={cn("truncate", s === 'Near Me' && "text-brand-primary")}>{s}</span>

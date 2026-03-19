@@ -1,11 +1,13 @@
 
+
 'use client';
 
+
 import { useEffect, useState, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Plus, Minus, Satellite, Map as MapIcon, Navigation, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check } from 'lucide-react';
+import { Plus, Minus, Satellite, Map as MapIcon, Locate, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check } from 'lucide-react';
 import { Property } from '@/types';
 import { formatPrice, getPropertyCoords, cn, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
@@ -278,45 +280,57 @@ function MapControls({
   };
 
   return (
-    <div className={cn(
-      "absolute right-4 sm:right-8 z-[1000] flex flex-col gap-4 transition-all duration-500",
-      hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-24 sm:bottom-12"
-    )}>
-      {/* Zoom Controls */}
-      <div className="flex flex-col overflow-hidden rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-        <button 
-          onClick={handleZoomIn}
-          title="Zoom In"
-          className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
-        >
-          <Plus className="h-5 w-5 text-zinc-900" />
-        </button>
-        <div className="mx-3 h-px bg-zinc-200/50" />
-        <button 
-          onClick={handleZoomOut}
-          title="Zoom Out"
-          className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
-        >
-          <Minus className="h-5 w-5 text-zinc-900" />
-        </button>
+    <>
+      {/* Zoom & GPS Group (Right Side) */}
+      <div className={cn(
+        "absolute right-4 sm:right-8 z-[1000] flex flex-col gap-4 transition-all duration-500",
+        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-24 sm:bottom-12"
+      )}>
+        <div className="flex flex-col overflow-hidden rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+          <button 
+            onClick={handleZoomIn}
+            title="Zoom In"
+            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
+          >
+            <Plus className="h-5 w-5 text-zinc-900" />
+          </button>
+          
+          <div className="mx-3 h-px bg-zinc-200/50" />
+          
+          <button 
+            onClick={handleZoomOut}
+            title="Zoom Out"
+            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
+          >
+            <Minus className="h-5 w-5 text-zinc-900" />
+          </button>
+
+          <div className="mx-3 h-px bg-zinc-200/50" />
+
+          <button 
+            onClick={handleGPS}
+            title="My Location"
+            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
+          >
+            <Locate className="h-5 w-5 text-zinc-900" />
+          </button>
+        </div>
       </div>
 
-      {/* Satellite & GPS */}
-      <div className="flex flex-col gap-3">
+      {/* Satellite Toggle (Left Side) */}
+      <div className={cn(
+        "absolute left-4 sm:left-8 z-[1000] transition-all duration-500",
+        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-24 sm:bottom-12"
+      )}>
         <button 
           onClick={() => setIsSatellite(!isSatellite)}
-          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95"
+          title={isSatellite ? "Show Map" : "Show Satellite"}
+          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-95"
         >
           {isSatellite ? <MapIcon className="h-5 w-5 text-zinc-900" /> : <Satellite className="h-5 w-5 text-zinc-900" />}
         </button>
-        <button 
-          onClick={handleGPS}
-          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-zinc-900 shadow-xl transition-all hover:scale-110 active:scale-90 active:rotate-12"
-        >
-          <Navigation className="h-5 w-5 text-white" />
-        </button>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -604,7 +618,7 @@ export default function MapComponent({
                 icon={L.divIcon({
                   html: ReactDOMServer.renderToStaticMarkup(
                     <div className="flex items-center justify-center h-8 w-8 bg-black rounded-full border-2 border-white shadow-lg">
-                      <Navigation className="h-4 w-4 text-white rotate-45" />
+                      <Locate className="h-4 w-4 text-white" />
                     </div>
                   ),
                   className: '',
@@ -614,6 +628,19 @@ export default function MapComponent({
               />
             )}
           </>
+        )}
+        {selectedProperty && selectedProperty.landmark_location_distance && selectedProperty.landmark_location_distance > 0 && (
+          <Circle
+            center={getCoords(selectedProperty, properties)}
+            radius={selectedProperty.landmark_location_distance}
+            pathOptions={{
+              color: '#3b82f6', // blue-500
+              fillColor: '#3b82f6',
+              fillOpacity: 0.15,
+              weight: 1,
+              dashArray: '5, 5'
+            }}
+          />
         )}
         <CollisionAwareMarkers 
           properties={properties} 

@@ -11,9 +11,18 @@ interface NoPhotosPlaceholderProps {
   className?: string;
   isMini?: boolean;
   propertyType?: string;
+  title?: string;
+  buttonText?: string;
 }
 
-export function NoPhotosPlaceholder({ onClick, className, isMini = false, propertyType = 'House' }: NoPhotosPlaceholderProps) {
+export function NoPhotosPlaceholder({ 
+  onClick, 
+  className, 
+  isMini = false, 
+  propertyType = 'House',
+  title = "Photos not shared publicly",
+  buttonText = "Request Photos"
+}: NoPhotosPlaceholderProps) {
   const config = getPropertyConfig(propertyType);
   const Icon = config.icon;
 
@@ -116,10 +125,10 @@ export function NoPhotosPlaceholder({ onClick, className, isMini = false, proper
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.6 }}
           transition={{ delay: 0.4 }}
-          className="mb-4 text-[10px] font-bold uppercase tracking-[0.15em]"
+          className="mb-4 text-[10px] font-bold uppercase tracking-[0.15em] text-center px-4"
           style={{ color: primaryColor }}
         >
-          Photos not shared publicly
+          {title}
         </motion.p>
 
         {/* Button */}
@@ -132,10 +141,10 @@ export function NoPhotosPlaceholder({ onClick, className, isMini = false, proper
           style={{ boxShadow: `0 4px 20px -5px ${primaryColor}30` }}
         >
           <span 
-            className="text-xs font-bold sm:text-sm"
+            className="text-xs font-bold sm:text-sm whitespace-nowrap"
             style={{ color: primaryColor }}
           >
-            Request Photos
+            {buttonText}
           </span>
           <div 
             className="flex h-4 w-4 items-center justify-center rounded-full transition-colors group-hover:bg-zinc-900 group-hover:text-white"

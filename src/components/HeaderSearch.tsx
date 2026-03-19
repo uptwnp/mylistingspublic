@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Wallet, Home as HomeIcon, Trees, ChevronDown, SlidersHorizontal, X, Navigation } from 'lucide-react';
+import { Search, MapPin, Wallet, Home as HomeIcon, Trees, ChevronDown, SlidersHorizontal, X, Locate } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import { getAreas } from '@/lib/supabase';
 import { useShortlist } from '@/context/ShortlistContext';
 import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import { getSeoUrl } from '@/lib/seo-utils';
+import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
 
 
 export const BUDGET_OPTIONS = [
@@ -69,7 +69,7 @@ export function HeaderSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const isExplorePage = pathname === '/explore';
+  const isExplorePage = pathname === '/explore' || !!parseSeoSlug(pathname.slice(1));
 
   useEffect(() => {
     async function loadAreas() {
@@ -225,7 +225,7 @@ export function HeaderSearch({
                                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
                                 s === 'Near Me' ? "bg-blue-50 group-hover:bg-blue-100" : "bg-zinc-100 group-hover:bg-zinc-200"
                               )}>
-                                 {s === 'Near Me' ? <Navigation className="h-5 w-5 text-brand-primary" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
+                                 {s === 'Near Me' ? <Locate className="h-5 w-5 text-brand-primary" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
                               </div>
                               <div className="flex flex-col min-w-0">
                                 <span className={cn("truncate", s === 'Near Me' && "text-brand-primary")}>{s}</span>
@@ -398,7 +398,7 @@ export function HeaderSearch({
             <div className="hidden sm:flex items-center gap-2">
               <button
                 onClick={() => { if (onExpand) onExpand(); else window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="flex items-center divide-x divide-zinc-200 rounded-full border border-zinc-200 bg-white py-1.5 pl-4 pr-1.5 shadow-md hover:shadow-lg transition-all"
+                className="flex-1 min-w-0 flex items-center divide-x divide-zinc-200 rounded-full border border-zinc-200 bg-white py-1.5 pl-4 pr-1.5 shadow-md hover:shadow-lg transition-all"
               >
                 <div className="flex items-center px-4 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); onExpand?.('location'); }}>
                   <span className="ty-caption font-bold text-zinc-900 truncate tracking-tight">{query || "Anywhere"}</span>
@@ -424,7 +424,7 @@ export function HeaderSearch({
                 <div className="flex items-center gap-2 relative">
                   <button
                     onClick={onOpenFilters}
-                    className="relative flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md hover:shadow-lg transition-all"
+                    className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md hover:shadow-lg transition-all"
                   >
                     <SlidersHorizontal className="h-4 w-4" />
                     {additionalFiltersCount > 0 && (
@@ -437,7 +437,7 @@ export function HeaderSearch({
                   <div className="relative">
                     <button 
                       onClick={() => setIsSortOpen(!isSortOpen)}
-                      className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white h-10 px-3 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 shadow-md hover:shadow-lg"
+                      className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white h-10 px-4 whitespace-nowrap shrink-0 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 shadow-md hover:shadow-lg"
                     >
                       {(() => {
                         const allSortCategories = [...SORT_CATEGORIES, ...NEARBY_SORT_CATEGORY];
@@ -445,9 +445,9 @@ export function HeaderSearch({
                         const DirectionIcon = sortOrder === 'desc' ? ArrowDown : ArrowUp;
                         return (
                           <>
-                            <activeCategory.icon className="h-4 w-4 text-zinc-700" />
-                            <span className="hidden lg:inline">{activeCategory.label}</span>
-                            <DirectionIcon className={cn("h-3.5 w-3.5 text-zinc-400 transition-transform", isSortOpen && "rotate-180")} />
+                            <activeCategory.icon className="h-4 w-4 shrink-0 text-zinc-700" />
+                            <span className="whitespace-nowrap">{activeCategory.label}</span>
+                            <DirectionIcon className={cn("h-3.5 w-3.5 shrink-0 text-zinc-400 transition-transform", isSortOpen && "rotate-180")} />
                           </>
                         );
                       })()}

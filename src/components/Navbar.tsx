@@ -11,7 +11,7 @@ import { HeaderSearch, BUDGET_OPTIONS } from './HeaderSearch';
 import { FilterModal } from './FilterModal';
 import { SelectionBottomSheet } from './SelectionBottomSheet';
 import { useCallback } from 'react';
-import { getSeoUrl } from '@/lib/seo-utils';
+import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
 import { useBrand } from '@/context/BrandContext';
 
 
@@ -120,10 +120,26 @@ export default function Navbar() {
 
   // Sync search state from URL
   useEffect(() => {
-    // Only sync if we're on the /explore page or /map page
-    // This prevents clearing global state when navigating back to Home
-    if (pathname !== '/explore' && pathname !== '/map') return;
+    // Check if it's a dynamic SEO route
+    const seoData = parseSeoSlug(pathname.slice(1));
+    const isStandardExplore = pathname === '/explore' || pathname === '/map';
     
+    // Only sync if we're on the /explore page, /map page, OR an SEO route
+    if (!isStandardExplore && !seoData) return;
+    
+    if (seoData) {
+      // Sync from SEO slug
+      if (seoData.city && seoData.city !== selectedCity) setSelectedCity(seoData.city);
+      if (seoData.type && seoData.type !== propertyType) setPropertyType(seoData.type);
+      if (seoData.area && seoData.area !== query) setQuery(seoData.area);
+      if (seoData.budget) {
+        const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === seoData.budget) || BUDGET_OPTIONS[0];
+        if (foundBudget.label !== budget.label) setBudget(foundBudget);
+      }
+      return;
+    }
+
+    // Standard sync from search params
     const area = searchParams.get('area') || '';
     if (area !== query) setQuery(area);
 
@@ -153,7 +169,7 @@ export default function Navbar() {
     if (city && city !== selectedCity) {
       setSelectedCity(city);
     }
-  }, [searchParams]);
+  }, [pathname, searchParams]);
 
   // Auto-apply when on Explore page
   useEffect(() => {

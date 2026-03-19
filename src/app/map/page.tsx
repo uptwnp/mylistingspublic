@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
-import { ArrowLeft, Layers, Navigation, Loader2 } from 'lucide-react';
+import { ArrowLeft, Layers, Locate, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 // Dynamically import MapComponent to prevent SSR issues
@@ -49,7 +49,7 @@ export default function MapPage() {
             <span className="hidden sm:inline">Standard</span>
           </button>
           <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-xl transition-transform hover:scale-110 active:scale-95">
-            <Navigation className="h-5 w-5" />
+            <Locate className="h-5 w-5" />
           </button>
         </div>
       </div>
