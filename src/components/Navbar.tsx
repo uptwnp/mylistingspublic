@@ -47,15 +47,6 @@ export default function Navbar() {
   const router = useRouter();
   const isHomePage = pathname === '/';
   const [allAreas, setAllAreas] = useState<string[]>([]);
-  const [showCityInLogo, setShowCityInLogo] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowCityInLogo(prev => !prev);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
   const OTHER_CITIES = [
     "Sonipat", "Delhi NCR", "Gurgaon", "Noida", "Rohtak"
   ];
@@ -267,67 +258,49 @@ export default function Navbar() {
           {/* Top Row: Logo, Center (Tabs/Search), and Actions */}
           <div className="flex items-center justify-between gap-4">
             {/* Left Section: Logo & Mobile Search Trigger */}
-            <div className="flex flex-1 items-center gap-2 sm:gap-6 min-w-0">
-              <div className="flex items-center gap-2 group shrink-0">
-                <Link href="/" className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105 shrink-0">
+            <div className="flex flex-1 items-center gap-3 sm:gap-6 min-w-0">
+              <Link href="/" className="flex items-center gap-2 group shrink-0">
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
                   <Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                </Link>
-                
-                <div className="relative h-7 sm:h-8 flex items-center" style={{ perspective: '1000px' }}>
-                  <AnimatePresence mode="wait">
-                    {!shouldShowCompact ? (
-                      <motion.div
-                        key="brand-logo"
-                        initial={{ rotateX: -90, opacity: 0 }}
-                        animate={{ rotateX: 0, opacity: 1 }}
-                        exit={{ rotateX: 90, opacity: 0 }}
-                        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                        className="flex items-center"
-                      >
-                        <Link href="/" className="ty-subtitle font-bold tracking-tighter text-zinc-900 truncate">
-                          {brand.logoText.styled ? (
-                            <>
-                              {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
-                            </>
-                          ) : (
-                            <span className="uppercase">{brand.logoText.text}</span>
-                          )}
-                        </Link>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="search-chip"
-                        initial={{ rotateX: -90, opacity: 0 }}
-                        animate={{ rotateX: 0, opacity: 1 }}
-                        exit={{ rotateX: 90, opacity: 0 }}
-                        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                        className="sm:hidden"
-                      >
-                        <button
-                          onClick={() => setIsMobileSearchOpen(true)}
-                          className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 shadow-md shadow-zinc-200/50 hover:shadow-lg transition-all"
-                        >
-                          <Search className="h-3.5 w-3.5 text-zinc-900" strokeWidth={3} />
-                          <span className="ty-caption font-black text-zinc-900 truncate max-w-[120px]">
-                            {query ? `${query}` : selectedCity}
-                          </span>
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  
-                  {/* Desktop Logo Name (Always show if not mobile) */}
-                  <div className={cn(
-                    "hidden sm:flex items-center transition-opacity duration-300",
-                    shouldShowCompact ? "opacity-0 pointer-events-none" : "opacity-100"
-                  )}>
-                    {!shouldShowCompact && (
-                       // This is redundant with the motion.div above but handles the sm: breakpoint logic cleanly
-                       null 
-                    )}
+                </div>
+                <span className={cn(
+                  "ty-subtitle font-bold tracking-tighter text-zinc-900 truncate",
+                  shouldShowCompact ? "hidden lg:block" : "block"
+                )}>
+                  {brand.logoText.styled ? (
+                    <>
+                      {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
+                    </>
+                  ) : (
+                    <span className="uppercase">{brand.logoText.text}</span>
+                  )}
+                </span>
+              </Link>
+
+              {/* Mobile Search Pill - Visible on scroll or subpages */}
+              {shouldShowCompact && (
+                <div className="sm:hidden flex-1 px-2">
+                  <div
+                    className="flex w-full items-center gap-3 rounded-full border border-zinc-200 bg-white px-4 py-2.5 shadow-md shadow-zinc-200/50 hover:shadow-lg transition-all"
+                  >
+                    <div 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        handleApplyFilters(); 
+                      }}
+                      className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-90 transition-transform cursor-pointer"
+                    >
+                      <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
+                    </div>
+                    <button 
+                      onClick={() => setIsMobileSearchOpen(true)}
+                      className="flex-1 text-left ty-caption font-black text-zinc-900 truncate tracking-tight"
+                    >
+                      {query ? `${query}, ${selectedCity}` : selectedCity}
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Middle Section: Desktop Tabs or Compact Search */}
@@ -445,19 +418,49 @@ export default function Navbar() {
               <div className="relative" ref={menuRef}>
                 <div 
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pl-3 transition-shadow hover:shadow-md cursor-pointer ml-1"
+                  className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-shadow hover:shadow-md cursor-pointer ml-1"
                 >
+                  <AnimatePresence mode="wait">
+                    {shortlistItems.length > 0 ? (
+                      <motion.div
+                        key="cart-icon"
+                        initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, x: -20 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                      >
+                        <Link href="/shortlist" onClick={(e) => e.stopPropagation()}>
+                          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white hover:bg-zinc-700 transition-colors">
+                            <ShoppingCart className="h-5 w-5 text-zinc-300" />
+                            <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
+                              {shortlistItems.length}
+                            </span>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="search-icon"
+                        initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, x: -20 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.innerWidth < 640) {
+                            setIsMobileSearchOpen(true);
+                          } else {
+                             setIsForceExpanded(true);
+                             setInitialSegment('location');
+                          }
+                        }}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors"
+                      >
+                        <Search className="h-4 w-4" strokeWidth={3} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   <Menu className="h-4 w-4 text-zinc-600" />
-                  <Link href="/shortlist" onClick={(e) => e.stopPropagation()}>
-                    <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors">
-                      <ShoppingCart className="h-5 w-5 text-zinc-300" />
-                      {shortlistItems.length > 0 && (
-                        <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
-                          {shortlistItems.length}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
                 </div>
 
                 <AnimatePresence>
@@ -475,7 +478,23 @@ export default function Navbar() {
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <Home className="h-4 w-4 text-zinc-400" />
-                          List your property
+                          Sell Property
+                        </Link>
+                        <Link 
+                          href="/agent" 
+                          className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <Building2 className="h-4 w-4 text-zinc-400" />
+                          Agent
+                        </Link>
+                        <Link 
+                          href="/refer" 
+                          className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-emerald-600 transition-colors hover:bg-emerald-50"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <Wallet className="h-4 w-4 text-emerald-400" />
+                          Refer and Earn
                         </Link>
                         <Link 
                           href="/favorites" 
