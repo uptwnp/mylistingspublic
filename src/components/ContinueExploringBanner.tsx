@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useShortlist } from '@/context/ShortlistContext';
 import { BUDGET_OPTIONS } from '@/components/HeaderSearch';
+import { getSeoUrl } from '@/lib/seo-utils';
 
 export function ContinueExploringBanner() {
   const { recentlyVisitedIds } = useShortlist();
@@ -59,7 +60,8 @@ export function ContinueExploringBanner() {
   if (lastProperty.type) queryParams.set('type', lastProperty.type);
   if (budgetQuery) queryParams.set('budget', budgetQuery);
 
-  const searchUrl = `/explore?${queryParams.toString()}`;
+  const seoUrl = getSeoUrl(lastProperty.city, lastProperty.type, lastProperty.area, budgetQuery);
+  const searchUrl = seoUrl || `/explore?${queryParams.toString()}`;
 
   return (
     <div className="flex w-full justify-center px-4 sm:px-0 py-2 sm:py-4">
@@ -69,7 +71,7 @@ export function ContinueExploringBanner() {
       >
         <div className="flex items-center gap-2 sm:gap-3 py-1">
              <span className="text-sm sm:text-base font-bold text-zinc-900 tracking-tight capitalize">
-               Continue exploring {baseType.toLowerCase()} {priceText} in {lastProperty.area}
+                Continue exploring {baseType.toLowerCase()} {priceText} in {lastProperty.area}
              </span>
              <span className="hidden sm:inline-block text-zinc-200 text-lg mx-1">•</span>
              <span className="hidden sm:inline-block text-sm font-semibold text-zinc-500 whitespace-nowrap">

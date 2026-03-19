@@ -351,7 +351,6 @@ export function HeaderSearch({
                               e.stopPropagation(); 
                               setPropertyType(type); 
                               setActiveSegment(null); 
-                              handleSearch({ type }); 
                             }}
                             className={cn(
                               "flex items-center gap-4 rounded-xl px-4 py-3 text-left ty-body font-bold transition-all border-2",

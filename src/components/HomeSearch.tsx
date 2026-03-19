@@ -275,12 +275,11 @@ export function HomeSearch() {
                   {PROPERTY_TYPES.map((type) => (
                     <button 
                       key={type}
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        setPropertyType(type); 
-                        setActiveSegment(null); 
-                        handleSearch({ type });
-                      }}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setPropertyType(type); 
+                          setActiveSegment(null); 
+                        }}
                       className={cn(
                         "flex items-center gap-4 rounded-xl px-4 py-4 text-left ty-body font-bold transition-all",
                         propertyType === type ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"

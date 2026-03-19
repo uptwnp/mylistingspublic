@@ -171,7 +171,7 @@ function PropertyDetailContent() {
           </Link>
         </div>
         <h1 className="ty-title font-bold text-zinc-900 leading-tight">
-          {formatSizeRange(property.size_min, property.size_max, property.size_unit)} {property.type} for sale in {property.area}, {property.city}
+          {formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min)} {property.type} for sale in {property.area}, {property.city}
         </h1>
       </section>
 
@@ -234,7 +234,7 @@ function PropertyDetailContent() {
                           setTimeout(() => setIsDragging(false), 100);
                         }}
                         onTap={() => {
-                          if (!isDragging) {
+                          if (!isDragging && heroImageIndex < property.image_urls.length) {
                             openGallery(heroImageIndex);
                           }
                         }}
@@ -254,13 +254,18 @@ function PropertyDetailContent() {
                         ) : (
                           // Extra Slide for Placeholder
                           <div 
-                            onClick={() => setIsPhotoModalOpen(true)}
-                            className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
+                            className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-zinc-50"
                           >
                             <ShieldCheck className="h-16 w-16 mb-6 text-zinc-300" />
                             <p className="ty-title font-bold text-zinc-900 mb-2">Not enough to get idea?</p>
                             <p className="ty-caption text-zinc-500 max-w-sm mb-6">Request more exclusive photos and videos for this property.</p>
-                            <button className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-95 transition-all">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsPhotoModalOpen(true);
+                              }}
+                              className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-95 transition-all cursor-pointer"
+                            >
                               Request more photos
                             </button>
                           </div>
@@ -417,7 +422,7 @@ function PropertyDetailContent() {
                         { label: 'Listing ID', value: property.public_id },
                         { label: 'City', value: property.city },
                         { label: 'Area', value: property.area },
-                        { label: 'Size', value: formatSizeRange(property.size_min, property.size_max, property.size_unit) },
+                        { label: 'Size', value: formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min) },
                         { label: 'Price Range', value: formatPriceRange(property.price_min, property.price_max) },
                         { label: 'Status', value: (property.status || 'Active').charAt(0).toUpperCase() + (property.status || 'Active').slice(1) },
                         { label: 'Approved On', value: formatDate(property.approved_on) },

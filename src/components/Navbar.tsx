@@ -39,6 +39,7 @@ export default function Navbar() {
   const [isOtherCityDropdownOpen, setIsOtherCityDropdownOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const otherCityDropdownRef = useRef<HTMLDivElement>(null);
   const mobileOtherCityDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -69,7 +70,9 @@ export default function Navbar() {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+      
+      // Only collapse IF clicking OUTSIDE the entire nav
+      if (isForceExpanded && navRef.current && !navRef.current.contains(event.target as Node)) {
         setIsForceExpanded(false);
         setInitialSegment(null);
       }
@@ -88,21 +91,23 @@ export default function Navbar() {
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isForceExpanded]);
 
-  const handleApplyFilters = useCallback((overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
+  const handleApplyFilters = useCallback((overrides?: { city?: string; area?: string; budget?: { label: string; value: number }; type?: string }) => {
+    const finalCity = overrides?.city ?? selectedCity;
     const finalArea = overrides?.area ?? query;
     const finalBudget = overrides?.budget ?? budget;
     const finalType = overrides?.type ?? propertyType;
-
+    
+    // Create query params for extra filters
     const params = new URLSearchParams();
     if (keywords) params.set('q', keywords);
     if (minSize) params.set('minSize', minSize);
     if (maxSize) params.set('maxSize', maxSize);
     if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
 
-    // Try SEO URL as base
-    const seoUrl = getSeoUrl(selectedCity, finalType, finalArea, finalBudget.label);
+    // Prioritize hierarchical SEO URL for primary search parameters
+    const seoUrl = getSeoUrl(finalCity, finalType, finalArea, finalBudget.label);
     if (seoUrl) {
       const queryString = params.toString();
       router.push(queryString ? `${seoUrl}${queryString ? `?${queryString}` : ''}` : seoUrl);
@@ -134,57 +139,53 @@ export default function Navbar() {
       if (seoData.city && seoData.city !== selectedCity) setSelectedCity(seoData.city);
       if (seoData.type && seoData.type !== propertyType) setPropertyType(seoData.type);
       if (seoData.area && seoData.area !== query) setQuery(seoData.area);
+      else if (!seoData.area && query !== '') setQuery(''); // Clear if it's 'anywhere' in SEO path
+
       if (seoData.budget) {
         const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === seoData.budget) || BUDGET_OPTIONS[0];
         if (foundBudget.label !== budget.label) setBudget(foundBudget);
+      } else if (budget.label !== 'Any Budget') {
+        setBudget(BUDGET_OPTIONS[0]);
       }
     }
 
     // Secondary: Sync other filters from search params (supports combination)
-    const keywordsParam = searchParams.get('q') || '';
-    if (keywordsParam && keywordsParam !== keywords) setKeywords(keywordsParam);
+    // Only sync if they were EXPLICITLY provided to avoid resetting SEO route state
+    const keywordsParam = searchParams.get('q') || searchParams.get('keywords');
+    if (keywordsParam !== null && keywordsParam !== keywords) setKeywords(keywordsParam);
     
-    const minSizeParam = searchParams.get('minSize') || '';
-    if (minSizeParam && minSizeParam !== minSize) setMinSize(minSizeParam);
+    const minSizeParam = searchParams.get('minSize');
+    if (minSizeParam !== null && minSizeParam !== minSize) setMinSize(minSizeParam);
     
-    const maxSizeParam = searchParams.get('maxSize') || '';
-    if (maxSizeParam && maxSizeParam !== maxSize) setMaxSize(maxSizeParam);
+    const maxSizeParam = searchParams.get('maxSize');
+    if (maxSizeParam !== null && maxSizeParam !== maxSize) setMaxSize(maxSizeParam);
     
-    const highlightsParam = searchParams.get('highlights') || '';
-    if (highlightsParam) {
+    const highlightsParam = searchParams.get('highlights');
+    if (highlightsParam !== null) {
       const hList = highlightsParam.split(',').filter(Boolean);
-      setSelectedHighlights(hList);
+      if (JSON.stringify(hList) !== JSON.stringify(selectedHighlights)) {
+        setSelectedHighlights(hList);
+      }
     }
 
-    // Standard sync from search params
-    const area = searchParams.get('area') || '';
-    if (area !== query) setQuery(area);
+    // Standard sync ONLY if not on SEO route or if params are present
+    if (!seoData) {
+      const area = searchParams.get('area');
+      if (area !== null && area !== query) setQuery(area);
 
-    const budgetLabel = searchParams.get('budget') || 'Any Budget';
-    const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === budgetLabel) || BUDGET_OPTIONS[0];
-    if (foundBudget.label !== budget.label) setBudget(foundBudget);
+      const budgetLabel = searchParams.get('budget');
+      if (budgetLabel !== null) {
+        const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === budgetLabel) || BUDGET_OPTIONS[0];
+        if (foundBudget.label !== budget.label) setBudget(foundBudget);
+      }
 
-    const type = searchParams.get('type') || 'Any Type';
-    if (type !== propertyType) setPropertyType(type);
+      const type = searchParams.get('type');
+      if (type !== null && type !== propertyType) setPropertyType(type);
 
-    const kw = searchParams.get('keywords') || '';
-    if (kw !== keywords) setKeywords(kw);
-
-    const min = searchParams.get('minSize') || '';
-    if (min !== minSize) setMinSize(min);
-
-    const max = searchParams.get('maxSize') || '';
-    if (max !== maxSize) setMaxSize(max);
-
-    const hParams = searchParams.get('highlights') || '';
-    const hArray = hParams ? hParams.split(',') : [];
-    if (JSON.stringify(hArray) !== JSON.stringify(selectedHighlights)) {
-      setSelectedHighlights(hArray);
-    }
-    
-    const city = searchParams.get('city');
-    if (city && city !== selectedCity) {
-      setSelectedCity(city);
+      const city = searchParams.get('city');
+      if (city && city !== selectedCity) {
+        setSelectedCity(city);
+      }
     }
   }, [pathname, searchParams]);
 
@@ -245,7 +246,9 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={cn(
+      <nav 
+        ref={navRef}
+        className={cn(
         "fixed top-0 z-50 w-full transition-all duration-700 ease-in-out",
         shouldShowCompact 
           ? "border-b border-zinc-200/50 bg-[#fafafa]/80 backdrop-blur-3xl py-3 shadow-sm" 
@@ -323,37 +326,31 @@ export default function Navbar() {
                       transition={{ duration: 0.2, ease: "easeOut" }}
                       className="hidden sm:flex items-center justify-center gap-1 max-w-[calc(100vw-140px)] px-2 sm:max-w-none sm:px-0"
                     >
-                    <button 
-                      onClick={() => setSelectedCity("Panipat")}
-                      className={cn(
-                        "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all shrink-0",
-                        selectedCity === "Panipat" ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
-                      )}
-                    >
-                      <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === "Panipat" ? "text-zinc-900" : "text-zinc-300")} />
-                      <span className="ty-micro font-bold">Panipat</span>
-                      {selectedCity === "Panipat" && (
-                        <div 
-                          className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
-                        />
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => setSelectedCity("Karnal")}
-                      className={cn(
-                        "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all shrink-0",
-                        selectedCity === "Karnal" ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
-                      )}
-                    >
-                      <Trees className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === "Karnal" ? "text-zinc-900" : "text-zinc-300")} />
-                      <span className="ty-micro font-bold">Karnal</span>
-                      {selectedCity === "Karnal" && (
-                        <div 
-                          className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
-                        />
-                      )}
-                    </button>
-                    <div className="relative shrink-0" ref={otherCityDropdownRef}>
+                    {["Panipat", "Karnal"].map((tabCity) => (
+                      <button 
+                        key={tabCity}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCity(tabCity);
+                          // If on explore/map or any SEO route, redirect to the new city
+                          if (pathname === '/explore' || pathname === '/map' || parseSeoSlug(pathname.slice(1))) {
+                            handleApplyFilters({ city: tabCity });
+                          }
+                        }}
+                        className={cn(
+                          "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all shrink-0",
+                          selectedCity === tabCity ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
+                        )}
+                      >
+                        <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
+                        <span className="ty-micro font-bold">{tabCity}</span>
+                        {selectedCity === tabCity && (
+                          <div 
+                            className="absolute -bottom-2 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-zinc-900 rounded-full"
+                          />
+                        )}
+                      </button>
+                    ))}  <div className="relative shrink-0" ref={otherCityDropdownRef}>
                       <button 
                         onClick={() => setIsOtherCityDropdownOpen(!isOtherCityDropdownOpen)}
                         className={cn(
@@ -707,8 +704,6 @@ export default function Navbar() {
           setPropertyType(val);
           setTimeout(() => {
             setActiveSelectionSheet(null);
-            setIsMobileSearchOpen(false);
-            handleApplyFilters({ type: val });
           }, 100);
         }}
       />

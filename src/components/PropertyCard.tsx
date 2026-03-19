@@ -109,7 +109,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
         {/* Main Content Area */}
         <motion.div layout className="flex flex-1 flex-col min-w-0 py-0.5">
           <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight truncate">
-            {formatSizeRange(property.size_min, property.size_max, property.size_unit)} {property.type}
+            {formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min)} {property.type}
           </h3>
 
           <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-medium text-zinc-500">

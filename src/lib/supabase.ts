@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getFallbackUnit } from './utils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -63,6 +64,11 @@ const formatPropertyData = (property: Record<string, unknown>) => {
       }
     }
   }
+
+  // Fallback for size_unit
+  if (!formatted.size_unit || formatted.size_unit === 'null' || formatted.size_unit === 'undefined') {
+    formatted.size_unit = getFallbackUnit(formatted.price_min || formatted.price_max, formatted.size_min || formatted.size_max);
+  }
   
   return formatted;
 };
@@ -110,14 +116,28 @@ export async function getProperties(
   try {
     let query = supabase
       .from('public_properties_view')
-      .select(PUBLIC_FIELDS);
+      .select(PUBLIC_FIELDS, { count: 'exact' });
 
     if (city && city !== 'All') {
       query = query.ilike('city', `%${city.trim()}%`);
     }
 
     if (type && type !== 'All' && type !== 'Any Type') {
-      query = query.ilike('type', `%${type.trim()}%`);
+      const t = type.toLowerCase();
+      // If it's a known category with synonyms, search for all variants
+      if (t.includes('plot') || t.includes('land')) {
+        query = query.or('type.ilike.%plot%,type.ilike.%land%');
+      } else if (t.includes('house') || t.includes('villa')) {
+        query = query.or('type.ilike.%house%,type.ilike.%villa%');
+      } else if (t.includes('flat') || t.includes('apartment')) {
+        query = query.or('type.ilike.%flat%,type.ilike.%apartment%');
+      } else if (t.includes('commercial')) {
+        query = query.or('type.ilike.%commercial%,type.ilike.%shop%,type.ilike.%office%');
+      } else if (t.includes('industrial') || t.includes('factory')) {
+        query = query.or('type.ilike.%industrial%,type.ilike.%factory%,type.ilike.%godown%');
+      } else {
+        query = query.ilike('type', `%${type.trim()}%`);
+      }
     }
 
     if (area && area !== 'All' && area !== 'Near Me') {
@@ -125,28 +145,26 @@ export async function getProperties(
     }
 
     if (budget && budget !== 'Any Budget') {
-      // Prices in DB are in Lakhs: 1 = 1 Lakh, 100 = 1 Cr
-      // Overlap logic: p_min <= u_max AND p_max >= u_min
-      
-      if (budget === 'Under 40 Lakh') {
+      const b = budget.toLowerCase();
+      if (b.includes('under 40')) {
         query = query.lte('price_min', 40);
-      } else if (budget === '40 to 80 Lakh') {
+      } else if (b.includes('40 to 80')) {
         query = query.lte('price_min', 80).gte('price_max', 40);
-      } else if (budget === '80 Lakh to 1.2 Cr') {
+      } else if (b.includes('80 lakh to 1.2 cr')) {
         query = query.lte('price_min', 120).gte('price_max', 80);
-      } else if (budget === '1.2 Cr to 1.6 Cr') {
+      } else if (b.includes('1.2 cr to 1.6 cr')) {
         query = query.lte('price_min', 160).gte('price_max', 120);
-      } else if (budget === '1.6 to 2.5 Cr') {
+      } else if (b.includes('1.6 to 2.5 cr')) {
         query = query.lte('price_min', 250).gte('price_max', 160);
-      } else if (budget === '2.5 Cr to 5 Cr') {
+      } else if (b.includes('2.5 cr to 5 cr')) {
         query = query.lte('price_min', 500).gte('price_max', 250);
-      } else if (budget === '5 Cr to 10 Cr') {
+      } else if (b.includes('5 cr to 10 cr')) {
         query = query.lte('price_min', 1000).gte('price_max', 500);
-      } else if (budget === '10 Cr to 50 cr') {
+      } else if (b.includes('10 cr to 50 cr')) {
         query = query.lte('price_min', 5000).gte('price_max', 1000);
-      } else if (budget === '50 Cr to 100 cr') {
+      } else if (b.includes('50 cr to 100 cr')) {
         query = query.lte('price_min', 10000).gte('price_max', 5000);
-      } else if (budget === '100 Cr+') {
+      } else if (b.includes('100 cr')) {
         query = query.gte('price_max', 10000);
       }
     }
@@ -180,7 +198,6 @@ export async function getProperties(
     const { data, error, count } = await query
       .range(from, to)
       .order(sortField, { ascending: sortOrder === 'asc', nullsFirst: false })
-      .select(PUBLIC_FIELDS, { count: 'exact' })
       .order('property_id', { ascending: true });
 
     if (error) {
@@ -428,7 +445,7 @@ export async function submitPropertyForSale(propertyData: any, visitorData: any)
       area: propertyData.area,
       price: parseFloat(propertyData.price),
       size: parseFloat(propertyData.size),
-      size_unit: propertyData.size_unit || 'Sq.Yds',
+      size_unit: propertyData.size_unit || getFallbackUnit(parseFloat(propertyData.price), parseFloat(propertyData.size)),
       description: propertyData.description,
       landmark_location: propertyData.location ? `${propertyData.location.lat},${propertyData.location.lng}` : null,
       status: 'pending'

@@ -23,9 +23,25 @@ export function formatPriceRange(min: number, max: number) {
   return `${formatPrice(min)} - ${formatPrice(max)}`;
 }
 
-export function formatSizeRange(min: number, max: number, unit: string | null) {
+export function getFallbackUnit(price: number | null | undefined, size: number | null | undefined): string {
+  if (!price || !size || typeof price !== 'number' || typeof size !== 'number' || size === 0) {
+    return 'Sq.Yds'; // Default fallback
+  }
+  const ratio = price / size;
+  if (ratio >= 0.05 && ratio <= 5) {
+    return 'Gaj';
+  }
+  return 'Sq.Yds';
+}
+
+export function formatSizeRange(min: number, max: number, unit: string | null, price?: number) {
   if (!min && !max) return 'N/A';
-  const unitStr = unit || '';
+  
+  let unitStr = unit;
+  if (!unitStr || unitStr === 'null' || unitStr === 'undefined') {
+    unitStr = getFallbackUnit(price, min || max);
+  }
+  
   if (min === max || !max) return `${min} ${unitStr}`.trim();
   return `${min} - ${max} ${unitStr}`.trim();
 }

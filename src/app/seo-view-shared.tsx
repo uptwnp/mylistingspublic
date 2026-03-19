@@ -10,23 +10,35 @@ export async function generateSeoMetadata(slug: string[]): Promise<Metadata> {
   const seoData = parseSeoSlug(slug);
 
   if (!seoData || !seoData.city) {
-    return { title: 'Properties | Dealer Network' };
+    return { title: 'Browse Properties | MyListings' };
   }
 
   const { city, type, area, budget } = seoData;
   const titleParts = [];
   
-  if (type) titleParts.push(type);
-  else titleParts.push("Properties");
+  // Property Type: e.g., "Plots", "Houses", or "Properties"
+  const baseType = type ? type : "Properties";
+  titleParts.push(baseType);
 
-  if (area) titleParts.push(`in ${area}`);
-  else if (city) titleParts.push(`in ${city}`);
+  titleParts.push("for Sale");
+
+  // Location part: e.g., "in Raj Nagar, Panipat" or just "in Panipat"
+  if (area && area.toLowerCase() !== 'anywhere') {
+    titleParts.push(`in ${area}, ${city}`);
+  } else {
+    titleParts.push(`in ${city}`);
+  }
   
-  if (budget) titleParts.push(`(${budget})`);
+  // Budget part: e.g., "Under 40 Lakh" or "in 1.6 to 2.5 Cr"
+  if (budget && budget.toLowerCase() !== 'any budget') {
+    titleParts.push(`${budget}`);
+  }
+
+  const title = titleParts.join(' ');
 
   return {
-    title: `${titleParts.join(' ')} | Dealer Network`,
-    description: `Explore verified listings in ${city}. Find your dream property with instant maps and premium selection.`,
+    title: `${title} | MyListings`,
+    description: `Browse verified ${baseType.toLowerCase()} for sale in ${area || city}. Get instant maps, direct contact with owners, and premium internal listings with ${title}.`,
     alternates: {
       canonical: `/${slug.join('/')}`,
     },

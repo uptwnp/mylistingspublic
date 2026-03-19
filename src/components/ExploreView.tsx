@@ -81,7 +81,7 @@ export function ExploreView({
     }
   }, [areaParam]);
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const itemsPerPage = 1000;
+  const itemsPerPage = 20;
 
   // Request location if nearby is selected
   useEffect(() => {
@@ -125,6 +125,11 @@ export function ExploreView({
       }
     }
   }, [areaParam, sortField, userLocation, selectedCity]);
+
+  // Reset page when any core search filter changes
+  useEffect(() => {
+    setPage(0);
+  }, [selectedCity, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -225,22 +230,21 @@ export function ExploreView({
                       const budget = overrideBudget || searchParams.get('budget');
                       const city = overrideCity || searchParams.get('city') || selectedCity;
 
-                      const displayType = type && type !== 'Any Type' && type !== 'All' ? type : '';
-                      const displayArea = area && area !== 'All' && area !== 'Any' ? area : '';
-                      
-                      let titleParts = [];
-                      if (displayType) titleParts.push(displayType);
-                      else titleParts.push("Properties");
+                      const displayType = type && type !== 'Any Type' && type !== 'All' ? type : 'Properties';
+                      const displayArea = area && area !== 'All' && area !== 'Any' && area !== 'any' && area !== 'anywhere' ? area : '';
+                      const displayBudget = budget && budget !== 'Any Budget' && budget !== 'any-budget' ? budget : '';
 
+                      let titleParts = [displayType, "for sale"];
+                      
                       if (displayArea) {
                         if (displayArea.toLowerCase() === 'near me') titleParts.push("Near Me");
-                        else titleParts.push(`in ${displayArea}`);
+                        else titleParts.push(`in ${displayArea}, ${city}`);
                       } else if (city && city !== 'All') {
                         titleParts.push(`in ${city}`);
                       }
 
-                      if (budget && budget !== 'Any Budget') {
-                        titleParts.push(`(${budget})`);
+                      if (displayBudget) {
+                        titleParts.push(displayBudget);
                       }
 
                       return titleParts.join(' ');
