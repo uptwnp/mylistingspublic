@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { getAreas } from '@/lib/supabase';
 import { useShortlist } from '@/context/ShortlistContext';
 import { BUDGET_OPTIONS } from './HeaderSearch';
+import { getSeoUrl } from '@/lib/seo-utils';
 
 
 const PROPERTY_TYPES = [
@@ -57,6 +58,12 @@ export function HomeSearch() {
     if (finalBudget.value > 0) params.set('budget', finalBudget.label);
     if (finalType !== "Any Type") params.set('type', finalType);
     
+    const seoUrl = getSeoUrl(selectedCity, finalType, finalArea, finalBudget.label);
+    if (seoUrl) {
+      router.push(seoUrl);
+      return;
+    }
+
     router.push(`/explore?${params.toString()}`);
   };
 

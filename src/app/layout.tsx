@@ -10,6 +10,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { StickyHub } from "@/components/StickyHub";
 import { ShortlistProvider } from "@/context/ShortlistContext";
+import { ContactDetailForm } from "@/components/ContactDetailForm";
+import { InquiryModal } from "@/components/InquiryModal";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,6 +45,8 @@ export default function RootLayout({
           </main>
           <Footer />
           <StickyHub />
+          <ContactDetailForm />
+          <InquiryModal />
         </ShortlistProvider>
       </body>
     </html>

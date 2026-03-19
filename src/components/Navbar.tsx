@@ -11,6 +11,7 @@ import { HeaderSearch, BUDGET_OPTIONS } from './HeaderSearch';
 import { FilterModal } from './FilterModal';
 import { SelectionBottomSheet } from './SelectionBottomSheet';
 import { useCallback } from 'react';
+import { getSeoUrl } from '@/lib/seo-utils';
 
 export default function Navbar() {
   const { 
@@ -101,6 +102,15 @@ export default function Navbar() {
     if (minSize) params.set('minSize', minSize);
     if (maxSize) params.set('maxSize', maxSize);
     if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
+
+    // Try SEO URL for simple city+type searches
+    if (!keywords && !minSize && !maxSize && selectedHighlights.length === 0) {
+      const seoUrl = getSeoUrl(selectedCity, finalType, finalArea, finalBudget.label);
+      if (seoUrl) {
+        router.push(seoUrl);
+        return;
+      }
+    }
 
     router.push(`/explore?${params.toString()}`);
   }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router]);
@@ -374,9 +384,9 @@ export default function Navbar() {
                   <Menu className="h-4 w-4 text-zinc-600" />
                   <Link href="/shortlist" onClick={(e) => e.stopPropagation()}>
                     <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors">
-                      <ShoppingCart className="h-4 w-4 text-zinc-300" />
+                      <ShoppingCart className="h-5 w-5 text-zinc-300" />
                       {shortlistItems.length > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-900 border border-white ty-micro font-bold text-white">
+                        <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
                           {shortlistItems.length}
                         </span>
                       )}

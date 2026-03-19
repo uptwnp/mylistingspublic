@@ -17,13 +17,16 @@ import { cn } from '@/lib/utils';
 
 
 export default function ShortlistPage() {
-  const { shortlistItems, inquiries, updateInquiry, removeFromShortlist, clearShortlist } = useShortlist();
+  const { shortlistItems, inquiries, updateInquiry, removeFromShortlist, clearShortlist, requireContactDetails, contactDetails, consultationRequests, addConsultationRequest, updateConsultationRequest, removeConsultationRequest } = useShortlist();
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [shortlistType, setShortlistType] = useState<'phone' | 'home' | 'office'>('phone');
+  const [showFinalStep, setShowFinalStep] = useState(false);
+  const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
+  const [preferredTime, setPreferredTime] = useState('Anytime');
+  const [preferredDate, setPreferredDate] = useState('');
+  const [shortlistType, setShortlistType] = useState<'phone' | 'home' | 'office' | 'site'>('phone');
   const [isShared, setIsShared] = useState(false);
 
   const handleShare = () => {
@@ -91,16 +94,30 @@ export default function ShortlistPage() {
                 <Link href="/" className="mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-500 hover:text-black">
                   <ArrowLeft className="h-3.5 w-3.5" /> Back to Discover
                 </Link>
-                <h1 className="ty-display font-bold tracking-tight text-zinc-900 leading-tight">
-                  Shortlist
-                </h1>
-                <p className="mt-2 ty-caption font-medium text-zinc-500">
-                  {properties.length} {properties.length === 1 ? 'property' : 'properties'} selected for consultation.
-                </p>
-              </div>
-              <AnimatePresence>
-                <div className="space-y-4 sm:space-y-6">
-                {properties.map((property) => {
+                 <div className="flex items-center justify-between gap-4">
+                   <div>
+                     <h1 className="ty-display font-bold tracking-tight text-zinc-900 leading-tight">
+                       Shortlist
+                     </h1>
+                     <p className="mt-2 ty-caption font-medium text-zinc-500">
+                       {properties.length} {properties.length === 1 ? 'property' : 'properties'} selected for consultation.
+                     </p>
+                   </div>
+                   <button 
+                     onClick={handleShare}
+                     className={cn(
+                       "flex h-10 items-center justify-center gap-2 rounded-2xl px-5 ty-caption font-bold shadow-sm transition-all active:scale-[0.98] border whitespace-nowrap",
+                       isShared ? "bg-emerald-500 text-white border-emerald-500" : "bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50"
+                     )}
+                   >
+                     {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                     {isShared ? 'Link Copied!' : 'Share Shortlist'}
+                   </button>
+                 </div>
+               </div>
+
+               <AnimatePresence mode="popLayout">
+                 {properties.map((property) => {
                   const inquiry = inquiries[property.property_id];
                   return (
                     <motion.div
@@ -109,7 +126,7 @@ export default function ShortlistPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
-                      className="flex flex-col gap-2 sm:gap-3 rounded-2xl bg-white p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-shadow group/card border border-zinc-100/50"
+                      className="mb-4 sm:mb-6 flex flex-col gap-2 sm:gap-3 rounded-2xl bg-white p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-shadow group/card border border-zinc-100/50"
                     >
                       <div className="flex gap-3 sm:gap-4">
                         {(() => {
@@ -149,7 +166,11 @@ export default function ShortlistPage() {
                           );
                         })()}
                         <button 
-                          onClick={() => removeFromShortlist(property.property_id)}
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to remove this property from your shortlist?')) {
+                              removeFromShortlist(property.property_id);
+                            }
+                          }}
                           className="p-1.5 sm:p-2 text-zinc-300 hover:text-rose-500 transition-colors self-center"
                         >
                           <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -248,86 +269,206 @@ export default function ShortlistPage() {
                       })()}
                     </motion.div>
                   );
-                })}
-                </div>
-              </AnimatePresence>
+                 })}
+
+                 <motion.div 
+                   key="clear-all"
+                   layout
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   exit={{ opacity: 0 }}
+                   className="flex justify-center mt-8"
+                 >
+                   <button 
+                     onClick={() => {
+                       if (window.confirm('Are you sure you want to clear your entire shortlist?')) {
+                         clearShortlist();
+                       }
+                     }}
+                     className="flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-rose-500 hover:bg-rose-50/50 transition-all border border-dashed border-zinc-200 hover:border-rose-100"
+                   >
+                     <Trash2 className="h-3.5 w-3.5" />
+                     Clear Entire Shortlist
+                   </button>
+                 </motion.div>
+               </AnimatePresence>
             </div>
 
             {/* Shortlist Options */}
             <div className="space-y-6 lg:block pb-24 lg:pb-0">
               <aside className="rounded-3xl bg-white p-6 shadow-xl shadow-zinc-200/50 border border-zinc-100 lg:sticky lg:top-32">
-                <h2 className="mb-6 ty-title font-bold tracking-tight">Consultation Type</h2>
-                
-                <div className="space-y-3">
-                  <button 
-                    onClick={() => { setShortlistType('phone'); setShowForm(true); }}
-                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'phone' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
-                  >
-                    <div className="rounded-full bg-blue-100 p-3 text-blue-600 group-hover:scale-110 transition-transform">
-                      <Phone className="h-5 w-5 sm:h-6 sm:w-6" />
-                    </div>
-                    <div>
-                      <h3 className="ty-caption font-bold text-zinc-900">Phone Callback</h3>
-                      <p className="ty-micro font-medium uppercase tracking-wider text-zinc-400">Expert call within 15 mins</p>
-                    </div>
-                  </button>
+                 
+                 {consultationRequests.length > 0 ? (
+                   <div className="space-y-6">
+                     <div className="flex items-center justify-between">
+                       <h2 className="ty-title font-bold tracking-tight">Active Request</h2>
+                       <div className="flex items-center gap-1">
+                          <button 
+                            onClick={() => {
+                              const req = consultationRequests[0];
+                              setShortlistType(req.type);
+                              setPreferredTime(req.preferredTime || 'Anytime');
+                              setPreferredDate(req.preferredDate || '');
+                              setEditingRequestId(req.id);
+                              setShowFinalStep(true);
+                            }}
+                            className="p-2 text-zinc-400 hover:text-blue-600 transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => removeConsultationRequest(consultationRequests[0].id)}
+                            className="p-2 text-zinc-400 hover:text-rose-500 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                     </div>
 
-                  <button 
-                    onClick={() => { setShortlistType('home'); setShowForm(true); }}
-                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'home' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
-                  >
-                    <div className="rounded-full bg-amber-100 p-3 text-amber-600 group-hover:scale-110 transition-transform">
-                      <Home className="h-5 w-5 sm:h-6 sm:w-6" />
-                    </div>
-                    <div>
-                      <h3 className="ty-caption font-bold text-zinc-900">At-Home Consultation</h3>
-                      <p className="ty-micro font-medium uppercase tracking-wider text-zinc-400">Physical visit by our expert</p>
-                    </div>
-                  </button>
+                     <div className="rounded-2xl bg-zinc-50 p-4 space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "p-2.5 rounded-xl bg-white shadow-sm border border-zinc-100",
+                            consultationRequests[0].type === 'phone' ? "text-blue-600" :
+                            consultationRequests[0].type === 'home' ? "text-amber-600" : "text-zinc-900"
+                          )}>
+                            {consultationRequests[0].type === 'phone' && <Phone className="h-5 w-5" />}
+                            {consultationRequests[0].type === 'home' && <Home className="h-5 w-5" />}
+                            {consultationRequests[0].type === 'office' && <Building2 className="h-5 w-5" />}
+                            {consultationRequests[0].type === 'site' && <MapPin className="h-5 w-5" />}
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                              {consultationRequests[0].type === 'phone' ? 'Call Discussion' :
+                               consultationRequests[0].type === 'home' ? 'Meeting at Place' :
+                               consultationRequests[0].type === 'office' ? 'Office Visit' : 'Site Visit'}
+                            </p>
+                            <p className="text-xs font-bold text-zinc-900">
+                              {consultationRequests[0].preferredDate ? `Date: ${consultationRequests[0].preferredDate}` : `Time: ${consultationRequests[0].preferredTime}`}
+                            </p>
+                          </div>
+                        </div>
 
-                  <button 
-                    onClick={() => { setShortlistType('office'); setShowForm(true); }}
-                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'office' ? 'border-black bg-zinc-50' : 'border-transparent bg-zinc-50 hover:border-zinc-200'}`}
-                  >
-                    <div className="rounded-full bg-blue-100 p-3 text-brand-primary group-hover:scale-110 transition-transform">
-                      <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <div className="pt-3 border-t border-zinc-200/50">
+                           <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Properties ({consultationRequests[0].propertyIds.length})</p>
+                           <div className="flex flex-wrap gap-1.5">
+                              {consultationRequests[0].propertyIds.slice(0, 5).map(id => (
+                                <span key={id} className="text-[9px] font-bold text-zinc-500 bg-white px-2 py-0.5 rounded-lg border border-zinc-100">#{id}</span>
+                              ))}
+                              {consultationRequests[0].propertyIds.length > 5 && (
+                                <span className="text-[9px] font-bold text-zinc-400">+{consultationRequests[0].propertyIds.length - 5}</span>
+                              )}
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="flex items-start gap-3 p-1">
+                        <div className="mt-1 h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse shrink-0" />
+                        <div className="flex-1">
+                           <p className="text-[11px] font-bold text-zinc-900">Sync Shortlist Live</p>
+                           <p className="text-[9px] font-medium text-zinc-400">Agent sees changes as you add items</p>
+                        </div>
+                     </div>
+
+                     <div className="bg-blue-50 rounded-2xl p-4 flex gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-bold text-blue-900 leading-tight">Request Logged</p>
+                          <p className="text-[10px] font-medium text-blue-700/80 mt-1">Our agent will contact you shortly to confirm details.</p>
+                        </div>
+                     </div>
+                     
+                     <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4">
+                        <p className="text-[10px] font-bold text-rose-600 leading-relaxed italic">
+                           * Please confirm before leaving your place for any site visit, meeting etc. as without prior confirmation agent might not be available to attend you.
+                        </p>
+                     </div>
+                   </div>
+                 ) : (
+                   <>
+                    <h2 className="mb-6 ty-title font-bold tracking-tight">Proceed with</h2>
+                    
+                    <div className="space-y-3">
+                      <button 
+                        onClick={() => {
+                          setShortlistType('phone');
+                          requireContactDetails(() => setShowFinalStep(true));
+                        }}
+                        className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'phone' ? 'border-zinc-900 bg-zinc-50 shadow-sm' : 'border-transparent bg-zinc-50/70 hover:border-zinc-200'}`}
+                      >
+                        <div className="rounded-full bg-blue-100 p-3 text-blue-600 group-hover:scale-110 transition-transform">
+                          <Phone className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-zinc-900">Call Discussion</h3>
+                          <p className="text-[10px] font-medium text-zinc-500">Time to get callback or our contact info</p>
+                        </div>
+                      </button>
+  
+                      <button 
+                        onClick={() => {
+                          setShortlistType('home');
+                          requireContactDetails(() => setShowFinalStep(true));
+                        }}
+                        className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'home' ? 'border-zinc-900 bg-zinc-50 shadow-sm' : 'border-transparent bg-zinc-50/70 hover:border-zinc-200'}`}
+                      >
+                        <div className="rounded-full bg-amber-100 p-3 text-amber-600 group-hover:scale-110 transition-transform">
+                          <Home className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-zinc-900">Meeting at your Place</h3>
+                          <p className="text-[10px] font-medium text-zinc-500">add exact home address, time</p>
+                        </div>
+                      </button>
+  
+                      <button 
+                        onClick={() => {
+                          setShortlistType('office');
+                          requireContactDetails(() => setShowFinalStep(true));
+                        }}
+                        className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'office' ? 'border-zinc-900 bg-zinc-50 shadow-sm' : 'border-transparent bg-zinc-50/70 hover:border-zinc-200'}`}
+                      >
+                        <div className="rounded-full bg-blue-100 p-3 text-brand-primary group-hover:scale-110 transition-transform">
+                          <Building2 className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-zinc-900">Visit our Office</h3>
+                          <p className="text-[10px] font-medium text-zinc-500">get our office address and fix a time</p>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setShortlistType('site');
+                          requireContactDetails(() => setShowFinalStep(true));
+                        }}
+                        className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] ${shortlistType === 'site' ? 'border-zinc-900 bg-zinc-50 shadow-sm' : 'border-transparent bg-zinc-50/70 hover:border-zinc-200'}`}
+                      >
+                        <div className="rounded-full bg-emerald-100 p-3 text-emerald-600 group-hover:scale-110 transition-transform">
+                          <MapPin className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-zinc-900">Site Visits</h3>
+                          <p className="text-[10px] font-medium text-zinc-500">take their time and schedule</p>
+                        </div>
+                      </button>
                     </div>
-                    <div>
-                      <h3 className="ty-caption font-bold text-zinc-900">In-Office Meeting</h3>
-                      <p className="ty-micro font-medium uppercase tracking-wider text-zinc-400">Visit our HQ for briefing</p>
+                    
+                    <div className="mt-8 rounded-2xl border border-rose-100 bg-rose-50/30 p-4">
+                        <p className="text-[9px] font-bold text-rose-500/80 leading-relaxed uppercase tracking-wider mb-2">Important Disclaimer:</p>
+                        <p className="text-[10px] font-medium text-rose-600 leading-relaxed">
+                          Please confirm before leaving your place for any site visit, meeting etc. as without prior confirmation agent might not be available to attend you.
+                        </p>
                     </div>
-                  </button>
-                </div>
-
-                <div className="mt-8 border-t border-zinc-100 pt-6 space-y-3">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-medium text-zinc-500">Summary</span>
-                    <span className="text-sm font-bold">{properties.length} Items</span>
-                  </div>
-
-                  <button 
-                    onClick={handleShare}
-                    className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg ${isShared ? 'bg-brand-primary text-white shadow-blue-100' : 'bg-zinc-900 text-white shadow-zinc-200'}`}
-                  >
-                    {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                    {isShared ? 'Link Copied!' : 'Share Shortlist'}
-                  </button>
-
-                  <button 
-                    onClick={clearShortlist}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 py-3 text-xs font-bold uppercase tracking-widest text-zinc-400 transition-all hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Clear All
-                  </button>
-                </div>
-              </aside>
-            </div>
+                   </>
+                 )}
+               </aside>
+             </div>
             
             {/* Sticky Mobile Bottom Bar for Shortlist */}
             <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-zinc-100 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] lg:hidden">
               <button 
-                onClick={() => setShowForm(true)}
+                onClick={() => requireContactDetails(() => setShowFinalStep(true))}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-xl shadow-zinc-200 active:scale-[0.98] transition-all"
               >
                 Proceed to Consultation ({properties.length})
@@ -336,9 +477,9 @@ export default function ShortlistPage() {
           </div>
         )}
 
-        {/* Form Modal */}
+        {/* Final Detail Form (Preferred Time/Date) */}
         <AnimatePresence>
-          {showForm && (
+          {showFinalStep && contactDetails && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -358,53 +499,83 @@ export default function ShortlistPage() {
                         {shortlistType === 'phone' && <Phone className="h-3 w-3" />}
                         {shortlistType === 'home' && <Home className="h-3 w-3" />}
                         {shortlistType === 'office' && <Building2 className="h-3 w-3" />}
-                        <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Quick Request</span>
+                        {shortlistType === 'site' && <MapPin className="h-3 w-3" />}
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Final Details</span>
                       </div>
                       <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
-                        {shortlistType === 'phone' ? 'Request Callback' : 
-                         shortlistType === 'home' ? 'Home Consultation' : 'Office Meeting'}
+                        Confirm Consultation
                       </h2>
                     </div>
                     <button 
-                      onClick={() => setShowForm(false)} 
+                      onClick={() => { setShowFinalStep(false); setEditingRequestId(null); }} 
                       className="rounded-full bg-zinc-50 p-2 text-zinc-400 hover:bg-zinc-100 transition-all font-bold"
                     >
                       Close
                     </button>
                   </div>
-
-                  <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); alert('Request Sent Successfully!'); setShowForm(false); clearShortlist(); }}>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Full Name</label>
-                        <input type="text" required className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white" placeholder="John Doe" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Phone Number</label>
-                        <input type="tel" required className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white" placeholder="+91 98XXX XXXXX" />
+ 
+                  <form 
+                    className="space-y-6" 
+                    onSubmit={(e) => { 
+                      e.preventDefault(); 
+                      if (editingRequestId) {
+                        updateConsultationRequest(editingRequestId, {
+                          type: shortlistType,
+                          preferredTime: shortlistType !== 'office' ? preferredTime : undefined,
+                          preferredDate: shortlistType === 'office' ? preferredDate : undefined,
+                        });
+                      } else {
+                        addConsultationRequest({
+                          type: shortlistType,
+                          propertyIds: shortlistItems,
+                          contactDetails: contactDetails!,
+                          preferredTime: shortlistType !== 'office' && shortlistType !== 'site' ? preferredTime : undefined,
+                          preferredDate: shortlistType === 'office' || shortlistType === 'site' ? preferredDate : undefined,
+                          isSyncEnabled: true, // Default ON
+                        });
+                      }
+                      alert(editingRequestId ? 'Request Updated Successfully!' : 'Consultation Request Sent!'); 
+                      setShowFinalStep(false); 
+                      setEditingRequestId(null);
+                    }}
+                  >
+                    <div className="rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Contact Details</p>
+                          <p className="text-sm font-bold text-zinc-900 mt-1">{contactDetails.fullName}</p>
+                          <p className="text-xs font-medium text-zinc-500">{contactDetails.phoneNumber} • {contactDetails.address}</p>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => { setShowFinalStep(false); requireContactDetails(() => setShowFinalStep(true), true); }}
+                          className="text-[10px] font-black uppercase tracking-widest text-brand-primary"
+                        >
+                          Change
+                        </button>
                       </div>
                     </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Budget Range</label>
-                        <select className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white">
-                          <option>1 - 3 Cr</option>
-                          <option>3 - 5 Cr</option>
-                          <option>5 - 10 Cr</option>
-                          <option>10Cr+</option>
-                        </select>
-                      </div>
-                      
-                      {shortlistType === 'office' ? (
+ 
+                    <div className="grid gap-4 sm:grid-cols-1">
+                      {(shortlistType === 'office' || shortlistType === 'site') ? (
                         <div className="space-y-1.5">
                           <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Preferred Date</label>
-                          <input type="date" required className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white" />
+                          <input 
+                            type="date" 
+                            required 
+                            value={preferredDate}
+                            onChange={(e) => setPreferredDate(e.target.value)}
+                            className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white" 
+                          />
                         </div>
                       ) : (
                         <div className="space-y-1.5">
                           <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1">Preferred Time</label>
-                          <select className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white">
+                          <select 
+                            value={preferredTime}
+                            onChange={(e) => setPreferredTime(e.target.value)}
+                            className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white"
+                          >
                             <option>Morning (10 - 1)</option>
                             <option>Afternoon (1 - 4)</option>
                             <option>Evening (4 - 7)</option>
@@ -413,16 +584,7 @@ export default function ShortlistPage() {
                         </div>
                       )}
                     </div>
-
-                    {shortlistType === 'home' && (
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-1 flex items-center gap-2">
-                          <MapPin className="h-3 w-3" /> Consultation Address
-                        </label>
-                        <textarea required className="w-full rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-zinc-900 focus:bg-white" rows={2} placeholder="Enter your full address..."></textarea>
-                      </div>
-                    )}
-
+ 
                     <div className="rounded-2xl border border-zinc-50 bg-zinc-50/50 p-4">
                       <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Items in Shortlist ({properties.length})</p>
                       <div className="flex flex-wrap gap-2">
@@ -430,7 +592,6 @@ export default function ShortlistPage() {
                           const pConfig = getPropertyConfig(p.type);
                           const hasImage = Array.isArray(p.image_urls) && p.image_urls.length > 0;
                           const PIcon = pConfig.icon;
-                          const pInquiry = inquiries[p.property_id];
                           return (
                             <div key={p.property_id} className="group relative">
                               <div className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 shadow-sm border border-zinc-100/50">
@@ -445,28 +606,15 @@ export default function ShortlistPage() {
                                 </div>
                                 <span className="text-[9px] font-bold text-zinc-500">#{p.property_id}</span>
                               </div>
-                              {pInquiry && (
-                                <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block w-48 z-[200]">
-                                  <div className="rounded-lg bg-zinc-900 p-2 text-[9px] font-bold text-white shadow-xl space-y-1">
-                                    {(pInquiry as any).wantSiteVisit && <p className="text-blue-300">• Want Site Visit</p>}
-                                    {(pInquiry as any).interestedInPurchase && <p className="text-emerald-300">• Interested in Purchase</p>}
-                                    {(pInquiry as any).haveQuestion && (pInquiry as any).question && <p className="italic">"{(pInquiry as any).question}"</p>}
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           );
                         })}
                       </div>
                     </div>
-
+ 
                     <button className="w-full rounded-xl bg-zinc-900 py-4 text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-black active:scale-[0.98] shadow-lg shadow-zinc-200">
                       Submit Consultation Request
                     </button>
-                    
-                    <p className="text-center text-[10px] text-zinc-400 font-medium">
-                      By submitting, you agree to being contacted by our executive regarding these properties.
-                    </p>
                   </form>
                 </div>
               </motion.div>

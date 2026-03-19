@@ -28,8 +28,8 @@ export default function MapPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getProperties(0, 20, false);
-      setProperties(data as Property[]);
+      const { data } = await getProperties(0, 20, false);
+      setProperties(data);
       setLoading(false);
     };
     fetchData();

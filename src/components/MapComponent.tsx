@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -17,14 +17,14 @@ import { PropertyCard } from './PropertyCard';
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-const createCustomIcon = (property: Property, isSelected: boolean, zoom: number) => {
+const createCustomIcon = (property: Property, isSelected: boolean, zoom: number, hideLabel?: boolean) => {
   const price = formatPrice(property.price_min);
   const config = getPropertyConfig(property.type);
   const IconComponent = config.icon;
 
   // Google Maps style scaling logic
   const scale = isSelected ? 1.15 : (zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85));
-  const showFullLabel = isSelected || zoom >= 15;
+  const showFullLabel = isSelected || (zoom >= 15 && !hideLabel);
   const pinSize = 36 * scale;
   const fontSize = (isSelected ? 14 : 11) * scale;
   const tailSize = 14 * scale;
@@ -123,6 +123,55 @@ const createCustomIcon = (property: Property, isSelected: boolean, zoom: number)
   });
 };
 
+const createClusterIcon = (count: number, zoom: number) => {
+  const scale = zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85);
+  const size = 52 * scale; // Increased for better visibility
+  
+  const html = renderToStaticMarkup(
+    <div style={{
+      width: size,
+      height: size,
+      backgroundColor: '#09090b', // Sleek dark theme
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: `${2 * scale}px solid white`,
+      boxShadow: '0 12px 32px -4px rgba(0,0,0,0.3)',
+      position: 'relative',
+      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
+      transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    }}>
+       {/* Inner subtle decorative ring */}
+       <div style={{
+         position: 'absolute',
+         inset: 4,
+         border: '1px solid rgba(255,255,255,0.1)',
+         borderRadius: '50%',
+       }} />
+       <span style={{
+         color: 'white',
+         fontSize: 18 * scale,
+         fontWeight: '700',
+         fontFamily: 'Inter, sans-serif',
+         letterSpacing: '-0.02em',
+         textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+       }}>
+         {count}
+       </span>
+    </div>
+  );
+
+  return L.divIcon({
+    html,
+    className: 'custom-cluster-marker',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+};
+
+
+
 interface MapComponentProps {
   properties: Property[];
   selectedProperty: Property | null;
@@ -140,9 +189,18 @@ function MapController({ selectedProperty, zoomLevel, properties }: { selectedPr
   useEffect(() => {
     if (selectedProperty && selectedProperty.property_id !== prevPropertyIdRef.current) {
       const coords = getPropertyCoords(selectedProperty, properties);
-      map.flyTo(coords, zoomLevel, { 
+      
+      // Intelligent zoom logic:
+      // If the property is already visible in the current view, don't zoom out.
+      // Simply pan to it at the current zoom level.
+      const currentBounds = map.getBounds();
+      const isAlreadyVisible = currentBounds.contains(L.latLng(coords[0], coords[1]));
+      
+      const targetZoom = isAlreadyVisible ? Math.max(map.getZoom(), zoomLevel) : zoomLevel;
+
+      map.flyTo(coords, targetZoom, { 
         animate: true, 
-        duration: 1.5,
+        duration: isAlreadyVisible ? 0.8 : 1.5, // Faster flight if already on screen
         easeLinearity: 0.25
       });
       prevPropertyIdRef.current = selectedProperty.property_id;
@@ -287,6 +345,185 @@ const getCurvedPath = (start: [number, number], end: [number, number], segments:
   return points;
 };
 
+/**
+ * Component to render markers with collision detection to prevent overlapping.
+ * Selected property is always shown. Others are filtered based on screen-space proximity.
+ */
+function CollisionAwareMarkers({ 
+  properties, 
+  selectedProperty, 
+  onSelectProperty, 
+  zoom 
+}: { 
+  properties: Property[], 
+  selectedProperty: Property | null, 
+  onSelectProperty: (p: Property | null) => void, 
+  zoom: number 
+}) {
+  const map = useMap();
+  
+  const clusteredData = useMemo(() => {
+    // If map isn't ready, just show individual markers
+    if (!map) return properties.map(p => ({ 
+      type: 'marker' as const, 
+      props: [p], 
+      center: getPropertyCoords(p, properties), 
+      hideLabel: false 
+    }));
+    
+    // Clustering Radius Logic - more aggressive to prevent visual overlap
+    const CLUSTER_RADIUS = zoom >= 18 ? 0 : (zoom >= 16 ? 45 : 65);
+
+
+    const sortedProps = [...properties].sort((a, b) => {
+      if (a.property_id === selectedProperty?.property_id) return -1;
+      if (b.property_id === selectedProperty?.property_id) return 1;
+      const aHasCoords = a.latitude && a.longitude;
+      const bHasCoords = b.latitude && b.longitude;
+      if (aHasCoords && !bHasCoords) return -1;
+      if (!aHasCoords && bHasCoords) return 1;
+      return 0;
+    });
+
+    const groups: { type: 'marker' | 'cluster', props: Property[], center: [number, number] }[] = [];
+
+    sortedProps.forEach(prop => {
+      const coords = getPropertyCoords(prop, properties);
+      const point = map.project(L.latLng(coords[0], coords[1]), zoom);
+      const isSelected = prop.property_id === selectedProperty?.property_id;
+
+      // Never cluster the selected property
+      if (isSelected) {
+        groups.push({ type: 'marker', props: [prop], center: coords });
+        return;
+      }
+
+      // Check if this property can merge into an existing cluster/marker
+      const nearIdx = groups.findIndex(g => {
+        // Don't merge with a group containing the selected property
+        if (g.props.some(p => p.property_id === selectedProperty?.property_id)) return false;
+        
+        const gPoint = map.project(L.latLng(g.center[0], g.center[1]), zoom);
+        const dx = point.x - gPoint.x;
+        const dy = point.y - gPoint.y;
+        return Math.sqrt(dx*dx + dy*dy) < CLUSTER_RADIUS;
+      });
+
+      if (nearIdx === -1) {
+        groups.push({ type: 'marker', props: [prop], center: coords });
+      } else {
+        groups[nearIdx].type = 'cluster';
+        groups[nearIdx].props.push(prop);
+      }
+    });
+
+    // Now for markers that aren't in a cluster, determine label visibility
+    const occupiedRects: { x1: number, y1: number, x2: number, y2: number }[] = [];
+    
+    // Pre-occupy space with all markers/clusters pins
+    groups.forEach(g => {
+      const point = map.project(L.latLng(g.center[0], g.center[1]), zoom);
+      const isSelected = g.props.some(p => p.property_id === selectedProperty?.property_id);
+      const scale = isSelected ? 1.15 : (zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85));
+      const size = g.type === 'cluster' ? 26 * scale : 20 * scale; // Buffer around pins and clusters
+      
+      occupiedRects.push({
+        x1: point.x - size - 4,
+        y1: point.y - (g.type === 'cluster' ? size + 4 : 46 * scale) - 4,
+        x2: point.x + size + 4,
+        y2: point.y + size + 4
+      });
+    });
+
+    return groups.map(g => {
+      if (g.type === 'cluster') return { ...g, hideLabel: true };
+      
+      const prop = g.props[0];
+      const isSelected = prop.property_id === selectedProperty?.property_id;
+      const showLabelBase = isSelected || zoom >= 15;
+      
+      if (!showLabelBase) return { ...g, hideLabel: true };
+
+      const point = map.project(L.latLng(g.center[0], g.center[1]), zoom);
+      const scale = isSelected ? 1.15 : (zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85));
+      const labelWidth = 90 * scale;
+      const pinHalfWidth = 18 * scale;
+      const pinHeight = 46 * scale;
+
+      const labelRect = {
+        x1: point.x + pinHalfWidth,
+        y1: point.y - pinHeight,
+        x2: point.x + pinHalfWidth + labelWidth + 4,
+        y2: point.y
+      };
+
+      const overlaps = occupiedRects.some(r => (
+        labelRect.x1 < r.x2 && labelRect.x2 > r.x1 && labelRect.y1 < r.y2 && labelRect.y2 > r.y1
+      ));
+
+      if (isSelected || !overlaps) {
+        occupiedRects.push(labelRect);
+        return { ...g, hideLabel: false };
+      }
+      return { ...g, hideLabel: true };
+    });
+  }, [properties, selectedProperty, zoom, map]);
+
+  const onClusterClick = (clusterProps: Property[]) => {
+    if (clusterProps.length <= 1) return;
+    
+    const lats = clusterProps.map(p => getPropertyCoords(p, properties)[0]);
+    const lngs = clusterProps.map(p => getPropertyCoords(p, properties)[1]);
+    
+    const bounds = L.latLngBounds(
+      [Math.min(...lats), Math.min(...lngs)],
+      [Math.max(...lats), Math.max(...lngs)]
+    );
+    
+    // If all properties are at the same point (fallbacks), just zoom in one level
+    if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+      map.zoomIn(2);
+      map.panTo(bounds.getCenter());
+    } else {
+      map.flyToBounds(bounds, { padding: [50, 50], duration: 1.2 });
+    }
+  };
+
+  return (
+    <>
+      {clusteredData.map((data, idx) => {
+        if (data.type === 'cluster') {
+          return (
+            <Marker 
+              key={`cluster-${idx}-${data.props[0].property_id}`}
+              position={data.center}
+              icon={createClusterIcon(data.props.length, zoom)}
+              zIndexOffset={100}
+              eventHandlers={{
+                click: () => onClusterClick(data.props),
+              }}
+            />
+          );
+        }
+        
+        const prop = data.props[0];
+        return (
+          <Marker 
+            key={prop.property_id} 
+            position={data.center}
+            icon={createCustomIcon(prop, selectedProperty?.property_id === prop.property_id, zoom, data.hideLabel)}
+            zIndexOffset={selectedProperty?.property_id === prop.property_id ? 1000 : 0}
+            eventHandlers={{
+              click: () => onSelectProperty(prop),
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+
 export default function MapComponent({ 
   properties, 
   selectedProperty, 
@@ -378,17 +615,12 @@ export default function MapComponent({
             )}
           </>
         )}
-        {properties.map((property) => (
-          <Marker 
-            key={property.property_id} 
-            position={getCoords(property, properties)}
-            icon={createCustomIcon(property, selectedProperty?.property_id === property.property_id, zoom)}
-            zIndexOffset={selectedProperty?.property_id === property.property_id ? 1000 : 0}
-            eventHandlers={{
-              click: () => onSelectProperty(property),
-            }}
-          />
-        ))}
+        <CollisionAwareMarkers 
+          properties={properties} 
+          selectedProperty={selectedProperty} 
+          onSelectProperty={onSelectProperty} 
+          zoom={zoom} 
+        />
       </MapContainer>
 
       {/* Floating Card UI */}

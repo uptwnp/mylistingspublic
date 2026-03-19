@@ -86,7 +86,7 @@ export async function getProperties(
 ) {
   if (!supabase) return [];
 
-  const safeLimit = Math.min(limit, 50);
+  const safeLimit = Math.min(limit, 1000);
   const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${page}`;
   
   // Try to get from localStorage first for "Perceived Instant" speed
@@ -177,26 +177,27 @@ export async function getProperties(
       query = query.or(`description.ilike.%${keywords}%,tags.ilike.%${keywords}%,area.ilike.%${keywords}%,type.ilike.%${keywords}%,city.ilike.%${keywords}%`);
     }
 
-    const { data, error } = await query
+    const { data, error, count } = await query
       .range(from, to)
       .order(sortField, { ascending: sortOrder === 'asc', nullsFirst: false })
+      .select(PUBLIC_FIELDS, { count: 'exact' })
       .order('property_id', { ascending: true });
 
     if (error) {
       console.error('Error fetching properties:', error);
-      return [];
+      return { data: [], count: 0 };
     }
 
     const formattedData = (data as Record<string, unknown>[])?.map(formatPropertyData);
 
     if (useCache && page === 0 && typeof window !== 'undefined') {
-      localStorage.setItem(cacheKey, JSON.stringify({ data: formattedData, timestamp: Date.now() }));
+      localStorage.setItem(cacheKey, JSON.stringify({ data: { data: formattedData, count: count || 0 }, timestamp: Date.now() }));
     }
 
-    return formattedData;
+    return { data: formattedData, count: count || 0 };
   } catch (err) {
     console.error('Critical error in getProperties:', err);
-    return [];
+    return { data: [], count: 0 };
   }
 }
 
@@ -358,18 +359,87 @@ export async function getAreas(city?: string) {
   });
 }
 
-export async function submitInquiry(inquiryData: any) {
+export async function upsertVisitor(visitorData: Record<string, any>) {
   if (!supabase) throw new Error('Supabase not initialized');
-  const { data, error } = await supabase.from('inquiries').insert([inquiryData]);
-  if (error) throw error;
+
+  const { data, error } = await supabase
+    .from('visitors')
+    .upsert({
+      name: visitorData.fullName || visitorData.name,
+      phone: visitorData.phoneNumber || visitorData.phone,
+      email: visitorData.email,
+      address: visitorData.address,
+      budget: visitorData.budget,
+      active_request_type: visitorData.active_request_type || 'other',
+      pref_ts: visitorData.pref_ts,
+      ip: visitorData.ip,
+      domain: visitorData.domain,
+      ref: visitorData.ref,
+      shortlist_items_json: visitorData.shortlist_items_json || [],
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'phone' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error in upsertVisitor:', error.message, error.details, error.hint);
+    throw error;
+  }
   return data;
 }
 
-export async function submitPropertyForSale(propertyData: any) {
+export async function submitInquiry(inquiryData: any) {
   if (!supabase) throw new Error('Supabase not initialized');
-  const { data, error } = await supabase.from('property_submissions').insert([propertyData]);
+  
+  // 1. Create or Update Visitor
+  const visitor = await upsertVisitor({
+    ...inquiryData,
+    active_request_type: inquiryData.type || 'inquiry'
+  });
+
+  // 2. Insert into inquiries table if it still exists, 
+  // but for now let's just use the visitors table as the primary source of truth for leads.
+  // If the user specifically has an inquiries table, we keep it.
+  const { data, error } = await supabase.from('inquiries').insert([{
+    ...inquiryData,
+    visitor_id: visitor.id
+  }]);
+  
   if (error) throw error;
-  return data;
+  return { visitor, data };
+}
+
+export async function submitPropertyForSale(propertyData: any, visitorData: any) {
+  if (!supabase) throw new Error('Supabase not initialized');
+
+  // 1. Create or Update Visitor
+  const visitor = await upsertVisitor({
+    ...visitorData,
+    active_request_type: 'sell'
+  });
+
+  // 2. Insert into for_sell_requests
+  const { data, error } = await supabase
+    .from('for_sell_requests')
+    .insert([{
+      visitor_id: visitor.id,
+      property_type: propertyData.type,
+      city: propertyData.city,
+      area: propertyData.area,
+      price: parseFloat(propertyData.price),
+      size: parseFloat(propertyData.size),
+      size_unit: propertyData.size_unit || 'Sq.Yds',
+      description: propertyData.description,
+      landmark_location: propertyData.location ? `${propertyData.location.lat},${propertyData.location.lng}` : null,
+      status: 'pending'
+    }]);
+
+  if (error) {
+    console.error('Error in submitPropertyForSale:', error);
+    throw error;
+  }
+  
+  return { visitor, data };
 }
 
 export const clearPropertyCache = () => {
@@ -381,3 +451,35 @@ export const clearPropertyCache = () => {
       .forEach(key => localStorage.removeItem(key));
   }
 };
+
+export async function syncShortlist(visitorData: any, shortlistItems: string[], inquiries: Record<string, any>) {
+  if (!supabase) return;
+  
+  return upsertVisitor({
+    ...visitorData,
+    shortlist_items_json: shortlistItems.map(id => ({
+      property_id: id,
+      notes: inquiries[id]?.question || '',
+      added_at: Date.now()
+    }))
+  });
+}
+
+export async function submitConsultationRequest(request: any) {
+  if (!supabase) throw new Error('Supabase not initialized');
+
+  // 1. Upsert Visitor first to ensure we have an ID
+  const visitor = await upsertVisitor({
+    ...request.contactDetails,
+    active_request_type: request.type,
+    pref_ts: request.preferredDate || request.preferredTime
+  });
+
+  // 2. We can log this in a separate consultation_requests table if needed,
+  // but based on the user's specific request for 'visitors' and 'for_sell_requests',
+  // we are already updating the visitor's 'active_request_type' and 'pref_ts'.
+  
+  // If the user has a consultation_requests table, we insert there.
+  // For now, let's just make sure the visitor is synced.
+  return visitor;
+}

@@ -26,6 +26,7 @@ const PROPERTY_TYPES = [
   { label: "Commercial", value: "Commercial Built-up", icon: Building2 },
   { label: "Industrial", value: "Industrial Land", icon: Trees },
   { label: "Agriculture", value: "Agriculture Land", icon: Trees },
+  { label: "Office", value: "Office", icon: Building2 },
 ];
 
 interface SelectionBottomSheetProps {

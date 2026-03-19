@@ -6,6 +6,7 @@ import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from './PropertyCard';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { getSeoUrl } from '@/lib/seo-utils';
 
 interface PropertySectionProps {
   title: string;
@@ -24,7 +25,7 @@ export function PropertySection({ title, city, type }: PropertySectionProps) {
         // Fetch more than needed to filter locally if type mapping is complex, 
         // but here we can try to filter by city in query and then type locally or via tags if possible.
         // For now, let's fetch first 50 properties for the city and filter.
-        const data = await getProperties(0, 20, true, city, type);
+        const { data } = await getProperties(0, 20, true, city, type);
         
         const filtered = data.filter((p: Property) => {
           // Double check city match locally (safety)
@@ -72,7 +73,7 @@ export function PropertySection({ title, city, type }: PropertySectionProps) {
           <p className="ty-caption text-zinc-500 font-medium truncate">Hand-picked properties in {city}.</p>
         </div>
         <Link 
-          href={`/explore?city=${city}&type=${type}`}
+          href={getSeoUrl(city, type) || `/explore?city=${city}&type=${type}`}
           className="group flex items-center gap-2 ty-caption font-bold text-zinc-900 hover:text-zinc-600 transition-colors"
         >
           View All

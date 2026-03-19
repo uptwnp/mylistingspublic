@@ -30,7 +30,7 @@ function PropertyDetailContent() {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
-  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave, addRecentlyVisited } = useShortlist();
+  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave, addRecentlyVisited, updateInquiry, inquiries } = useShortlist();
   const [similarProperties, setSimilarProperties] = useState<Property[]>([]);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -64,7 +64,7 @@ function PropertyDetailContent() {
           setProperty(data);
           addRecentlyVisited(data.property_id);
           // Fetch similar properties
-          const similar = await getProperties(0, 5, false, data.city, data.type) as Property[];
+          const { data: similar } = await getProperties(0, 5, false, data.city, data.type);
           setSimilarProperties(similar.filter((p: Property) => p.property_id !== data.property_id).slice(0, 4));
         }
       } catch (error: any) {
@@ -541,7 +541,27 @@ function PropertyDetailContent() {
 
                 <div className="mt-8 flex w-full flex-col gap-3">
                   <button 
-                    onClick={() => setIsPhotoModalOpen(false)}
+                    onClick={() => {
+                      if (!inCart) {
+                        addToShortlist(property);
+                      }
+                      
+                      const existing = inquiries[property.property_id] || { 
+                        wantSiteVisit: false, 
+                        interestedInPurchase: false, 
+                        haveQuestion: true, 
+                        question: '' 
+                      };
+                      
+                      updateInquiry(property.property_id, {
+                        ...existing,
+                        haveQuestion: true,
+                        question: 'I need photos and video and I am ready to pay the token amount.'
+                      });
+                      
+                      setIsPhotoModalOpen(false);
+                      router.push('/shortlist');
+                    }}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-3.5 ty-caption font-bold text-white transition-all hover:bg-zinc-800 active:scale-[0.98]"
                   >
                     Proceed with Token Request

@@ -24,5 +24,44 @@ export type Property = {
 
 export type ShortlistItem = {
   id: string;
+  notes?: string;
   addedAt: number;
+};
+
+export type Visitor = {
+  id?: string;
+  dealer_id?: string;
+  name: string;
+  phone: string;
+  email?: string;
+  budget?: string;
+  address?: string;
+  active_request_type?: 'call' | 'visit' | 'sell' | 'other';
+  pref_ts?: string;
+  ip?: string;
+  domain?: string;
+  ref?: string;
+  shortlist_items_json?: ShortlistItem[];
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type ForSellRequest = {
+  id?: string;
+  visitor_id?: string;
+  dealer_id?: string;
+  property_type: string;
+  city: string;
+  area: string;
+  price: number;
+  size: number;
+  size_unit: string;
+  description?: string;
+  address?: string;
+  landmark_location?: string;
+  landmark_location_distance?: number;
+  images_json?: string[];
+  status?: 'pending' | 'approved' | 'rejected';
+  created_at?: string;
+  updated_at?: string;
 };

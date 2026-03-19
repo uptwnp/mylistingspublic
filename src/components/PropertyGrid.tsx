@@ -29,26 +29,26 @@ export function PropertyGrid() {
     
     try {
       const nextP = isInitial ? 0 : page + 1;
-      const data = await getProperties(nextP, LIMIT, useCache, selectedCity);
+      const { data, count } = await getProperties(nextP, LIMIT, useCache, selectedCity);
       
       if (isInitial) {
-        const newData = data as Property[];
-        const uniqueData = newData.filter((p, index, self) => 
-          index === self.findIndex((t) => t.property_id === p.property_id)
+        const newData = data;
+        const uniqueData = newData.filter((p: Property, index: number, self: Property[]) => 
+          index === self.findIndex((t: Property) => t.property_id === p.property_id)
         );
         setProperties(uniqueData);
         setPage(0);
       } else {
         setProperties(prev => {
-          const newData = data as Property[];
+          const newData = data;
           const existingIds = new Set(prev.map(p => p.property_id));
-          const filteredNewData = newData.filter(p => !existingIds.has(p.property_id));
+          const filteredNewData = newData.filter((p: Property) => !existingIds.has(p.property_id));
           return [...prev, ...filteredNewData];
         });
         setPage(nextP);
       }
       
-      setHasMore(data.length === LIMIT);
+      setHasMore(properties.length + data.length < count);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {

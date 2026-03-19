@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { syncShortlist, submitConsultationRequest } from '@/lib/supabase';
 
 import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
 
@@ -9,6 +10,26 @@ export interface InquiryData {
   interestedInPurchase: boolean;
   haveQuestion: boolean;
   question: string;
+}
+
+export interface ContactDetails {
+  fullName: string;
+  phoneNumber: string;
+  alternateNumber?: string;
+  address: string;
+  email?: string;
+  budget?: string;
+}
+
+export interface ConsultationRequest {
+  id: string;
+  type: 'phone' | 'home' | 'office' | 'site';
+  propertyIds: string[];
+  contactDetails: ContactDetails;
+  preferredTime?: string;
+  preferredDate?: string;
+  isSyncEnabled: boolean;
+  timestamp: number;
 }
 
 interface ShortlistContextType {
@@ -58,6 +79,17 @@ interface ShortlistContextType {
   setUserLocation: (loc: {lat: number, lng: number, isFallback?: boolean} | null) => void;
   recentlyVisitedIds: string[];
   addRecentlyVisited: (id: string) => void;
+  
+  contactDetails: ContactDetails | null;
+  setContactDetails: (details: ContactDetails) => void;
+  isContactFormOpen: boolean;
+  setIsContactFormOpen: (open: boolean) => void;
+  requireContactDetails: (callback: () => void, force?: boolean) => void;
+  
+  consultationRequests: ConsultationRequest[];
+  addConsultationRequest: (request: Omit<ConsultationRequest, 'id' | 'timestamp'>) => void;
+  updateConsultationRequest: (id: string, updates: Partial<ConsultationRequest>) => void;
+  removeConsultationRequest: (id: string) => void;
 }
 
 const ShortlistContext = createContext<ShortlistContextType | undefined>(undefined);
@@ -68,6 +100,8 @@ const CITY_KEY = 'dealer_network_selected_city';
 const FILTERS_KEY = 'dealer_network_global_filters';
 const INQUIRIES_KEY = 'dealer_network_inquiries';
 const RECENT_KEY = 'dealer_network_recently_visited';
+const CONTACT_KEY = 'dealer_network_contact_details';
+const REQUESTS_KEY = 'dealer_network_consultation_requests';
 
 export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [shortlistItems, setShortlistItems] = useState<string[]>([]);
@@ -92,6 +126,12 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [inquiries, setInquiries] = useState<Record<string, InquiryData>>({});
   const [inquiryProperty, setInquiryProperty] = useState<any | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number, isFallback?: boolean} | null>(null);
+  
+  const [contactDetails, setContactDetailsState] = useState<ContactDetails | null>(null);
+  const [isContactFormOpen, setIsContactFormOpen] = useState(false);
+  const [onContactSuccess, setOnContactSuccess] = useState<(() => void) | null>(null);
+
+  const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
 
   // Initialize from localStorage on mount
   useEffect(() => {
@@ -163,6 +203,16 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to parse shared shortlist', e);
       }
     }
+
+    const savedContact = localStorage.getItem(CONTACT_KEY);
+    if (savedContact) {
+      try { setContactDetailsState(JSON.parse(savedContact)); } catch (e) { console.error(e); }
+    }
+
+    const savedRequests = localStorage.getItem(REQUESTS_KEY);
+    if (savedRequests) {
+      try { setConsultationRequests(JSON.parse(savedRequests)); } catch (e) { console.error(e); }
+    }
   }, []);
 
   // Update localStorage when state changes
@@ -192,6 +242,10 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(INQUIRIES_KEY, JSON.stringify(inquiries));
   }, [inquiries]);
 
+  useEffect(() => {
+    localStorage.setItem(REQUESTS_KEY, JSON.stringify(consultationRequests));
+  }, [consultationRequests]);
+
   // Save filters to localStorage whenever they change
   useEffect(() => {
     const filters = {
@@ -205,6 +259,22 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     };
     localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
   }, [query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights]);
+
+  // Sync visitor data (shortlist, notes, contact) to Supabase Cloud
+  useEffect(() => {
+    if (contactDetails) {
+      const sync = async () => {
+        try {
+          await syncShortlist(contactDetails, shortlistItems, inquiries);
+        } catch (e) {
+          console.error('Visitor sync failed:', e);
+        }
+      };
+      
+      const timer = setTimeout(sync, 1000); // Debounce sync
+      return () => clearTimeout(timer);
+    }
+  }, [contactDetails, shortlistItems, inquiries]);
 
   const clearFilters = () => {
     setQuery('');
@@ -266,6 +336,46 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const setContactDetails = (details: ContactDetails) => {
+    setContactDetailsState(details);
+    localStorage.setItem(CONTACT_KEY, JSON.stringify(details));
+    if (onContactSuccess) {
+      onContactSuccess();
+      setOnContactSuccess(null);
+    }
+    setIsContactFormOpen(false);
+  };
+
+  const requireContactDetails = (callback: () => void, force?: boolean) => {
+    if (contactDetails && !force) {
+      callback();
+    } else {
+      setOnContactSuccess(() => callback);
+      setIsContactFormOpen(true);
+    }
+  };
+
+  const addConsultationRequest = (request: Omit<ConsultationRequest, 'id' | 'timestamp'>) => {
+    const newRequest: ConsultationRequest = {
+      ...request,
+      isSyncEnabled: request.isSyncEnabled ?? false,
+      id: Math.random().toString(36).substring(2, 11),
+      timestamp: Date.now(),
+    };
+    setConsultationRequests([newRequest]);
+
+    // Also sync to Supabase (Lead generation)
+    submitConsultationRequest(newRequest).catch(e => console.error('Supabase lead sync failed', e));
+  };
+
+  const updateConsultationRequest = (id: string, updates: Partial<ConsultationRequest>) => {
+    setConsultationRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  };
+
+  const removeConsultationRequest = (id: string) => {
+    setConsultationRequests(prev => prev.filter(r => r.id !== id));
+  };
+
   return (
     <ShortlistContext.Provider value={{
       shortlistItems,
@@ -312,6 +422,15 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       setIsMobileSearchOpen,
       userLocation,
       setUserLocation,
+      contactDetails,
+      setContactDetails,
+      isContactFormOpen,
+      setIsContactFormOpen,
+      requireContactDetails,
+      consultationRequests,
+      addConsultationRequest,
+      updateConsultationRequest,
+      removeConsultationRequest,
     }}>
       {children}
     </ShortlistContext.Provider>

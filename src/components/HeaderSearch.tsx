@@ -9,6 +9,7 @@ import { getAreas } from '@/lib/supabase';
 import { useShortlist } from '@/context/ShortlistContext';
 import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 import { ArrowDown, ArrowUp } from 'lucide-react';
+import { getSeoUrl } from '@/lib/seo-utils';
 
 
 export const BUDGET_OPTIONS = [
@@ -105,6 +106,16 @@ export function HeaderSearch({
     if (finalArea) params.set('area', finalArea);
     if (finalBudget.value > 0) params.set('budget', finalBudget.label);
     if (finalType !== "Any Type") params.set('type', finalType);
+
+    if (!finalArea && finalBudget.value === 0) {
+      const seoUrl = getSeoUrl(city, finalType);
+      if (seoUrl) {
+        router.push(seoUrl);
+        setActiveSegment(null);
+        if (onSearch) onSearch();
+        return;
+      }
+    }
 
     router.push(`/explore?${params.toString()}`);
     setActiveSegment(null);
