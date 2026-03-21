@@ -12,12 +12,12 @@ export interface BrandConfig {
 
 export function getBrandConfig(hostname: string | null): BrandConfig {
   const fallback: BrandConfig = {
-    name: "MyListing",
+    name: "MyListings",
     isCustom: false,
     logoText: {
       styled: true,
       prefix: "My",
-      suffix: "Listing"
+      suffix: "Listings"
     }
   };
 

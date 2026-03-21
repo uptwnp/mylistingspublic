@@ -3,10 +3,12 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { ExploreView } from '@/components/ExploreView';
-import { parseSeoSlug } from '@/lib/seo-utils';
+import { parseSeoSlug, SEO_CITIES, SEO_PROPERTY_TYPES, BUDGET_MAPPINGS } from '@/lib/seo-utils';
 import { Metadata } from 'next';
 
-export async function generateSeoMetadata(slug: string[]): Promise<Metadata> {
+export async function generateSeoMetadata(
+  slug: string[]
+): Promise<Metadata> {
   const seoData = parseSeoSlug(slug);
 
   if (!seoData || !seoData.city) {
@@ -36,11 +38,67 @@ export async function generateSeoMetadata(slug: string[]): Promise<Metadata> {
 
   const title = titleParts.join(' ');
 
+  // Canonical logic: Build the cleanest possible path by omitting 'any' parameters from the end
+  const cityMatch = SEO_CITIES.find(c => c.value === city);
+  const citySlug = cityMatch ? cityMatch.slug : city.toLowerCase().replace(/\s+/g, '-');
+  
+  const canonicalParts = [citySlug];
+  
+  const isAnyArea = !area || area.toLowerCase() === 'anywhere';
+  const isAnyType = !type || type.toLowerCase() === 'all-types' || type.toLowerCase() === 'any type' || type.toLowerCase() === 'anything';
+  const isAnyBudget = !budget || budget.toLowerCase() === 'any budget';
+
+  if (!isAnyArea) {
+    const areaSlug = area.toLowerCase().trim().replace(/\s+/g, '-');
+    canonicalParts.push(areaSlug);
+    
+    if (!isAnyType) {
+      const typeMatch = SEO_PROPERTY_TYPES.find(t => t.value === type);
+      const typeSlug = typeMatch ? typeMatch.slug : type.toLowerCase().trim().replace(/\s+/g, '-');
+      canonicalParts.push(typeSlug);
+      
+      if (!isAnyBudget) {
+        const budgetMatch = BUDGET_MAPPINGS.find(b => b.label === budget);
+        const budgetSlug = budgetMatch ? (budgetMatch.slug || budgetMatch.pattern.source.replace(/[\\^$]/g, '')) : budget.toLowerCase().trim().replace(/\s+/g, '-');
+        canonicalParts.push(budgetSlug);
+      }
+    } else {
+      // If type is Any but budget is NOT Any, we still need 'all-types' to maintain hierarchy
+      if (!isAnyBudget) {
+        canonicalParts.push('all-types');
+        const budgetMatch = BUDGET_MAPPINGS.find(b => b.label === budget);
+        const budgetSlug = budgetMatch ? (budgetMatch.slug || budgetMatch.pattern.source.replace(/[\\^$]/g, '')) : budget.toLowerCase().trim().replace(/\s+/g, '-');
+        canonicalParts.push(budgetSlug);
+      }
+    }
+  } else {
+    // If area is Any, but type is NOT Any, we still need 'anywhere' to maintain hierarchy
+    if (!isAnyType) {
+      canonicalParts.push('anywhere');
+      const typeMatch = SEO_PROPERTY_TYPES.find(t => t.value === type);
+      const typeSlug = typeMatch ? typeMatch.slug : type.toLowerCase().trim().replace(/\s+/g, '-');
+      canonicalParts.push(typeSlug);
+      
+      if (!isAnyBudget) {
+        const budgetMatch = BUDGET_MAPPINGS.find(b => b.label === budget);
+        const budgetSlug = budgetMatch ? (budgetMatch.slug || budgetMatch.pattern.source.replace(/[\\^$]/g, '')) : budget.toLowerCase().trim().replace(/\s+/g, '-');
+        canonicalParts.push(budgetSlug);
+      }
+    } else if (!isAnyBudget) {
+      // If area and type are Any, but budget is NOT Any
+      canonicalParts.push('anywhere');
+      canonicalParts.push('all-types');
+      const budgetMatch = BUDGET_MAPPINGS.find(b => b.label === budget);
+      const budgetSlug = budgetMatch ? (budgetMatch.slug || budgetMatch.pattern.source.replace(/[\\^$]/g, '')) : budget.toLowerCase().trim().replace(/\s+/g, '-');
+      canonicalParts.push(budgetSlug);
+    }
+  }
+
   return {
     title: `${title} | MyListings`,
     description: `Browse verified ${baseType.toLowerCase()} for sale in ${area || city}. Get instant maps, direct contact with owners, and premium internal listings with ${title}.`,
     alternates: {
-      canonical: `/${slug.join('/')}`,
+      canonical: `/${canonicalParts.join('/')}`,
     },
   };
 }
