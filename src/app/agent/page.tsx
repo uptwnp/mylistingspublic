@@ -251,20 +251,20 @@ export default function AgentPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <label className="ty-micro font-black text-zinc-400 uppercase ml-1">Full Name</label>
-                          <input required type="text" className="w-full rounded-2xl border-2 border-zinc-100 bg-zinc-50/50 p-4 font-bold text-zinc-900 outline-none focus:border-brand-primary transition-all" placeholder="John Doe" />
+                          <input required type="text" name="fullName" autoComplete="name" className="w-full rounded-2xl border-2 border-zinc-100 bg-zinc-50/50 p-4 font-bold text-zinc-900 outline-none focus:border-brand-primary transition-all" placeholder="John Doe" />
                         </div>
                         <div className="space-y-2">
                           <label className="ty-micro font-black text-zinc-400 uppercase ml-1">Work City</label>
-                          <input required type="text" className="w-full rounded-2xl border-2 border-zinc-100 bg-zinc-50/50 p-4 font-bold text-zinc-900 outline-none focus:border-brand-primary transition-all" placeholder="e.g. Panipat" />
+                          <input required type="text" name="workCity" autoComplete="address-level2" className="w-full rounded-2xl border-2 border-zinc-100 bg-zinc-50/50 p-4 font-bold text-zinc-900 outline-none focus:border-brand-primary transition-all" placeholder="e.g. Panipat" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <label className="ty-micro font-black text-zinc-400 uppercase ml-1">Phone Number</label>
-                        <input required type="tel" className="w-full rounded-2xl border-2 border-zinc-100 bg-zinc-50/50 p-4 font-bold text-zinc-900 outline-none focus:border-brand-primary transition-all" placeholder="+91 00000 00000" />
+                        <input required type="tel" name="phone" autoComplete="tel" className="w-full rounded-2xl border-2 border-zinc-100 bg-zinc-50/50 p-4 font-bold text-zinc-900 outline-none focus:border-brand-primary transition-all" placeholder="+91 00000 00000" />
                       </div>
                       <div className="space-y-2">
                         <label className="ty-micro font-black text-zinc-400 uppercase ml-1">Company (Optional)</label>
-                        <input type="text" className="w-full rounded-2xl border-2 border-zinc-100 bg-zinc-50/50 p-4 font-bold text-zinc-900 outline-none focus:border-brand-primary transition-all" placeholder="Company Name" />
+                        <input type="text" name="company" autoComplete="organization" className="w-full rounded-2xl border-2 border-zinc-100 bg-zinc-50/50 p-4 font-bold text-zinc-900 outline-none focus:border-brand-primary transition-all" placeholder="Company Name" />
                       </div>
                       <div className="pt-6">
                          <button type="submit" className="w-full rounded-[24px] bg-zinc-900 py-6 ty-title font-black text-white uppercase tracking-widest shadow-2xl transition-all hover:bg-black active:scale-[0.98]">
