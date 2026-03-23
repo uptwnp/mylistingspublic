@@ -9,9 +9,9 @@ import { Property } from "@/types";
 
 interface HomeClientWrapperProps {
   initialPlots: { data: Property[], count: number };
-  initialApartments: { data: Property[], count: number };
-  initialVillas: { data: Property[], count: number };
-  initialCommercial: { data: Property[], count: number };
+  initialApartments?: { data: Property[], count: number };
+  initialVillas?: { data: Property[], count: number };
+  initialCommercial?: { data: Property[], count: number };
   serverCity: string;
 }
 

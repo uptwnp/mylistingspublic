@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getAreaCenters } from '@/lib/supabase';
 import { syncShortlistAction, submitConsultationRequestAction } from '@/app/actions/leads';
 
@@ -93,6 +93,7 @@ interface ShortlistContextType {
   removeConsultationRequest: (id: string) => void;
   areaCenters: any[];
   loadAreaCentersOnce: () => Promise<void>;
+  isInitialized: boolean;
 }
 
 const ShortlistContext = createContext<ShortlistContextType | undefined>(undefined);
@@ -138,9 +139,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
   const [areaCenters, setAreaCenters] = useState<any[]>([]);
 
-  // Initialize from localStorage on mount
   useEffect(() => {
-    setMounted(true);
     const savedCart = localStorage.getItem(CART_KEY);
     const savedProps = localStorage.getItem(SAVED_KEY);
     const savedRecent = localStorage.getItem(RECENT_KEY);
@@ -210,6 +209,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to parse shared shortlist', e);
       }
     }
+    setMounted(true);
   }, []);
 
   const loadAreaCentersOnce = React.useCallback(async () => {
@@ -253,6 +253,93 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem(REQUESTS_KEY, JSON.stringify(consultationRequests));
   }, [consultationRequests]);
+
+  // Prevent background scrolling when any modal/overlay is open
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const isAnyModalOpen = 
+      isFilterModalOpen || 
+      activeSelectionSheet !== null || 
+      isMobileSearchOpen || 
+      inquiryProperty !== null || 
+      isContactFormOpen;
+
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mounted, isFilterModalOpen, activeSelectionSheet, isMobileSearchOpen, inquiryProperty, isContactFormOpen]);
+
+  // Device back button support for modals
+  const modalHistoryRef = useRef({ pushed: 0, isInternal: false });
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const openModals = [
+      isFilterModalOpen,
+      activeSelectionSheet !== null,
+      isMobileSearchOpen,
+      inquiryProperty !== null,
+      isContactFormOpen
+    ].filter(Boolean).length;
+
+    const handlePopState = () => {
+      if (modalHistoryRef.current.isInternal) {
+        modalHistoryRef.current.isInternal = false;
+        return;
+      }
+
+      // If browser back is pressed, close the "top-most" logical modal
+      if (activeSelectionSheet) {
+        setActiveSelectionSheet(null);
+      } else if (isContactFormOpen) {
+        setIsContactFormOpen(false);
+      } else if (isFilterModalOpen) {
+        setIsFilterModalOpen(false);
+      } else if (isMobileSearchOpen) {
+        setIsMobileSearchOpen(false);
+      } else if (inquiryProperty) {
+        setInquiryProperty(null);
+      }
+      
+      modalHistoryRef.current.pushed = Math.max(0, modalHistoryRef.current.pushed - 1);
+    };
+
+    if (openModals > modalHistoryRef.current.pushed) {
+      // Something opened, push a state
+      window.history.pushState({ modal: true }, '');
+      modalHistoryRef.current.pushed++;
+    } else if (openModals < modalHistoryRef.current.pushed) {
+      // Something closed manually, pop a state if we have any
+      if (modalHistoryRef.current.pushed > 0) {
+        // Only call back() if the current state is actually our modal state.
+        // If the user has already navigated away (changing history state), calling back()
+        // would reverse that navigation.
+        if (typeof window !== 'undefined' && window.history.state?.modal === true) {
+          modalHistoryRef.current.isInternal = true;
+          window.history.back();
+        }
+        modalHistoryRef.current.pushed--;
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [
+    mounted, 
+    isFilterModalOpen, 
+    activeSelectionSheet, 
+    isMobileSearchOpen, 
+    inquiryProperty, 
+    isContactFormOpen
+  ]);
 
   // Save filters to localStorage whenever they change
   useEffect(() => {
@@ -441,6 +528,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       removeConsultationRequest,
       areaCenters,
       loadAreaCentersOnce,
+      isInitialized: mounted,
     }}>
       {children}
     </ShortlistContext.Provider>

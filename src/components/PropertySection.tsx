@@ -45,33 +45,9 @@ export function PropertySection({ title, city, type, initialData }: PropertySect
     async function fetchSectionProperties() {
       setLoading(true);
       try {
-        // Fetch more than needed to filter locally if type mapping is complex, 
-        // but here we can try to filter by city in query and then type locally or via tags if possible.
-        // For now, let's fetch first 50 properties for the city and filter.
-        const { data } = await getProperties(0, 20, true, city, type);
-        
-        const filtered = data.filter((p: Property) => {
-          // Double check city match locally (safety)
-          const pCity = p.city?.toLowerCase() || '';
-          const targetCity = city.toLowerCase();
-          const cityMatch = pCity.includes(targetCity) || targetCity.includes(pCity);
-          
-          if (!cityMatch && city !== 'All') return false;
-
-          const pType = p.type?.toLowerCase() || '';
-          const targetType = type.toLowerCase();
-          
-          let typeMatch = false;
-          if (targetType === 'residential plot') typeMatch = pType.includes('plot') || pType.includes('land');
-          else if (targetType === 'house/villa') typeMatch = pType.includes('house') || pType.includes('villa');
-          else if (targetType === 'flat/apartment') typeMatch = pType.includes('flat') || pType.includes('apartment');
-          else if (targetType === 'commercial') typeMatch = pType.includes('commercial') || pType.includes('shop') || pType.includes('office');
-          else typeMatch = pType.includes(targetType);
-
-          return typeMatch;
-        }).slice(0, 6); // Show up to 6 cards
-
-        setProperties(filtered);
+        // Now handled entirely by the RPC for performance
+        const { data } = await getProperties(0, 6, true, city, type);
+        setProperties(data);
       } catch (error) {
         console.error(`Error fetching properties for section ${title}:`, error);
       } finally {
@@ -97,7 +73,7 @@ export function PropertySection({ title, city, type, initialData }: PropertySect
         </div>
         <Link 
           href={getSeoUrl(city, type) || `/explore?city=${city}&type=${type}`}
-          className="group flex items-center gap-2 ty-caption font-bold text-zinc-900 hover:text-zinc-600 transition-colors"
+          className="group hidden sm:flex items-center gap-2 ty-caption font-bold text-zinc-900 hover:text-zinc-600 transition-colors"
         >
           View All
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -120,6 +96,14 @@ export function PropertySection({ title, city, type, initialData }: PropertySect
           ))
         )}
       </div>
+
+      <Link 
+        href={getSeoUrl(city, type) || `/explore?city=${city}&type=${type}`}
+        className="group flex sm:hidden items-center justify-center gap-3 w-full py-3.5 bg-white rounded-full border border-zinc-200 ty-caption font-bold text-zinc-900 shadow-sm hover:shadow-md transition-all active:scale-[0.98] mt-2 group/btn"
+      >
+        View All {title}
+        <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+      </Link>
     </div>
   );
 }

@@ -86,7 +86,7 @@ export function PropertyListSection({ title, subtitle, propertyIds, viewAllLink 
         {viewAllLink && (
           <Link 
             href={viewAllLink}
-            className="group flex items-center gap-2 ty-caption font-bold text-zinc-900 hover:text-zinc-600 transition-colors"
+            className="group hidden sm:flex items-center gap-2 ty-caption font-bold text-zinc-900 hover:text-zinc-600 transition-colors"
           >
             View All
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -110,6 +110,16 @@ export function PropertyListSection({ title, subtitle, propertyIds, viewAllLink 
           ))
         )}
       </div>
+
+      {viewAllLink && (
+        <Link 
+          href={viewAllLink}
+          className="group flex sm:hidden items-center justify-center gap-3 w-full py-3.5 bg-white rounded-full border border-zinc-200 ty-caption font-bold text-zinc-900 shadow-sm hover:shadow-md transition-all active:scale-[0.98] mt-2 group/btn"
+        >
+          View All {title}
+          <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+        </Link>
+      )}
     </div>
   );
 }

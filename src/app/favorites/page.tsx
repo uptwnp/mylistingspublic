@@ -7,16 +7,18 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { Property } from '@/types';
 import { getProperties, getPropertiesByIds } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
-import { Heart, ArrowLeft, Loader2 } from 'lucide-react';
+import { Heart, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { PropertyCard } from '@/components/PropertyCard';
 
 export default function FavoritesPage() {
-  const { savedIds } = useShortlist();
+  const { savedIds, isInitialized } = useShortlist();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     const fetchSavedProperties = async () => {
       if (savedIds.length === 0) {
         setProperties([]);
@@ -35,12 +37,26 @@ export default function FavoritesPage() {
     };
 
     fetchSavedProperties();
-  }, [savedIds]);
+  }, [savedIds, isInitialized]);
 
-  if (loading) {
+  if (!isInitialized || (loading && savedIds.length > 0)) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-zinc-900" />
+      <div className="min-h-screen bg-zinc-50 pt-32 pb-20">
+        <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
+          <div className="mb-12 animate-pulse">
+            <div className="h-4 w-32 bg-zinc-200 rounded-full mb-4" />
+            <div className="h-12 w-64 bg-zinc-200 rounded-2xl" />
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-[4/5] bg-white rounded-3xl animate-pulse p-4 space-y-4 shadow-sm border border-zinc-100">
+                 <div className="h-2/3 w-full bg-zinc-50 rounded-2xl" />
+                 <div className="h-4 w-3/4 bg-zinc-50 rounded-full" />
+                 <div className="h-6 w-1/2 bg-zinc-50 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

@@ -35,19 +35,13 @@ export function NoPhotosPlaceholder({
   if (isMini) {
     return (
       <div 
-        className={cn("flex h-full w-full items-center justify-center", className)}
+        className={cn("flex h-full w-full items-center justify-center transition-all duration-300", className)}
         style={{ backgroundColor: secondaryColor }}
       >
-         <div className="relative flex items-center justify-center">
-            {/* Soft background for the mini icon */}
-            <div 
-              className="absolute inset-0 scale-[2] blur-xl rounded-full opacity-20" 
-              style={{ backgroundColor: primaryColor }}
-            />
-            <Icon 
-              className="h-[85%] w-[85%] relative z-10" 
-              style={{ color: primaryColor }}
-            />
+         <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+             <Icon 
+               className="h-1/2 w-1/2 relative z-10 opacity-40 text-zinc-900" 
+             />
          </div>
       </div>
     );

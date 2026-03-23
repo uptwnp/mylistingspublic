@@ -27,15 +27,30 @@ export function HomeSearch() {
   const [activeSegment, setActiveSegment] = useState<string | null>(null);
   const [allAreas, setAllAreas] = useState<string[]>([]);
   
+  const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let active = true;
+    
+    // If no query, this will fetch "Top Areas" (Vercel Cached)
+    // If query exists, this will do a "Live Search"
     async function loadAreas() {
-      const areas = await getAreas(selectedCity);
-      setAllAreas(areas);
+      setIsSearching(true);
+      try {
+        const areas = await getAreas(selectedCity, query);
+        if (active) setAllAreas(areas);
+      } catch (err) {
+        console.error('Search areas failed:', err);
+      } finally {
+        if (active) setIsSearching(false);
+      }
     }
-    loadAreas();
-  }, [selectedCity]);
+
+    // Debounce live searching
+    const timeoutId = setTimeout(loadAreas, query ? 300 : 0);
+    return () => { active = false; clearTimeout(timeoutId); };
+  }, [selectedCity, query]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -114,66 +129,71 @@ export function HomeSearch() {
                     {query ? 'Available Areas' : 'Popular Areas'}
                   </h3>
                   <div className="flex flex-col gap-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                    {(() => {
-                      const isNearMe = query.toLowerCase() === 'near me';
-                      const isExactMatch = allAreas.some(a => a.toLowerCase() === query.toLowerCase());
-                      const showNearby = !query || isExactMatch || 'near me'.includes(query.toLowerCase());
-                      const showDefault = !query || isExactMatch || isNearMe;
-                      
-                      const filtered = allAreas
-                        .filter(a => a.toLowerCase().includes(query.toLowerCase()))
-                        .slice(0, 10);
+                    {isSearching && !allAreas.length ? (
+                      <div className="p-8 text-center ty-caption text-zinc-400">Searching...</div>
+                    ) : (
+                      <>
+                        {/* Show "Near Me" only if it's a likely match or search is empty */}
+                        {(!query || 'near me'.includes(query.toLowerCase())) && (
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              if ('geolocation' in navigator) {
+                                navigator.geolocation.getCurrentPosition(
+                                  (position) => {
+                                    setUserLocation({
+                                      lat: position.coords.latitude,
+                                      lng: position.coords.longitude,
+                                      isFallback: false
+                                    });
+                                  },
+                                  (error) => {
+                                    console.error("Error getting location:", error);
+                                  }
+                                );
+                              }
+                              setQuery('Near Me'); 
+                              setActiveSegment('budget'); 
+                            }}
+                            className={cn(
+                              "flex items-center gap-4 rounded-xl px-4 py-3 ty-body font-bold transition-all text-left group w-full text-brand-primary hover:bg-blue-50",
+                            )}
+                          >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors bg-blue-50 group-hover:bg-blue-100">
+                               <Locate className="h-5 w-5 text-brand-primary" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="truncate text-brand-primary">Near Me</span>
+                              <span className="text-[10px] font-bold text-brand-primary/50 uppercase tracking-wider">Current location</span>
+                            </div>
+                          </button>
+                        )}
 
-                      const areas = showDefault ? allAreas.slice(0, 10) : filtered;
-                      const displayAreas = showNearby ? ['Near Me', ...areas] : areas;
+                        {allAreas.map((s) => (
+                          <button 
+                            key={s} 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setQuery(s); 
+                              setActiveSegment('budget'); 
+                            }}
+                            className="flex items-center gap-4 rounded-xl px-4 py-3 ty-body font-bold transition-all text-left group w-full text-zinc-700 hover:bg-zinc-50"
+                          >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors bg-zinc-100 group-hover:bg-zinc-200">
+                               <MapPin className="h-5 w-5 text-zinc-500" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="truncate">{s}</span>
+                            </div>
+                          </button>
+                        ))}
 
-                      return displayAreas.map((s) => (
-                        <button 
-                          key={s} 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            if (s === 'Near Me' && 'geolocation' in navigator) {
-                              navigator.geolocation.getCurrentPosition(
-                                (position) => {
-                                  setUserLocation({
-                                    lat: position.coords.latitude,
-                                    lng: position.coords.longitude,
-                                    isFallback: false
-                                  });
-                                },
-                                (error) => {
-                                  console.error("Error getting location:", error);
-                                  // Fallback will be handled in ExploreContent
-                                }
-                              );
-                            }
-                            setQuery(s); 
-                            setActiveSegment('budget'); 
-                          }}
-                          className={cn(
-                            "flex items-center gap-4 rounded-xl px-4 py-3 ty-body font-bold transition-all text-left group w-full",
-                            s === 'Near Me' ? "text-brand-primary hover:bg-blue-50" : "text-zinc-700 hover:bg-zinc-50"
-                          )}
-                        >
-                          <div className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-                            s === 'Near Me' ? "bg-blue-50 group-hover:bg-blue-100" : "bg-zinc-100 group-hover:bg-zinc-200"
-                          )}>
-                             {s === 'Near Me' ? <Locate className="h-5 w-5 text-brand-primary" /> : <MapPin className="h-5 w-5 text-zinc-500" />}
+                        {!isSearching && allAreas.length === 0 && (
+                          <div className="p-8 text-center ty-caption text-zinc-400">
+                            {query ? `No areas found matching "${query}"` : "No areas available"}
                           </div>
-                          <div className="flex flex-col min-w-0">
-                            <span className={cn("truncate", s === 'Near Me' && "text-brand-primary")}>{s}</span>
-                            {s === 'Near Me' && <span className="text-[10px] font-bold text-brand-primary/50 uppercase tracking-wider">Current location</span>}
-                          </div>
-                        </button>
-                      ));
-                    })()}
-                    {!query || allAreas.some(a => a.toLowerCase() === query.toLowerCase()) ? null : (
-                      allAreas.filter(a => a.toLowerCase().includes(query.toLowerCase())).length === 0 && (
-                        <div className="p-4 text-center ty-caption text-zinc-400">
-                          No matching areas found
-                        </div>
-                      )
+                        )}
+                      </>
                     )}
                   </div>
               </motion.div>

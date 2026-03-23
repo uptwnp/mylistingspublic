@@ -9,7 +9,7 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null as any;
 
-const CACHE_KEY = 'property_platform_results_v5';
+const CACHE_KEY = 'property_platform_results_v6';
 const AREAS_CACHE_KEY = 'property_platform_areas_v1';
 const CITIES_CACHE_KEY = 'property_platform_cities_v1';
 const CENTERS_CACHE_KEY = 'property_platform_centers_v1';
@@ -77,159 +77,99 @@ export async function getProperties(
 ) {
   if (!supabase) return { data: [], count: 0 };
 
-  const safeLimit = Math.min(limit, 1000);
+  const safeLimit = Math.min(limit, 20); // Strict maximum for pagination
   const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${userLat || 'noLat'}_${userLng || 'noLng'}_${page}`;
   
-  // Try to get from localStorage first for "Perceived Instant" speed
+  // 1. Try LocalStorage Cache (Browser Only) - Perceived Instant Speed
   if (useCache && typeof window !== 'undefined' && page === 0) {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
         const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 3600000) { // 1 hour TTL
-          return data;
-        }
+        if (Date.now() - timestamp < CACHE_TTL) return data;
       } catch (e) {
         localStorage.removeItem(cacheKey);
       }
     }
   }
 
-  const from = page * safeLimit;
-  const to = from + safeLimit - 1;
+  // 2. Map Budget string to numeric values (consistent with SQL function)
+  let p_min_price = null;
+  let p_max_price = null;
+  if (budget && budget !== 'Any Budget') {
+    const b = budget.toLowerCase();
+    if (b.includes('under 40')) p_max_price = 40;
+    else if (b.includes('40 to 80')) { p_min_price = 40; p_max_price = 80; }
+    else if (b.includes('80 lakh to 1.2 cr')) { p_min_price = 80; p_max_price = 120; }
+    else if (b.includes('1.2 cr to 1.6 cr')) { p_min_price = 120; p_max_price = 160; }
+    else if (b.includes('1.6 to 2.5 cr')) { p_min_price = 160; p_max_price = 250; }
+    else if (b.includes('2.5 cr to 5 cr')) { p_min_price = 250; p_max_price = 500; }
+    else if (b.includes('5 cr to 10 cr')) { p_min_price = 500; p_max_price = 1000; }
+    else if (b.includes('10 cr to 50 cr')) { p_min_price = 1000; p_max_price = 5000; }
+    else if (b.includes('50 cr to 100 cr')) { p_min_price = 5000; p_max_price = 10000; }
+    else if (b.includes('100 cr')) p_min_price = 10000;
+  }
 
+  // 3. Unified RPC Call (The "Vercel Optimized" Way)
   try {
-    let query: any;
-    if (sortField === 'distance' && userLat && userLng) {
-      // Use the new Golden RPC for true database-side distance sorting
-      query = supabase
-        .rpc('get_nearby_listing_data', { user_lat: userLat, user_lng: userLng })
-        .select(PUBLIC_FIELDS, { count: 'exact' });
-    } else {
-      query = supabase
-        .from('website_public_listing')
-        .select(PUBLIC_FIELDS, { count: 'exact' });
-    }
-
-    if (city && city !== 'All') {
-      query = query.ilike('city', `%${city.trim()}%`);
-    }
-
-    if (type && type !== 'All' && type !== 'Any Type') {
-      const t = type.toLowerCase();
-      // If it's a known category with synonyms, search for all variants
-      if (t.includes('plot') || t.includes('land')) {
-        query = query.or('type.ilike.%plot%,type.ilike.%land%');
-      } else if (t.includes('house') || t.includes('villa')) {
-        query = query.or('type.ilike.%house%,type.ilike.%villa%');
-      } else if (t.includes('flat') || t.includes('apartment')) {
-        query = query.or('type.ilike.%flat%,type.ilike.%apartment%');
-      } else if (t.includes('commercial')) {
-        query = query.or('type.ilike.%commercial%,type.ilike.%shop%,type.ilike.%office%');
-      } else if (t.includes('industrial') || t.includes('factory')) {
-        query = query.or('type.ilike.%industrial%,type.ilike.%factory%,type.ilike.%godown%');
-      } else {
-        query = query.ilike('type', `%${type.trim()}%`);
-      }
-    }
-
-    if (area && area !== 'All' && area !== 'Near Me') {
-      query = query.ilike('area', `%${area.trim()}%`);
-    }
-
-    if (budget && budget !== 'Any Budget') {
-      const b = budget.toLowerCase();
-      if (b.includes('under 40')) {
-        query = query.lte('price_min', 40);
-      } else if (b.includes('40 to 80')) {
-        query = query.lte('price_min', 80).gte('price_max', 40);
-      } else if (b.includes('80 lakh to 1.2 cr')) {
-        query = query.lte('price_min', 120).gte('price_max', 80);
-      } else if (b.includes('1.2 cr to 1.6 cr')) {
-        query = query.lte('price_min', 160).gte('price_max', 120);
-      } else if (b.includes('1.6 to 2.5 cr')) {
-        query = query.lte('price_min', 250).gte('price_max', 160);
-      } else if (b.includes('2.5 cr to 5 cr')) {
-        query = query.lte('price_min', 500).gte('price_max', 250);
-      } else if (b.includes('5 cr to 10 cr')) {
-        query = query.lte('price_min', 1000).gte('price_max', 500);
-      } else if (b.includes('10 cr to 50 cr')) {
-        query = query.lte('price_min', 5000).gte('price_max', 1000);
-      } else if (b.includes('50 cr to 100 cr')) {
-        query = query.lte('price_min', 10000).gte('price_max', 5000);
-      } else if (b.includes('100 cr')) {
-        query = query.gte('price_max', 10000);
-      }
-    }
-
-    if (minSize) {
-      const sizeVal = parseFloat(minSize);
-      if (!isNaN(sizeVal)) query = query.gte('size_min', sizeVal);
-    }
-
-    if (maxSize) {
-      const sizeVal = parseFloat(maxSize);
-      if (!isNaN(sizeVal)) query = query.lte('size_max', sizeVal);
-    }
-
-    if (highlights) {
-      const highlightList = highlights.split(',').map(h => h.trim()).filter(Boolean);
-      if (highlightList.length > 0) {
-        // Since Supabase REST API doesn't support 'contains' well for CSV strings, we use ilike for each if needed, 
-        // but often highlights are stored as text arrays or JSONB. 
-        // Assuming they are comma-separated text based on formatPropertyData.
-        highlightList.forEach(h => {
-          query = query.ilike('highlights', `%${h}%`);
-        });
-      }
-    }
-
-    if (keywords) {
-      query = query.ilike('search_text', `%${keywords.toLowerCase().trim()}%`);
-    }
-
-    const { data, error, count } = await query
-      .range(from, to)
-      .order(sortField === 'distance' ? 'approved_on' : sortField, { ascending: sortOrder === 'asc', nullsFirst: false })
-      .order('property_id', { ascending: true });
+    const { data, error } = await supabase.rpc('get_public_properties_v2', {
+      p_city: city || 'All',
+      p_type: type || 'All',
+      p_area: area || 'All',
+      p_min_price,
+      p_max_price,
+      p_min_size: minSize ? parseFloat(minSize) : null,
+      p_max_size: maxSize ? parseFloat(maxSize) : null,
+      p_highlights: highlights,
+      p_keywords: keywords,
+      p_user_lat: userLat,
+      p_user_lng: userLng,
+      p_sort_field: sortField,
+      p_sort_order: sortOrder,
+      p_page: page,
+      p_limit: safeLimit
+    });
 
     if (error) {
-      console.error('Error fetching properties:', error);
-      return { data: [], count: 0 };
+      console.error('Supabase RPC Error:', error);
+      // Fallback: If function doesn't exist yet, we stick to the old client logic temporarily
+      throw error; 
     }
 
-    const formattedData = (data as Record<string, unknown>[])?.map(formatPropertyData);
+    const { properties, total_count } = (data as any)[0] || { properties: [], total_count: 0 };
+    const formattedData = properties?.map(formatPropertyData) || [];
 
+    // Local Storage Caching
     if (useCache && page === 0 && typeof window !== 'undefined') {
-      localStorage.setItem(cacheKey, JSON.stringify({ data: { data: formattedData, count: count || 0 }, timestamp: Date.now() }));
+      localStorage.setItem(cacheKey, JSON.stringify({ data: { data: formattedData, count: total_count }, timestamp: Date.now() }));
     }
 
-    return { data: formattedData, count: count || 0 };
+    return { data: formattedData, count: total_count };
   } catch (err) {
-    console.error('Critical error in getProperties:', err);
+    console.error('RPC failed, ensure get_public_properties_v2 is deployed in SQL Editor:', err);
     return { data: [], count: 0 };
   }
 }
 
+
+
 export async function getPropertyById(id: string | number) {
   if (!supabase || !id) return null;
   const cleanId = String(id).trim();
-  
-  if (!/^\d+$/.test(cleanId)) return null;
 
   try {
     const { data, error } = await supabase
       .from('website_public_listing')
       .select(PUBLIC_FIELDS)
-      .or(`property_id.eq.${cleanId},public_id.eq.${cleanId}`)
-      .limit(1);
+      .eq('property_id', cleanId)
+      .maybeSingle();
 
     if (error) {
-      console.error('Error fetching property:', error);
+      console.error('Error in direct getPropertyById:', error);
       return null;
     }
 
-    return (data && data.length > 0) ? formatPropertyData(data[0] as Record<string, unknown>) : null;
+    return data ? formatPropertyData(data as Record<string, unknown>) : null;
   } catch (err) {
     console.error('Critical error in getPropertyById:', err);
     return null;
@@ -286,87 +226,21 @@ export async function getTrendingProperties(limit = 6) {
   return getProperties(0, limit, true, 'All', 'All', 'approved_on', 'desc');
 }
 
+import { getLocationSuggestionsAction } from '@/app/actions/property-actions';
+
+/**
+ * Optimized Cities list (uses Vercel caching)
+ */
 export async function getCities() {
-  if (!supabase) return ['Panipat', 'Karnal'];
-  
-  return dedupeRequest('cities', async () => {
-    // Try cache first
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem(CITIES_CACHE_KEY);
-      if (cached) {
-        try {
-          const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < CACHE_TTL) return data;
-        } catch (e) {
-          localStorage.removeItem(CITIES_CACHE_KEY);
-        }
-      }
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('website_public_listing')
-        .select('city');
-      
-      if (error) throw error;
-      
-      const cities = Array.from(new Set((data as any[]).map(d => d.city))).filter(Boolean);
-      const result = cities.length > 0 ? cities : ['Panipat', 'Karnal'];
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(CITIES_CACHE_KEY, JSON.stringify({ data: result, timestamp: Date.now() }));
-      }
-
-      return result;
-    } catch (err) {
-      console.error('Error in getCities:', err);
-      return ['Panipat', 'Karnal'];
-    }
-  });
+  return getLocationSuggestionsAction('city');
 }
 
-export async function getAreas(city?: string) {
-  if (!supabase) return [];
-  const cacheKey = `${AREAS_CACHE_KEY}_${city || 'All'}`;
-  
-  return dedupeRequest(cacheKey, async () => {
-    // Try cache first
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < CACHE_TTL) return data;
-        } catch (e) {
-          localStorage.removeItem(cacheKey);
-        }
-      }
-    }
-
-    try {
-      let query = supabase
-        .from('website_public_listing')
-        .select('area');
-
-      if (city && city !== 'All') {
-        query = query.ilike('city', `%${city.trim()}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      
-      const areas = Array.from(new Set((data as any[]).map(d => d.area))).filter(Boolean);
-
-      if (typeof window !== 'undefined' && areas.length > 0) {
-        localStorage.setItem(cacheKey, JSON.stringify({ data: areas, timestamp: Date.now() }));
-      }
-      
-      return areas;
-    } catch (err) {
-      console.error('Error in getAreas:', err);
-      return [];
-    }
-  });
+/**
+ * Optimized Areas list (uses Vercel caching)
+ * Supports live query search optionally.
+ */
+export async function getAreas(city?: string, query?: string) {
+  return getLocationSuggestionsAction('area', city || 'All', query || '');
 }
 
 export async function getAreaCenters() {

@@ -79,29 +79,37 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
             <NoPhotosPlaceholder isMini propertyType={property.type} />
           )}
           
-          {/* Selection Indicator for Cart */}
-          {inCart && (
-            <motion.div layout className={cn(
-              "absolute inset-0 bg-zinc-900/40 flex items-center justify-center backdrop-blur-[1px] transition-opacity duration-200",
-              "group-hover/image:opacity-0"
-            )}>
-              <div className="bg-white rounded-full p-1 shadow-lg">
-                <Check className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-zinc-900" strokeWidth={4} />
-              </div>
-            </motion.div>
-          )}
+          {/* Selection Indicator for Cart (Single Top-Right Badge) */}
+          <AnimatePresence>
+            {inCart && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-20 pointer-events-none"
+              >
+                <motion.div
+                  initial={{ scale: 0, x: 10, y: -10 }}
+                  animate={{ scale: 1, x: 0, y: 0 }}
+                  className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white shadow-xl ring-2 ring-white"
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={5} />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Open in New Tab Overlay */}
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-all duration-200 z-10">
+          {/* Open in New Tab Overlay (Visible on Hover, Above Cart State) */}
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 opacity-0 group-hover/image:opacity-100 transition-all duration-300 backdrop-blur-[1px]">
             <a 
               href={`/property/${property.property_id}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="bg-white/95 hover:bg-white text-zinc-900 p-2 rounded-full shadow-lg transform scale-50 group-hover/image:scale-110 transition-all duration-200"
-              title="Open property in new tab"
+              className="bg-white text-zinc-900 p-2.5 rounded-full shadow-2xl transform scale-50 group-hover/image:scale-100 transition-all duration-300"
+              title="View property details"
             >
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-[18px] w-[18px]" strokeWidth={3} />
             </a>
           </div>
         </motion.div>

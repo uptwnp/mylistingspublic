@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { ExploreView } from '@/components/ExploreView';
 import { parseSeoSlug, SEO_CITIES, SEO_PROPERTY_TYPES, BUDGET_MAPPINGS } from '@/lib/seo-utils';
+import { getProperties } from '@/lib/supabase';
 import { Metadata } from 'next';
 
 export async function generateSeoMetadata(
@@ -103,12 +104,25 @@ export async function generateSeoMetadata(
   };
 }
 
-export function SeoExploreView({ slug }: { slug: string[] }) {
+export async function SeoExploreView({ slug }: { slug: string[] }) {
   const seoData = parseSeoSlug(slug);
 
   if (!seoData || !seoData.city) {
     notFound();
   }
+
+  // Pre-fetch the first page of results on the Server for ISR
+  const { data: initialProperties, count: initialTotalCount } = await getProperties(
+    0, // page 0
+    20, // 20 items
+    false,
+    seoData.city,
+    seoData.type || undefined,
+    'approved_on', // Default sort
+    'desc',
+    seoData.area || undefined,
+    seoData.budget || undefined
+  );
 
   return (
     <Suspense fallback={
@@ -121,6 +135,8 @@ export function SeoExploreView({ slug }: { slug: string[] }) {
         overrideType={seoData.type || undefined} 
         overrideArea={seoData.area || undefined} 
         overrideBudget={seoData.budget || undefined} 
+        initialProperties={initialProperties}
+        initialTotalCount={initialTotalCount}
       />
     </Suspense>
   );

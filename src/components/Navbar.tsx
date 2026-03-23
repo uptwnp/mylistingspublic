@@ -38,6 +38,7 @@ export default function Navbar() {
 
   const [initialSegment, setInitialSegment] = useState<string | null>(null);
   const [isOtherCityDropdownOpen, setIsOtherCityDropdownOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -53,11 +54,8 @@ export default function Navbar() {
   ];
 
   const loadAreasOnce = useCallback(async () => {
-    if (allAreas.length === 0) {
-      const areas = await getAreas(selectedCity);
-      setAllAreas(areas);
-    }
-  }, [selectedCity, allAreas.length]);
+    // This is now just a placeholder as components handle their own lazy loading
+  }, []);
 
   useEffect(() => {
     // Reset areas when city changes, but don't fetch until interaction
@@ -69,7 +67,12 @@ export default function Navbar() {
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
+      setIsMobile(window.innerWidth < 640);
     };
+    
+    // Initial check
+    setIsMobile(window.innerWidth < 640);
+    handleScroll();
     
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -112,21 +115,8 @@ export default function Navbar() {
     if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
 
     // Prioritize hierarchical SEO URL for primary search parameters
-    const seoUrl = getSeoUrl(finalCity, finalType, finalArea, finalBudget.label);
-    if (seoUrl) {
-      const queryString = params.toString();
-      router.push(queryString ? `${seoUrl}${queryString ? `?${queryString}` : ''}` : seoUrl);
-      setIsFilterModalOpen(false);
-      return;
-    }
-
-    // Fallback to traditional explore page
-    if (selectedCity) params.set('city', selectedCity);
-    if (finalArea) params.set('area', finalArea);
-    if (finalBudget.value > 0) params.set('budget', finalBudget.label);
-    if (finalType !== "Any Type") params.set('type', finalType);
-
-    router.push(`/explore?${params.toString()}`);
+    const url = `/explore?${params.toString()}`;
+    router.push(url);
     setIsFilterModalOpen(false);
   }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router]);
 
@@ -269,45 +259,8 @@ export default function Navbar() {
                   <Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </Link>
 
-                <AnimatePresence mode="popLayout">
-                  {(!shouldShowCompact) ? (
-                    <motion.div
-                      key="brand-name"
-                      initial={{ opacity: 0, rotateX: 90 }}
-                      animate={{ opacity: 1, rotateX: 0 }}
-                      exit={{ opacity: 0, rotateX: -90 }}
-                      transition={{ duration: 0.05 }}
-                    >
-                      <Link href="/" className="ty-subtitle font-bold tracking-tighter text-zinc-900 truncate block">
-                        {brand.logoText.styled ? (
-                          <>
-                            {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
-                          </>
-                        ) : (
-                          <span className="uppercase">{brand.logoText.text}</span>
-                        )}
-                      </Link>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="brand-name-desktop"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.05 }}
-                      className="hidden lg:block"
-                    >
-                      <Link href="/" className="ty-subtitle font-bold tracking-tighter text-zinc-900 truncate block">
-                        {brand.logoText.styled ? (
-                          <>
-                            {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
-                          </>
-                        ) : (
-                          <span className="uppercase">{brand.logoText.text}</span>
-                        )}
-                      </Link>
-                    </motion.div>
-                  )}
-                  {shouldShowCompact && (
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {(isMobile && shouldShowCompact) ? (
                     <motion.div 
                       key="mobile-search-pill"
                       initial={{ opacity: 0, rotateX: -90, y: 10 }}
@@ -339,6 +292,24 @@ export default function Navbar() {
                           {query ? `${query}, ${selectedCity}` : selectedCity}
                         </button>
                       </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="brand-name"
+                      initial={{ opacity: 0, rotateX: -90, y: 10 }}
+                      animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                      exit={{ opacity: 0, rotateX: 90, y: -10 }}
+                      transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
+                    >
+                      <Link href="/" className="ty-subtitle font-bold tracking-tighter text-zinc-900 truncate block">
+                        {brand.logoText.styled ? (
+                          <>
+                            {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
+                          </>
+                        ) : (
+                          <span className="uppercase">{brand.logoText.text}</span>
+                        )}
+                      </Link>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -465,31 +436,36 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-shadow hover:shadow-md cursor-pointer ml-1"
                 >
-                  <AnimatePresence mode="wait">
-                    {shortlistItems.length > 0 ? (
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    { (shortlistItems.length > 0 || !isMobile) ? (
                       <motion.div
                         key="cart-icon"
-                        initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, x: -20 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        initial={{ opacity: 0, rotateX: -90, y: 10 }}
+                        animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                        exit={{ opacity: 0, rotateX: 90, y: -10 }}
+                        transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
                       >
                         <Link href="/shortlist" onClick={(e) => e.stopPropagation()}>
-                          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white hover:bg-zinc-700 transition-colors">
-                            <ShoppingCart className="h-5 w-5 text-zinc-300" />
-                            <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
-                              {shortlistItems.length}
-                            </span>
+                          <div className={cn(
+                            "relative flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                            shortlistItems.length > 0 ? "bg-zinc-900 text-white hover:bg-zinc-700" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                          )}>
+                            <ShoppingCart className={cn("h-5 w-5", shortlistItems.length > 0 ? "text-zinc-300" : "text-zinc-600")} />
+                            {shortlistItems.length > 0 && (
+                              <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
+                                {shortlistItems.length}
+                              </span>
+                            )}
                           </div>
                         </Link>
                       </motion.div>
                     ) : (
                       <motion.div
                         key="search-icon"
-                        initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, x: -20 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        initial={{ opacity: 0, rotateX: -90, y: 10 }}
+                        animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                        exit={{ opacity: 0, rotateX: 90, y: -10 }}
+                        transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (window.innerWidth < 640) {
@@ -679,54 +655,54 @@ export default function Navbar() {
                 {/* Where Card */}
                 <button 
                   onClick={() => setActiveSelectionSheet('area')}
-                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                  className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="ty-title font-bold text-zinc-900">Where to?</h2>
-                    <MapPin className="h-6 w-6 text-zinc-400" />
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="ty-subtitle font-bold text-zinc-900">Where to?</h2>
+                    <MapPin className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-base font-bold", !query ? "text-zinc-400" : "text-zinc-900")}>
+                    <span className={cn("text-sm font-bold", !query ? "text-zinc-400" : "text-zinc-900")}>
                       {query || "Search areas..."}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                    <ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
 
                 {/* Budget Card - OPTIONS SHOWN VIA BOTTOM SHEET */}
                 <button 
                   onClick={() => setActiveSelectionSheet('budget')}
-                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                  className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="ty-title font-bold text-zinc-900">What's your budget?</h2>
-                    <Wallet className="h-6 w-6 text-zinc-400" />
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="ty-subtitle font-bold text-zinc-900">What's your budget?</h2>
+                    <Wallet className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-base font-bold", budget.label === "Any Budget" ? "text-zinc-400" : "text-zinc-900")}>
+                    <span className={cn("text-sm font-bold", budget.label === "Any Budget" ? "text-zinc-400" : "text-zinc-900")}>
                       {budget.label === "Any Budget" ? "Select your price range" : budget.label}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                    <ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
 
                 {/* Property Type Card - OPTIONS SHOWN VIA BOTTOM SHEET */}
                 <button 
                   onClick={() => setActiveSelectionSheet('type')}
-                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                  className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="ty-title font-bold text-zinc-900">Property type?</h2>
-                    <Home className="h-6 w-6 text-zinc-400" />
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="ty-subtitle font-bold text-zinc-900">Property type?</h2>
+                    <Home className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-base font-bold", propertyType === "Any Type" ? "text-zinc-400" : "text-zinc-900")}>
+                    <span className={cn("text-sm font-bold", propertyType === "Any Type" ? "text-zinc-400" : "text-zinc-900")}>
                       {propertyType === "Any Type" ? "What are you looking for?" : propertyType}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                    <ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
               </div>
@@ -737,9 +713,8 @@ export default function Navbar() {
               <button 
                 onClick={() => {
                   clearFilters();
-                  if (pathname !== '/explore') {
-                    router.push('/explore');
-                  }
+                  handleApplyFilters();
+                  setTimeout(() => setIsMobileSearchOpen(false), 10);
                 }}
                 className="ty-caption font-black text-zinc-900 underline underline-offset-4"
               >
@@ -748,7 +723,7 @@ export default function Navbar() {
               <button 
                 onClick={() => {
                   handleApplyFilters();
-                  setIsMobileSearchOpen(false);
+                  setTimeout(() => setIsMobileSearchOpen(false), 10);
                 }}
                 className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all active:scale-95"
               >
@@ -806,11 +781,12 @@ export default function Navbar() {
         title="Where to?"
         type="area"
         selectedValue={query}
+        selectedCity={selectedCity}
+        data={allAreas}
         onSelect={(val) => {
           setQuery(val);
           setTimeout(() => setActiveSelectionSheet('budget'), 100);
         }}
-        data={allAreas}
       />
 
       {/* Fixed Bottom Category Filters (Mobile Only) */}

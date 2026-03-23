@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from './PropertyCard';
-import { RefreshCcw, Loader2 } from 'lucide-react';
+import { RefreshCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCallback } from 'react';
 import { useShortlist } from '@/context/ShortlistContext';
@@ -148,10 +148,10 @@ export function PropertyGrid() {
             className="flex items-center gap-2 rounded-xl bg-zinc-900 px-8 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-800 disabled:opacity-50"
           >
             {loadingMore ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading More Properties...
-              </>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-white opacity-40 animate-pulse" />
+                <span className="animate-pulse">Loading More...</span>
+              </div>
             ) : (
               'Load More Results'
             )}

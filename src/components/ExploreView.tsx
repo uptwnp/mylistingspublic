@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
-import { Loader2, SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
@@ -20,9 +20,10 @@ import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-zinc-100">
+    <div className="flex h-full w-full items-center justify-center bg-zinc-50 animate-pulse">
       <div className="text-center">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-zinc-400" />
+        <MapIcon className="mx-auto h-8 w-8 text-zinc-200 mb-3" />
+        <span className="ty-micro font-bold text-zinc-400 uppercase tracking-widest">Initialising Map...</span>
       </div>
     </div>
   ),
@@ -33,18 +34,22 @@ interface ExploreViewProps {
   overrideType?: string;
   overrideArea?: string;
   overrideBudget?: string;
+  initialProperties?: Property[];
+  initialTotalCount?: number;
 }
 
 export function ExploreView({ 
   overrideCity, 
   overrideType,
   overrideArea,
-  overrideBudget
+  overrideBudget,
+  initialProperties = [],
+  initialTotalCount = 0
 }: ExploreViewProps) {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
+  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const [totalCount, setTotalCount] = useState(initialTotalCount);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialProperties.length === 0);
   const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('list');
 
   useEffect(() => {

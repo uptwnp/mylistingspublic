@@ -7,7 +7,7 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { Property } from '@/types';
 import { getPropertiesByIds } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
-import { Trash2, Phone, Home, ArrowLeft, Loader2, Building2, MapPin, CheckCircle2, Share2, Pencil, Plus, Check, X } from 'lucide-react';
+import { Trash2, Phone, Home, ArrowLeft, Building2, MapPin, CheckCircle2, Share2, Pencil, Plus, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 
 
 export default function ShortlistPage() {
-  const { shortlistItems, inquiries, updateInquiry, removeFromShortlist, clearShortlist, requireContactDetails, contactDetails, consultationRequests, addConsultationRequest, updateConsultationRequest, removeConsultationRequest } = useShortlist();
+  const { shortlistItems, inquiries, updateInquiry, removeFromShortlist, clearShortlist, requireContactDetails, contactDetails, consultationRequests, addConsultationRequest, updateConsultationRequest, removeConsultationRequest, isInitialized } = useShortlist();
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
@@ -42,6 +42,8 @@ export default function ShortlistPage() {
   };
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     const fetchShortlistProperties = async () => {
       if (shortlistItems.length === 0) {
         setProperties([]);
@@ -60,12 +62,23 @@ export default function ShortlistPage() {
     };
 
     fetchShortlistProperties();
-  }, [shortlistItems]);
+  }, [shortlistItems, isInitialized]);
 
-  if (loading) {
+  if (!isInitialized || (loading && shortlistItems.length > 0)) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-zinc-900" />
+      <div className="min-h-screen bg-zinc-50 pt-32 pb-20">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
+          <div className="grid gap-8 lg:grid-cols-3">
+             <div className="lg:col-span-2 space-y-6 animate-pulse">
+                <div className="h-4 w-48 bg-zinc-200 rounded-full mb-8" />
+                <div className="h-12 w-64 bg-zinc-200 rounded-2xl mb-8" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-32 w-full bg-white rounded-2xl p-4 shadow-sm border border-zinc-100" />
+                ))}
+             </div>
+             <div className="h-[500px] w-full bg-white rounded-3xl animate-pulse shadow-sm border border-zinc-100" />
+          </div>
+        </div>
       </div>
     );
   }

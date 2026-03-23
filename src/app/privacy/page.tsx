@@ -1,8 +1,9 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import { Shield, ChevronRight, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+
+// Static legal page: Cache for 1 hour
+export const revalidate = 3600;
+export const runtime = 'edge';
 
 const sections = [
   { id: 'data-collection', title: 'Data Collection' },
@@ -47,11 +48,7 @@ export default function PrivacyPolicy() {
 
           {/* Main Content */}
           <article className="flex-1 max-w-3xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div>
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 shadow-xl shadow-zinc-200 mb-8">
                 <Shield className="h-6 w-6 text-white" />
               </div>
@@ -143,7 +140,7 @@ export default function PrivacyPolicy() {
                   </div>
                 </section>
               </div>
-            </motion.div>
+            </div>
           </article>
         </div>
       </div>
