@@ -50,15 +50,17 @@ export function ExploreView({
   const [totalCount, setTotalCount] = useState(initialTotalCount);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(initialProperties.length === 0);
-  const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('list');
+  const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
+  const [isFirstMount, setIsFirstMount] = useState(true);
 
   useEffect(() => {
-    // Determine initial view mode based on screen width
-    if (window.innerWidth >= 1024) {
-      setViewMode('split');
-    } else {
+    // Determine actual view mode based on screen width
+    if (window.innerWidth < 1024) {
       setViewMode('list');
     }
+    // Small delay to enable animations AFTER layout is settled
+    const timer = setTimeout(() => setIsFirstMount(false), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const [page, setPage] = useState(0);
@@ -71,7 +73,8 @@ export function ExploreView({
     shortlistItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
     setActiveSelectionSheet, setKeywords, setMinSize, setMaxSize, 
     setSelectedHighlights, clearFilters, userLocation, setUserLocation,
-    sortField, sortOrder, setSortField, setSortOrder, areaCenters, loadAreaCentersOnce
+    sortField, sortOrder, setSortField, setSortOrder, areaCenters, loadAreaCentersOnce,
+    cacheProperties
   } = useShortlist();
 
   useEffect(() => {
@@ -187,8 +190,9 @@ export function ExploreView({
       }
 
       setProperties(finalData);
+      cacheProperties(finalData);
       setLoading(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
     };
     fetchData();
   }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
@@ -203,7 +207,8 @@ export function ExploreView({
           <div 
             id="property-list-container"
             className={cn(
-              "flex flex-col transition-all duration-300",
+              "flex flex-col",
+              !isFirstMount && "transition-all duration-300",
               viewMode === 'split' ? 'w-full lg:w-[35%]' : 
               viewMode === 'list' ? 'w-full' : 'hidden'
             )}>
@@ -335,7 +340,8 @@ export function ExploreView({
 
           {/* Map Side */}
           <div className={cn(
-            "sticky top-20 h-[calc(100vh-80px)] transition-all duration-300",
+            "sticky top-20 h-[calc(100vh-80px)]",
+            !isFirstMount && "transition-all duration-300",
             viewMode === 'split' ? 'hidden lg:flex lg:flex-1' : 
             viewMode === 'map' ? 'w-full flex' : 'hidden',
             "items-center justify-center pt-2 lg:pt-4 pb-5"

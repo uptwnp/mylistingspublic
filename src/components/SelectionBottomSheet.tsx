@@ -103,12 +103,12 @@ export function SelectionBottomSheet({
 
           {/* Sheet Container */}
           <div className="fixed inset-0 z-[1101] flex items-end justify-center pointer-events-none sm:hidden">
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className={cn(
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: "spring", damping: 30, stiffness: 350, mass: 0.8 }}
+                className={cn(
                 "relative w-full overflow-hidden bg-white shadow-2xl pointer-events-auto flex flex-col",
                 type === 'area' ? "h-full" : "rounded-t-[32px] max-h-[80vh]"
               )}

@@ -95,6 +95,10 @@ interface ShortlistContextType {
   loadAreaCentersOnce: () => Promise<void>;
   closeAllModals: (skipHistory?: boolean) => void;
   isInitialized: boolean;
+  
+  // Property Cache for instant navigation
+  cachedProperties: Record<string, any>;
+  cacheProperties: (properties: any[]) => void;
 }
 
 const ShortlistContext = createContext<ShortlistContextType | undefined>(undefined);
@@ -139,6 +143,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
 
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
   const [areaCenters, setAreaCenters] = useState<any[]>([]);
+  const [cachedProperties, setCachedProperties] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_KEY);
@@ -441,6 +446,26 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const cacheProperties = React.useCallback((props: any[]) => {
+    if (!props || props.length === 0) return;
+    setCachedProperties(prev => {
+      const next = { ...prev };
+      props.forEach(p => {
+        if (p?.property_id) next[p.property_id] = p;
+      });
+      
+      // Keep only latest 100 properties to prevent memory bloat
+      const keys = Object.keys(next);
+      if (keys.length > 100) {
+        // Clear oldest entries (keys at the beginning)
+        const keysToRemove = keys.slice(0, keys.length - 100);
+        keysToRemove.forEach(k => delete next[k]);
+      }
+      
+      return next;
+    });
+  }, []);
+
   const setContactDetails = (details: ContactDetails) => {
     setContactDetailsState(details);
     localStorage.setItem(CONTACT_KEY, JSON.stringify(details));
@@ -551,6 +576,8 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       loadAreaCentersOnce,
       closeAllModals,
       isInitialized: mounted,
+      cachedProperties,
+      cacheProperties,
     }}>
       {children}
     </ShortlistContext.Provider>

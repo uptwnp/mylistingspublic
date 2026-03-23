@@ -222,10 +222,7 @@ export default function Navbar() {
         selectedHighlights.join(',') !== highlightsInUrl;
         
       if (isDifferent) {
-        const timeout = setTimeout(() => {
-          handleApplyFilters();
-        }, 50);
-        return () => clearTimeout(timeout);
+        handleApplyFilters();
       }
     }
   }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname, searchParams]);
@@ -249,9 +246,7 @@ export default function Navbar() {
     additionalFiltersCount,
     onSearch: () => {
       setIsForceExpanded(false);
-      if (pathname !== '/explore') {
-        handleApplyFilters();
-      }
+      handleApplyFilters();
     }
   };
 
@@ -674,7 +669,7 @@ export default function Navbar() {
                   className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="ty-subtitle font-bold text-zinc-900">Where to?</h2>
+                    <h2 className="ty-subtitle font-bold text-zinc-900">Where?</h2>
                     <MapPin className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
@@ -790,7 +785,7 @@ export default function Navbar() {
       <SelectionBottomSheet
         isOpen={activeSelectionSheet === 'area'}
         onClose={() => setActiveSelectionSheet(null)}
-        title="Where to?"
+        title="Where?"
         type="area"
         selectedValue={query}
         selectedCity={selectedCity}

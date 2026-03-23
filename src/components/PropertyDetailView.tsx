@@ -26,9 +26,16 @@ interface PropertyDetailViewProps {
 export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps) {
   const router = useRouter();
   const mapSectionRef = useRef<HTMLDivElement>(null);
-  const [property] = useState<Property>(initialProperty);
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
-  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave, addRecentlyVisited, updateInquiry, inquiries } = useShortlist();
+  const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave, addRecentlyVisited, updateInquiry, inquiries, cachedProperties, userLocation: globalUserLocation } = useShortlist();
+  
+  // Try to use cached data for instant initial render if we have it
+  const [property] = useState<Property>(() => {
+    const cached = cachedProperties[initialProperty.property_id];
+    // Only use cache if it was more detailed or if we have it
+    return cached || initialProperty;
+  });
+
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(globalUserLocation || null);
   const [similarProperties, setSimilarProperties] = useState<Property[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(true);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);

@@ -84,7 +84,7 @@ export function FilterModal({
               initial={{ opacity: 0, scale: 0.9, y: '100%' }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: '100%' }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              transition={{ type: "spring", damping: 30, stiffness: 350, mass: 0.8 }}
               className="relative w-full max-w-lg overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white shadow-2xl pointer-events-auto flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh]"
             >
               {/* Header */}

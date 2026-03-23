@@ -112,30 +112,10 @@ export function HeaderSearch({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
-    const finalArea = overrides?.area ?? query;
-    const finalBudget = overrides?.budget ?? budget;
-    const finalType = overrides?.type ?? propertyType;
-
-    // Prioritize hierarchical SEO URL for primary search parameters
-    const seoUrl = getSeoUrl(city, finalType, finalArea, finalBudget.label);
-    if (seoUrl) {
-      router.push(seoUrl);
-      setActiveSegment(null);
-      if (onSearch) onSearch();
-      return;
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch();
     }
-
-    // Fallback to query params only for complex filters not covered by SEO structure
-    const params = new URLSearchParams();
-    if (city) params.set('city', city);
-    if (finalArea) params.set('area', finalArea);
-    if (finalBudget.value > 0) params.set('budget', finalBudget.label);
-    if (finalType !== "Any Type") params.set('type', finalType);
-
-    router.push(`/explore?${params.toString()}`);
-    setActiveSegment(null);
-    if (onSearch) onSearch();
   };
 
   return (
@@ -144,9 +124,8 @@ export function HeaderSearch({
         {!isScrolled ? (
           <motion.div
             key="large-search"
-            initial={{ opacity: 0, y: -10 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
             className="w-full"
           >
             {/* LARGE SEARCH - PC VERSION (HIDDEN ON MOBILE) */}
@@ -164,7 +143,7 @@ export function HeaderSearch({
                   activeSegment === 'location' && "bg-white shadow-xl ring-1 ring-zinc-200"
                 )}
               >
-                <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Where to?</span>
+                <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Where?</span>
                 <div className="flex items-center w-full min-w-0">
                   <input 
                     ref={inputRef}
@@ -408,9 +387,8 @@ export function HeaderSearch({
           /* COMPACT NAVBAR SEARCH */
           <motion.div
             key="compact-search"
-            initial={{ opacity: 0, y: 10 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
             className="w-full flex justify-center"
           >
             <div className="hidden sm:flex items-center gap-2">
@@ -497,6 +475,7 @@ export function HeaderSearch({
                                       setSortOrder(cat.defaultOrder);
                                     }
                                     setIsSortOpen(false);
+                                    onSearch?.(); // Call onSearch after sorting
                                   }}
                                   className={cn(
                                     "flex w-full justify-between items-center rounded-xl px-3 py-2.5 text-left ty-caption font-bold transition-all",

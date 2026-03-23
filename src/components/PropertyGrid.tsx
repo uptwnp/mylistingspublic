@@ -10,7 +10,7 @@ import { useCallback } from 'react';
 import { useShortlist } from '@/context/ShortlistContext';
 
 export function PropertyGrid() {
-  const { selectedCity } = useShortlist();
+  const { selectedCity, cacheProperties } = useShortlist();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,6 +49,7 @@ export function PropertyGrid() {
       }
       
       setHasMore(properties.length + data.length < count);
+      if (data && data.length > 0) cacheProperties(data);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {

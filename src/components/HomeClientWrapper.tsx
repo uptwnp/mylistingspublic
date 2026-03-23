@@ -58,6 +58,13 @@ export function HomeClientWrapper({
       <ContinueExploringBanner />
 
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12 pt-8 pb-32 space-y-10 sm:space-y-16">
+        <PropertySection 
+          title={`Residential Plots for sale`} 
+          city={selectedCity}
+          type="Residential Plot" 
+          initialData={selectedCity === serverCity ? initialPlots : undefined}
+        />
+
         {recentlyVisitedIds.length > 0 && (
           <PropertyListSection
             title="Recently Visited"
@@ -79,13 +86,6 @@ export function HomeClientWrapper({
             propertyIds={savedIds}
           />
         )}
-
-        <PropertySection 
-          title={`Residential Plots for sale`} 
-          city={selectedCity}
-          type="Residential Plot" 
-          initialData={selectedCity === serverCity ? initialPlots : undefined}
-        />
 
         <PropertySection 
           title={`Apartments for sale`} 

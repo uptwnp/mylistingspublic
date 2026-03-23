@@ -48,9 +48,6 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
   return (
     <motion.div 
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.99 }}
       onClick={handleCardToggle}
@@ -60,7 +57,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
       )}
     >
       {/* Top Section - Always Visible */}
-      <motion.div layout className="flex items-center gap-4">
+      <div className="flex items-center gap-4">
         {/* Left Image/Icon Box */}
         <motion.div 
           layout
@@ -115,7 +112,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
         </motion.div>
 
         {/* Main Content Area */}
-        <motion.div layout className="flex flex-1 flex-col min-w-0 py-0.5">
+        <div className="flex flex-1 flex-col min-w-0 py-0.5">
           <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight truncate">
             {formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min)} {property.type}
           </h3>
@@ -144,9 +141,9 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
               </span>
             </div>
           )}
-        </motion.div>
+        </div>
 
-        <motion.div layout className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
+        <div className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
           <span className="px-2 sm:px-3 py-1 bg-zinc-100 rounded-full ty-micro font-black text-zinc-900 shadow-sm border border-zinc-200">
             {property.formatted_price || formatPrice(property.price_min)}
           </span>
@@ -158,8 +155,8 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
           >
             <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-400" />
           </motion.div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Expandable Area */}
       <AnimatePresence>
@@ -275,19 +272,18 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
 export function PropertyCardSkeleton() {
   return (
-    <div className="flex items-center gap-4 border border-zinc-100 bg-white p-3 rounded-[24px] shadow-sm relative overflow-hidden">
-      <div className="h-20 w-20 shrink-0 rounded-[18px] bg-zinc-100 shimmer-bg" />
-      <div className="flex flex-1 flex-col gap-2 py-1">
-        <div className="h-6 w-3/4 rounded-lg bg-zinc-100 shimmer-bg" />
-        <div className="h-4 w-1/2 rounded-md bg-zinc-50 shimmer-bg" />
-        <div className="h-4 w-2/3 rounded-md bg-zinc-50 shimmer-bg" />
-      </div>
-      <div className="flex h-20 flex-col items-end justify-between py-1 shrink-0">
-        <div className="flex gap-2">
-          <div className="h-9 w-9 rounded-full bg-zinc-50 shimmer-bg" />
-          <div className="h-9 w-9 rounded-full bg-zinc-50 shimmer-bg" />
+    <div className="flex flex-col border border-zinc-100 bg-white p-3 rounded-[24px] shadow-sm relative overflow-hidden">
+      <div className="flex items-center gap-4">
+        <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-[14px] sm:rounded-[18px] bg-zinc-100 shimmer-bg" />
+        <div className="flex flex-1 flex-col gap-2 py-1">
+          <div className="h-5 sm:h-6 w-3/4 rounded-lg bg-zinc-100 shimmer-bg" />
+          <div className="h-3.5 sm:h-4 w-1/2 rounded-md bg-zinc-50 shimmer-bg" />
+          <div className="h-3 sm:h-4 w-2/3 rounded-md bg-zinc-50 shimmer-bg" />
         </div>
-        <div className="h-6 w-16 rounded-full bg-zinc-50 shimmer-bg" />
+        <div className="flex h-16 sm:h-20 flex-col items-end justify-between py-1 shrink-0">
+          <div className="h-6 w-16 rounded-full bg-zinc-50 shimmer-bg" />
+          <div className="h-4 w-4 rounded-full bg-zinc-50 shimmer-bg" />
+        </div>
       </div>
     </div>
   );
