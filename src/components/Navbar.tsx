@@ -29,7 +29,8 @@ export default function Navbar() {
     minSize, setMinSize,
     maxSize, setMaxSize,
     selectedHighlights, setSelectedHighlights,
-    clearFilters
+    clearFilters,
+    closeAllModals
   } = useShortlist();
   const brand = useBrand();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -115,10 +116,25 @@ export default function Navbar() {
     if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
 
     // Prioritize hierarchical SEO URL for primary search parameters
+    const seoUrl = getSeoUrl(finalCity, finalType, finalArea, finalBudget.label);
+    if (seoUrl) {
+      const queryString = params.toString();
+      const url = queryString ? `${seoUrl}${queryString ? `?${queryString}` : ''}` : seoUrl;
+      router.push(url);
+      closeAllModals(true);
+      return;
+    }
+
+    // Fallback to traditional explore page
+    if (selectedCity) params.set('city', selectedCity);
+    if (finalArea) params.set('area', finalArea);
+    if (finalBudget.value > 0) params.set('budget', finalBudget.label);
+    if (finalType !== "Any Type") params.set('type', finalType);
+
     const url = `/explore?${params.toString()}`;
     router.push(url);
-    setIsFilterModalOpen(false);
-  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router]);
+    closeAllModals(true);
+  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, closeAllModals]);
 
   // Sync search state from URL
   useEffect(() => {
@@ -714,17 +730,13 @@ export default function Navbar() {
                 onClick={() => {
                   clearFilters();
                   handleApplyFilters();
-                  setTimeout(() => setIsMobileSearchOpen(false), 10);
                 }}
                 className="ty-caption font-black text-zinc-900 underline underline-offset-4"
               >
                 Clear all
               </button>
               <button 
-                onClick={() => {
-                  handleApplyFilters();
-                  setTimeout(() => setIsMobileSearchOpen(false), 10);
-                }}
+                onClick={() => handleApplyFilters()}
                 className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all active:scale-95"
               >
                 <Search className="h-4 w-4" strokeWidth={3} />

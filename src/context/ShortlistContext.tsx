@@ -93,6 +93,7 @@ interface ShortlistContextType {
   removeConsultationRequest: (id: string) => void;
   areaCenters: any[];
   loadAreaCentersOnce: () => Promise<void>;
+  closeAllModals: (skipHistory?: boolean) => void;
   isInitialized: boolean;
 }
 
@@ -290,9 +291,18 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       isContactFormOpen
     ].filter(Boolean).length;
 
-    const handlePopState = () => {
+    const handlePopState = (event: PopStateEvent) => {
       if (modalHistoryRef.current.isInternal) {
         modalHistoryRef.current.isInternal = false;
+        return;
+      }
+
+      // If we land on a "modal" state but no modals are actually open, 
+      // it means we're passing through a stale history state from a previous jump.
+      // Automatically go back one more time to reach the original page.
+      if (!openModals && event.state?.modal) {
+        modalHistoryRef.current.isInternal = true;
+        window.history.back();
         return;
       }
 
@@ -467,6 +477,17 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     setConsultationRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
   };
 
+  const closeAllModals = (skipHistory = false) => {
+    if (skipHistory) {
+      modalHistoryRef.current.pushed = 0;
+    }
+    setIsFilterModalOpen(false);
+    setActiveSelectionSheet(null);
+    setIsMobileSearchOpen(false);
+    setInquiryProperty(null);
+    setIsContactFormOpen(false);
+  };
+
   const removeConsultationRequest = (id: string) => {
     setConsultationRequests(prev => prev.filter(r => r.id !== id));
   };
@@ -528,6 +549,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       removeConsultationRequest,
       areaCenters,
       loadAreaCentersOnce,
+      closeAllModals,
       isInitialized: mounted,
     }}>
       {children}
