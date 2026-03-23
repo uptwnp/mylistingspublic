@@ -49,7 +49,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
   return (
     <motion.div 
       whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.99 }}
+      whileTap={{ scale: 0.98 }}
       onClick={handleCardToggle}
       className={cn(
         "group relative flex flex-col border bg-white p-3 rounded-[24px] shadow-sm cursor-pointer overflow-hidden",
@@ -220,7 +220,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                         }
                       }
                     }}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-95"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-[0.98]"
                   >
                     <Share2 className="h-5 w-5" />
                   </button>
@@ -251,7 +251,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
                   <button 
                     className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-90",
+                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-[0.98]",
                       saved 
                         ? "text-rose-500 bg-rose-50 border-rose-100" 
                         : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"

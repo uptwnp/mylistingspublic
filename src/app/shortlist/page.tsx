@@ -228,14 +228,14 @@ export default function ShortlistPage() {
                                         });
                                         setEditingNoteId(null);
                                       }}
-                                      className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white transition-all active:scale-95"
+                                      className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white transition-all active:scale-[0.98]"
                                     >
                                       <Check className="h-3 w-3" strokeWidth={3} />
                                       Save Note
                                     </button>
                                     <button
                                       onClick={() => setEditingNoteId(null)}
-                                      className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-[10px] font-bold text-zinc-500 transition-all hover:bg-zinc-50 active:scale-95"
+                                      className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-[10px] font-bold text-zinc-500 transition-all hover:bg-zinc-50 active:scale-[0.98]"
                                     >
                                       <X className="h-3 w-3" />
                                       Cancel
@@ -258,7 +258,7 @@ export default function ShortlistPage() {
                                       setNoteText(inquiries[property.property_id]?.question || '');
                                       setEditingNoteId(property.property_id);
                                     }}
-                                    className="shrink-0 flex items-center gap-1 rounded-lg border border-blue-100 bg-white px-2 py-1 text-[9px] font-bold text-blue-500 shadow-sm transition-all hover:border-blue-200 active:scale-95"
+                                    className="shrink-0 flex items-center gap-1 rounded-lg border border-blue-100 bg-white px-2 py-1 text-[9px] font-bold text-blue-500 shadow-sm transition-all hover:border-blue-200 active:scale-[0.98]"
                                   >
                                     <Pencil className="h-2.5 w-2.5" />
                                     Edit

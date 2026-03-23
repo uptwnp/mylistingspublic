@@ -115,13 +115,13 @@ export function MiniImageCarousel({ images, alt, onTap }: MiniImageCarouselProps
           <div className="absolute inset-0 z-20 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={prev}
-              className="flex h-6 w-6 items-center justify-center rounded-r-full bg-white/80 text-zinc-900 shadow-sm transition-all hover:bg-white active:scale-95"
+              className="flex h-6 w-6 items-center justify-center rounded-r-full bg-white/80 text-zinc-900 shadow-sm transition-all hover:bg-white active:scale-[0.98]"
             >
               <ChevronLeft className="h-3 w-3" />
             </button>
             <button
               onClick={next}
-              className="flex h-6 w-6 items-center justify-center rounded-l-full bg-white/80 text-zinc-900 shadow-sm transition-all hover:bg-white active:scale-95"
+              className="flex h-6 w-6 items-center justify-center rounded-l-full bg-white/80 text-zinc-900 shadow-sm transition-all hover:bg-white active:scale-[0.98]"
             >
               <ChevronRight className="h-3 w-3" />
             </button>

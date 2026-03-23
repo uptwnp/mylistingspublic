@@ -95,7 +95,7 @@ export function FilterModal({
                 </div>
                 <button
                   onClick={onClose}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-all hover:bg-zinc-200 active:scale-90"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-all hover:bg-zinc-200 active:scale-[0.98]"
                 >
                   <X className="h-5 w-5" />
                 </button>

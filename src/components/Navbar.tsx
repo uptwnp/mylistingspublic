@@ -200,25 +200,30 @@ export default function Navbar() {
     }
   }, [pathname, searchParams]);
 
-  // Auto-apply when on Explore page
+  // Auto-apply when on Explore or SEO property pages
   useEffect(() => {
-    if (pathname === '/explore') {
+    const isStandardExplore = pathname === '/explore' || pathname === '/map';
+    const isSeoPage = !!parseSeoSlug(pathname.slice(1));
+
+    if (isStandardExplore || isSeoPage) {
       // Avoid recursive updates: only push if state changed from URL
-      const areaInUrl = searchParams.get('area') || '';
-      const budgetInUrl = searchParams.get('budget') || 'Any Budget';
-      const typeInUrl = searchParams.get('type') || 'Any Type';
-      const keywordsInUrl = searchParams.get('keywords') || '';
-      const minSizeInUrl = searchParams.get('minSize') || '';
-      const maxSizeInUrl = searchParams.get('maxSize') || '';
-      const highlightsInUrl = searchParams.get('highlights') || '';
+      const seoData = parseSeoSlug(pathname.slice(1));
+      
+      const areaInUrl = (seoData?.area || searchParams.get('area') || '').trim();
+      const budgetInUrl = (seoData?.budget || searchParams.get('budget') || 'Any Budget').trim();
+      const typeInUrl = (seoData?.type || searchParams.get('type') || 'Any Type').trim();
+      const keywordsInUrl = (searchParams.get('q') || searchParams.get('keywords') || '').trim();
+      const minSizeInUrl = (searchParams.get('minSize') || '').trim();
+      const maxSizeInUrl = (searchParams.get('maxSize') || '').trim();
+      const highlightsInUrl = (searchParams.get('highlights') || '').trim();
       
       const isDifferent = 
-        query !== areaInUrl || 
-        budget.label !== budgetInUrl || 
-        propertyType !== typeInUrl ||
-        keywords !== keywordsInUrl ||
-        minSize !== minSizeInUrl ||
-        maxSize !== maxSizeInUrl ||
+        query.trim() !== areaInUrl || 
+        budget.label.trim() !== budgetInUrl || 
+        propertyType.trim() !== typeInUrl ||
+        keywords.trim() !== keywordsInUrl ||
+        minSize.toString().trim() !== minSizeInUrl ||
+        maxSize.toString().trim() !== maxSizeInUrl ||
         selectedHighlights.join(',') !== highlightsInUrl;
         
       if (isDifferent) {
@@ -226,6 +231,7 @@ export default function Navbar() {
       }
     }
   }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname, searchParams]);
+
 
   const additionalFiltersCount = [
     keywords,
@@ -266,7 +272,7 @@ export default function Navbar() {
             {/* Left Section: Logo & Mobile Search Trigger */}
             <div className="flex flex-1 items-center gap-0 sm:gap-6 min-w-0">
               <div className="flex items-center gap-2 group shrink-0">
-                <Link href="/" className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
+                <Link href="/" className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-all hover:scale-105 ">
                   <Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </Link>
 
@@ -288,7 +294,7 @@ export default function Navbar() {
                             e.stopPropagation(); 
                             handleApplyFilters(); 
                           }}
-                          className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-90 transition-transform cursor-pointer"
+                          className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-[0.98] transition-transform cursor-pointer"
                         >
                           <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
                         </div>
@@ -368,7 +374,7 @@ export default function Navbar() {
                         )}
                         suppressHydrationWarning={true}
                       >
-                        <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
+                        <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 ", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
                         <span className="ty-micro font-bold">{tabCity}</span>
                         {selectedCity === tabCity && (
                           <div 
@@ -385,7 +391,7 @@ export default function Navbar() {
                         )}
                         suppressHydrationWarning={true}
                       >
-                        <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
+                        <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 active:scale-[0.98]", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
                         <div className="relative flex items-center justify-center">
                           <span className="ty-micro font-bold leading-none">
                             {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
@@ -445,7 +451,7 @@ export default function Navbar() {
               <div className="relative" ref={menuRef}>
                 <div 
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-shadow hover:shadow-md cursor-pointer ml-1"
+                  className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-all hover:shadow-md cursor-pointer ml-1 "
                 >
                   <AnimatePresence mode="popLayout" initial={false}>
                     { (shortlistItems.length > 0 || !isMobile) ? (
@@ -510,7 +516,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Home className="h-4 w-4 text-zinc-400" />
+                          <Home className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
                           Sell Property
                         </Link>
                         <Link 
@@ -596,7 +602,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-50">
               <button 
                 onClick={() => setIsMobileSearchOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-100 text-zinc-900 shadow-sm transition-all active:scale-90"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-100 text-zinc-900 shadow-sm transition-all active:scale-[0.98]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -732,7 +738,7 @@ export default function Navbar() {
               </button>
               <button 
                 onClick={() => handleApplyFilters()}
-                className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all active:scale-95"
+                className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all "
               >
                 <Search className="h-4 w-4" strokeWidth={3} />
                 <span>Search</span>
@@ -764,7 +770,11 @@ export default function Navbar() {
         selectedValue={budget}
         onSelect={(val) => {
           setBudget(val);
-          setTimeout(() => setActiveSelectionSheet('type'), 100);
+          if (isMobileSearchOpen) {
+            setTimeout(() => setActiveSelectionSheet('type'), 100);
+          } else {
+            setActiveSelectionSheet(null);
+          }
         }}
       />
 
@@ -792,11 +802,15 @@ export default function Navbar() {
         data={allAreas}
         onSelect={(val) => {
           setQuery(val);
-          setTimeout(() => setActiveSelectionSheet('budget'), 100);
+          if (isMobileSearchOpen) {
+            setTimeout(() => setActiveSelectionSheet('budget'), 100);
+          } else {
+            setActiveSelectionSheet(null);
+          }
         }}
       />
 
-      {/* Fixed Bottom Category Filters (Mobile Only) */}
     </>
   );
 }
+

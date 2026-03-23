@@ -192,20 +192,33 @@ function MapController({ selectedProperty, zoomLevel, properties, areaCenters }:
     if (selectedProperty && selectedProperty.property_id !== prevPropertyIdRef.current) {
       const coords = getPropertyCoords(selectedProperty, properties, areaCenters);
       
+      // Defensive check: Ensure we have valid numeric coordinates before calling Leaflet
+      if (!coords || isNaN(coords[0]) || isNaN(coords[1])) {
+        console.error('MapController: Invalid coordinates for property', selectedProperty.property_id, coords);
+        return;
+      }
+
       // Intelligent zoom logic:
       // If the property is already visible in the current view, don't zoom out.
       // Simply pan to it at the current zoom level.
-      const currentBounds = map.getBounds();
-      const isAlreadyVisible = currentBounds.contains(L.latLng(coords[0], coords[1]));
-      
-      const targetZoom = isAlreadyVisible ? Math.max(map.getZoom(), zoomLevel) : zoomLevel;
+      try {
+        const currentBounds = map.getBounds();
+        const latLng = L.latLng(coords[0], coords[1]);
+        const isAlreadyVisible = currentBounds.contains(latLng);
+        
+        const currentZoom = map.getZoom();
+        const safeZoom = isNaN(currentZoom) ? zoomLevel : currentZoom;
+        const targetZoom = isAlreadyVisible ? Math.max(safeZoom, zoomLevel) : zoomLevel;
 
-      map.flyTo(coords, targetZoom, { 
-        animate: true, 
-        duration: isAlreadyVisible ? 0.8 : 1.5, // Faster flight if already on screen
-        easeLinearity: 0.25
-      });
-      prevPropertyIdRef.current = selectedProperty.property_id;
+        map.flyTo(coords, targetZoom, { 
+          animate: true, 
+          duration: isAlreadyVisible ? 0.8 : 1.5, // Faster flight if already on screen
+          easeLinearity: 0.25
+        });
+        prevPropertyIdRef.current = selectedProperty.property_id;
+      } catch (err) {
+        console.error('Map flyTo failed:', err);
+      }
     } else if (!selectedProperty && prevPropertyIdRef.current !== null) {
       prevPropertyIdRef.current = null;
     }
@@ -288,7 +301,7 @@ function MapControls({
           <button 
             onClick={handleZoomIn}
             title="Zoom In"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
+            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
             <Plus className="h-5 w-5 text-zinc-900" />
           </button>
@@ -298,7 +311,7 @@ function MapControls({
           <button 
             onClick={handleZoomOut}
             title="Zoom Out"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
+            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
             <Minus className="h-5 w-5 text-zinc-900" />
           </button>
@@ -308,7 +321,7 @@ function MapControls({
           <button 
             onClick={handleGPS}
             title="My Location"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-90"
+            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
             <Locate className="h-5 w-5 text-zinc-900" />
           </button>
@@ -323,7 +336,7 @@ function MapControls({
         <button 
           onClick={() => setIsSatellite(!isSatellite)}
           title={isSatellite ? "Show Map" : "Show Satellite"}
-          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-95"
+          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-[0.98]"
         >
           {isSatellite ? <MapIcon className="h-5 w-5 text-zinc-900" /> : <Satellite className="h-5 w-5 text-zinc-900" />}
         </button>
@@ -667,7 +680,7 @@ export default function MapComponent({
                   e.stopPropagation();
                   onSelectProperty(null);
                 }}
-                className="absolute -top-2 -right-2 z-[1002] flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white shadow-xl transition-all hover:scale-110 active:scale-90 border-2 border-white"
+                className="absolute -top-2 -right-2 z-[1002] flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white shadow-xl transition-all hover:scale-110 active:scale-[0.98] border-2 border-white"
               >
                 <X className="h-3.5 w-3.5" />
               </button>

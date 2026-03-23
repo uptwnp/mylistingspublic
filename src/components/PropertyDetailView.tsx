@@ -234,7 +234,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                                 e.stopPropagation();
                                 setIsPhotoModalOpen(true);
                               }}
-                              className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-95 transition-all cursor-pointer"
+                              className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-[0.98] transition-all cursor-pointer"
                             >
                               Request more photos
                             </button>
@@ -250,7 +250,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                           e.stopPropagation();
                           paginate(-1);
                         }}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-xl backdrop-blur-md transition-all hover:bg-white active:scale-90 pointer-events-auto border border-zinc-100"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-xl backdrop-blur-md transition-all hover:bg-white active:scale-[0.98] pointer-events-auto border border-zinc-100"
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </button>
@@ -259,7 +259,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                           e.stopPropagation();
                           paginate(1);
                         }}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-xl backdrop-blur-md transition-all hover:bg-white active:scale-90 pointer-events-auto border border-zinc-100"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-zinc-900 shadow-xl backdrop-blur-md transition-all hover:bg-white active:scale-[0.98] pointer-events-auto border border-zinc-100"
                       >
                         <ChevronRight className="h-5 w-5" />
                       </button>
@@ -282,7 +282,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                           setHeroImageIndex(i);
                         }}
                         className={cn(
-                          "relative h-12 w-16 overflow-hidden rounded-lg border-2 transition-all active:scale-95",
+                          "relative h-12 w-16 overflow-hidden rounded-lg border-2 transition-all active:scale-[0.98]",
                           heroImageIndex === i ? "border-white shadow-lg" : "border-transparent opacity-50 hover:opacity-100"
                         )}
                       >
@@ -307,7 +307,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                     <div className="text-center mt-4">
                       <p className="ty-title font-bold text-zinc-900">No photos available</p>
                       <p className="mt-2 ty-caption text-zinc-500 max-w-sm mb-6">Owner has restricted public photos. You can request exclusive access.</p>
-                      <button className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-95">
+                      <button className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-[0.98]">
                         Request photos
                       </button>
                     </div>
@@ -485,7 +485,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                     <p className="ty-label text-zinc-400">Listing Type</p>
-                    <p className="ty-caption font-bold text-zinc-900">Direct Listing</p>
+                    <p className="ty-caption font-bold text-zinc-900">Preferred</p>
                 </div>
                 <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                     <ShieldCheck className="h-6 w-6" />

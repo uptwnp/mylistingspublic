@@ -128,7 +128,7 @@ export function SelectionBottomSheet({
                 <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 active:scale-90"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 active:scale-[0.98]"
                 >
                   <X className="h-4 w-4" />
                 </button>

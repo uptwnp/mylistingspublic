@@ -328,7 +328,7 @@ export function HeaderSearch({
 
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleSearch(); }}
-                  className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition-all shadow-lg hover:bg-blue-700 active:scale-95 ml-2"
+                  className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition-all shadow-lg hover:bg-blue-700  ml-2"
                 >
                   <Search className="h-6 w-6" strokeWidth={3} />
                 </button>
@@ -410,7 +410,7 @@ export function HeaderSearch({
                     e.stopPropagation(); 
                     handleSearch(); 
                   }}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white ml-2 transition-transform active:scale-90 hover:bg-blue-700"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white ml-2 transition-transform  hover:bg-blue-700"
                 >
                   <Search className="h-4 w-4" strokeWidth={3} />
                 </div>
@@ -436,7 +436,7 @@ export function HeaderSearch({
                         e.stopPropagation();
                         setIsSortOpen(!isSortOpen);
                       }}
-                      className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white h-10 px-4 whitespace-nowrap shrink-0 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 shadow-md hover:shadow-lg"
+                      className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white h-10 px-4 whitespace-nowrap shrink-0 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50  shadow-md hover:shadow-lg"
                     >
                       {(() => {
                         const allSortCategories = [...SORT_CATEGORIES, ...NEARBY_SORT_CATEGORY];
@@ -509,7 +509,7 @@ export function HeaderSearch({
                   e.stopPropagation(); 
                   handleSearch(); 
                 }}
-                className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-90 transition-transform cursor-pointer"
+                className="flex h-6 w-6 items-center justify-center -ml-1  transition-transform cursor-pointer"
               >
                 <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
               </div>

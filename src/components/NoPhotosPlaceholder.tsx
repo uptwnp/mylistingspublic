@@ -131,7 +131,7 @@ export function NoPhotosPlaceholder({
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
           onClick={onClick}
-          className="group flex items-center gap-2 rounded-full border border-white bg-white px-4 py-1.5 shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
+          className="group flex items-center gap-2 rounded-full border border-white bg-white px-4 py-1.5 shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-[0.98]"
           style={{ boxShadow: `0 4px 20px -5px ${primaryColor}30` }}
         >
           <span 

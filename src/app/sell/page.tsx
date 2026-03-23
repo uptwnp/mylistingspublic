@@ -9,7 +9,7 @@ export const runtime = 'edge';
 
 export default function SellPropertyPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <main className="min-h-screen">
       {/* 
           This page is now a Server Component. 
           The marketing text above the fold will be cached and served instantly by Vercel.
@@ -21,9 +21,9 @@ export default function SellPropertyPage() {
           Additional Static Marketing / About sections can go here 
           to be indexed and cached even faster.
       */}
-      <section className="py-12 border-t border-zinc-100 text-center bg-zinc-50/50">
+      <footer className="py-12 border-t border-zinc-100 text-center bg-zinc-50/50">
          <p className="ty-micro font-bold text-zinc-400 uppercase tracking-[0.2em]">Verified Property Network &copy; 2026</p>
-      </section>
-    </div>
+      </footer>
+    </main>
   );
 }

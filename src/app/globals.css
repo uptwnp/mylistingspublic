@@ -63,13 +63,13 @@
 ───────────────────────────────────────────── */
 :root {
   /* ── Text Sizes ── */
-  --text-hero:     22px;  /* h1 on hero/sell pages         */
-  --text-display:  19px;  /* section titles, page headings */
-  --text-title:    16px;  /* card/section sub-headers      */
-  --text-subtitle: 14px;  /* supporting headings           */
-  --text-body:     13px;  /* general body copy             */
-  --text-caption:  11px;  /* secondary info, meta text     */
-  --text-label:    10px;  /* uppercase tracking labels     */
+  --text-hero:     28px;  /* h1 on hero/sell pages         */
+  --text-display:  22px;  /* section titles, page headings */
+  --text-title:    18px;  /* card/section sub-headers      */
+  --text-subtitle: 15px;  /* supporting headings           */
+  --text-body:     14px;  /* general body copy             */
+  --text-caption:  12px;  /* secondary info, meta text     */
+  --text-label:    11px;  /* uppercase tracking labels     */
   --text-micro:     9px;  /* tiny badges, counters         */
 
   /* ── Font Colors ── */
@@ -92,23 +92,25 @@
 /* Desktop overrides — sm breakpoint (≥ 640px) */
 @media (min-width: 640px) {
   :root {
-    --text-hero:     38px;
-    --text-display:  26px;
-    --text-title:    19px;
-    --text-subtitle: 15px;
-    --text-body:     14px;
-    --text-caption:  12px;
-    --text-label:    10px;
-    --text-micro:     9px;
+    --text-hero:     42px;
+    --text-display:  30px;
+    --text-title:    22px;
+    --text-subtitle: 16px;
+    --text-body:     15px;
+    --text-caption:  13px;
+    --text-label:    11px;
+    --text-micro:     10px;
   }
 }
 
 /* Large desktop — lg breakpoint (≥ 1024px) */
 @media (min-width: 1024px) {
   :root {
-    --text-hero:     42px;
-    --text-display:  30px;
-    --text-title:    20px;
+    --text-hero:     52px;
+    --text-display:  38px;
+    --text-title:    24px;
+    --text-subtitle: 17px;
+    --text-body:     16px;
   }
 }
 
@@ -128,6 +130,7 @@
 
 /* ─────────────────────────────────────────────
    BASE
+   (Global transitions removed to allow component-specific control)
 ───────────────────────────────────────────── */
 body {
   background: var(--background);
@@ -158,13 +161,13 @@ input[type="radio"],
 .property-card-interactive {
   cursor: pointer !important;
   touch-action: manipulation;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.1s ease-out;
 }
 
 button:active, 
 a:active, 
 .cursor-pointer:active {
-  transform: scale(0.94);
+  transform: scale(0.96);
   transition: transform 0.05s ease-out;
 }
 

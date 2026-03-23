@@ -40,7 +40,7 @@ export function HomeClientWrapper({
         <div className="mt-8 px-0">
           <button
             onClick={() => setIsMobileSearchOpen(true)}
-            className="flex w-full items-center gap-4 rounded-[32px] border border-zinc-200/80 bg-white p-4 shadow-2xl shadow-zinc-200/60 transition-all hover:scale-[1.02] active:scale-95 text-left"
+            className="flex w-full items-center gap-4 rounded-[32px] border border-zinc-200/80 bg-white p-4 shadow-2xl shadow-zinc-200/60 transition-all hover:scale-[1.02] active:scale-[0.98] text-left"
           >
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
               <Search className="h-5 w-5" strokeWidth={3} />

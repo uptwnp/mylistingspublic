@@ -67,7 +67,7 @@ export function ContinueExploringBanner() {
     <div className="flex w-full justify-center px-4 sm:px-0 py-2 sm:py-4">
       <Link 
         href={searchUrl}
-        className="flex items-center gap-2 sm:gap-4 rounded-full border border-zinc-200/80 bg-white p-2 pl-6 sm:pl-8 shadow-xl shadow-black-[0.03] transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/5 hover:border-zinc-300 active:scale-95 group max-w-fit"
+        className="flex items-center gap-2 sm:gap-4 rounded-full border border-zinc-200/80 bg-white p-2 pl-6 sm:pl-8 shadow-xl shadow-black-[0.03] transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/5 hover:border-zinc-300 active:scale-[0.98] group max-w-fit"
       >
         <div className="flex items-center gap-2 sm:gap-3 py-1">
              <span className="text-sm sm:text-base font-bold text-zinc-900 tracking-tight capitalize">

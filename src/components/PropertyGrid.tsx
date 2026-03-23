@@ -112,7 +112,7 @@ export function PropertyGrid() {
               key={type}
               onClick={() => setSelectedType(type)}
               className={cn(
-                "whitespace-nowrap rounded-full px-5 py-2.5 text-xs font-bold tracking-tight transition-all active:scale-95",
+                "whitespace-nowrap rounded-full px-5 py-2.5 text-xs font-bold tracking-tight transition-all active:scale-[0.98]",
                 selectedType === type
                   ? "bg-zinc-900 text-white shadow-lg"
                   : "bg-white text-zinc-500 border border-zinc-100 hover:border-zinc-200"

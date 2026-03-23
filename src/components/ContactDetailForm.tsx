@@ -76,7 +76,7 @@ export function ContactDetailForm() {
               </div>
               <button
                 onClick={() => setIsContactFormOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 active:scale-90 hover:bg-zinc-200 transition-colors"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 active:scale-[0.98] hover:bg-zinc-200 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>

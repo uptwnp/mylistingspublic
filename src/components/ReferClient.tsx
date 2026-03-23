@@ -21,7 +21,7 @@ export function ReferClient() {
           <p className="ty-subtitle font-medium text-zinc-400 mb-3 max-w-md mx-auto leading-relaxed">
             We share <span className="text-zinc-900 font-bold">25% of our earnings</span> just for sharing the contact info of a potential buyer or seller.
           </p>
-          <a href={`https://wa.me/919518091945?text=${wa}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 rounded-[28px] bg-zinc-900 px-12 py-5 ty-title font-bold text-white shadow-2xl transition-all hover:bg-black hover:scale-[1.04] active:scale-95">
+          <a href={`https://wa.me/919518091945?text=${wa}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 rounded-[28px] bg-zinc-900 px-12 py-5 ty-title font-bold text-white shadow-2xl transition-all hover:bg-black hover:scale-[1.04] active:scale-[0.98]">
             <MessageCircle className="h-5 w-5" /> Join Free on WhatsApp
           </a>
         </motion.div>
@@ -76,8 +76,8 @@ export function ReferClient() {
       <section className="py-28 px-4 sm:px-6 text-center">
         <h2 className="ty-display font-black text-zinc-900 uppercase tracking-tighter mb-10">Start Referring Today.</h2>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href={`https://wa.me/919518091945?text=${wa}`} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-[28px] bg-zinc-900 px-12 py-5 ty-title font-bold text-white shadow-2xl transition-all hover:bg-black active:scale-95"><MessageCircle className="h-5 w-5" /> WhatsApp Us</a>
-          <a href="tel:+919518091945" className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full border border-zinc-200 bg-white px-10 py-5 ty-caption font-bold text-zinc-900 hover:bg-zinc-50 transition-colors active:scale-95"><Phone className="h-4 w-4 text-zinc-400" /> Call Us</a>
+          <a href={`https://wa.me/919518091945?text=${wa}`} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-[28px] bg-zinc-900 px-12 py-5 ty-title font-bold text-white shadow-2xl transition-all hover:bg-black active:scale-[0.98]"><MessageCircle className="h-5 w-5" /> WhatsApp Us</a>
+          <a href="tel:+919518091945" className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full border border-zinc-200 bg-white px-10 py-5 ty-caption font-bold text-zinc-900 hover:bg-zinc-50 transition-colors active:scale-[0.98]"><Phone className="h-4 w-4 text-zinc-400" /> Call Us</a>
         </div>
         <p className="mt-8 ty-micro text-zinc-400 uppercase tracking-widest">Eligibility: Buyer Budget or Property Value above ₹1 Cr</p>
       </section>

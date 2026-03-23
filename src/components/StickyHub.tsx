@@ -52,7 +52,7 @@ export function StickyHub() {
         >
           <Link 
             href="/shortlist"
-            className="flex items-center gap-4 rounded-full bg-zinc-900/90 hover:bg-zinc-900 px-6 py-3.5 text-white shadow-[0_20px_40px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all hover:scale-105 active:scale-95 border border-white/10"
+            className="flex items-center gap-4 rounded-full bg-zinc-900/90 hover:bg-zinc-900 px-6 py-3.5 text-white shadow-[0_20px_40px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all hover:scale-105 active:scale-[0.98] border border-white/10"
           >
             <div className="flex items-center gap-5">
               <div className="relative">
@@ -75,7 +75,7 @@ export function StickyHub() {
                 e.stopPropagation();
                 setIsVisible(false);
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-full transition-all hover:bg-white/10 active:scale-90"
+              className="flex h-8 w-8 items-center justify-center rounded-full transition-all hover:bg-white/10 active:scale-[0.98]"
             >
               {isIconHovered ? (
                 <X className="h-4 w-4 text-zinc-400" />
