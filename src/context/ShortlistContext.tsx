@@ -240,6 +240,10 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem(CITY_KEY, selectedCity);
+    // Also set a cookie so the server can read it for pre-fetching
+    if (typeof document !== 'undefined') {
+      document.cookie = `${CITY_KEY}=${selectedCity}; path=/; max-age=31536000; SameSite=Lax`;
+    }
   }, [selectedCity]);
 
   useEffect(() => {

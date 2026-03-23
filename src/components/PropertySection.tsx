@@ -12,12 +12,13 @@ interface PropertySectionProps {
   title: string;
   city: string;
   type: string;
+  initialData?: { data: Property[], count: number };
 }
 
-export function PropertySection({ title, city, type }: PropertySectionProps) {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasEntered, setHasEntered] = useState(false);
+export function PropertySection({ title, city, type, initialData }: PropertySectionProps) {
+  const [properties, setProperties] = useState<Property[]>(initialData?.data || []);
+  const [loading, setLoading] = useState(!initialData);
+  const [hasEntered, setHasEntered] = useState(!!initialData);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
