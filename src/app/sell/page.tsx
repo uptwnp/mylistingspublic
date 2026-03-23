@@ -34,7 +34,8 @@ import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 import { useBrand } from '@/context/BrandContext';
 
-import { getAreas, getCities, submitPropertyForSale } from '@/lib/supabase';
+import { getAreas, getCities } from '@/lib/supabase';
+import { submitPropertyForSaleAction } from '@/app/actions/leads';
 import dynamic from 'next/dynamic';
 
 // Map component for location picking (Dynamic)
@@ -102,7 +103,7 @@ export default function SellPropertyPage() {
       
       setIsSubmitting(true);
       try {
-        await submitPropertyForSale(formData, contactDetails);
+        await submitPropertyForSaleAction(formData, contactDetails);
         setIsSubmitted(true);
       } catch (error) {
         console.error('Submission failed:', error);

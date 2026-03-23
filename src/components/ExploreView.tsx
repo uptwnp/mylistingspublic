@@ -66,8 +66,12 @@ export function ExploreView({
     shortlistItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
     setActiveSelectionSheet, setKeywords, setMinSize, setMaxSize, 
     setSelectedHighlights, clearFilters, userLocation, setUserLocation,
-    sortField, sortOrder, setSortField, setSortOrder, areaCenters
+    sortField, sortOrder, setSortField, setSortOrder, areaCenters, loadAreaCentersOnce
   } = useShortlist();
+
+  useEffect(() => {
+    loadAreaCentersOnce();
+  }, [loadAreaCentersOnce]);
 
   // Re-derive active category from context strings:
   const allSortCategories = [...SORT_CATEGORIES, ...NEARBY_SORT_CATEGORY];

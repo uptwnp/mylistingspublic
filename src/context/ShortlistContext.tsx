@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { syncShortlist, submitConsultationRequest, getAreaCenters } from '@/lib/supabase';
+import { getAreaCenters } from '@/lib/supabase';
+import { syncShortlistAction, submitConsultationRequestAction } from '@/app/actions/leads';
 
 import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
 
@@ -91,6 +92,7 @@ interface ShortlistContextType {
   updateConsultationRequest: (id: string, updates: Partial<ConsultationRequest>) => void;
   removeConsultationRequest: (id: string) => void;
   areaCenters: any[];
+  loadAreaCentersOnce: () => Promise<void>;
 }
 
 const ShortlistContext = createContext<ShortlistContextType | undefined>(undefined);
@@ -105,6 +107,7 @@ const CONTACT_KEY = 'dealer_network_contact_details';
 const REQUESTS_KEY = 'dealer_network_consultation_requests';
 
 export function ShortlistProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const [shortlistItems, setShortlistItems] = useState<string[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [recentlyVisitedIds, setRecentlyVisitedIds] = useState<string[]>([]);
@@ -137,11 +140,15 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize from localStorage on mount
   useEffect(() => {
+    setMounted(true);
     const savedCart = localStorage.getItem(CART_KEY);
     const savedProps = localStorage.getItem(SAVED_KEY);
+    const savedRecent = localStorage.getItem(RECENT_KEY);
     const savedCity = localStorage.getItem(CITY_KEY);
     const savedInquiries = localStorage.getItem(INQUIRIES_KEY);
     const savedFilters = localStorage.getItem(FILTERS_KEY);
+    const savedContact = localStorage.getItem(CONTACT_KEY);
+    const savedRequests = localStorage.getItem(REQUESTS_KEY);
     
     if (savedCart) {
       try { setShortlistItems(JSON.parse(savedCart)); } catch (e) { console.error(e); }
@@ -149,7 +156,6 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     if (savedProps) {
       try { setSavedIds(JSON.parse(savedProps)); } catch (e) { console.error(e); }
     }
-    const savedRecent = localStorage.getItem(RECENT_KEY);
     if (savedRecent) {
       try { setRecentlyVisitedIds(JSON.parse(savedRecent)); } catch (e) { console.error(e); }
     }
@@ -159,16 +165,10 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     if (savedInquiries) {
       try { 
         const parsed = JSON.parse(savedInquiries);
-        // Migration logic for old string-based inquiries
         const migrated: Record<string, InquiryData> = {};
         Object.entries(parsed).forEach(([id, val]) => {
           if (typeof val === 'string') {
-            migrated[id] = {
-              wantSiteVisit: false,
-              interestedInPurchase: false,
-              haveQuestion: true,
-              question: val
-            };
+            migrated[id] = { wantSiteVisit: false, interestedInPurchase: false, haveQuestion: true, question: val };
           } else {
             migrated[id] = val as InquiryData;
           }
@@ -188,11 +188,16 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
         if (f.selectedHighlights !== undefined) setSelectedHighlights(f.selectedHighlights);
       } catch (e) { console.error(e); }
     }
+    if (savedContact) {
+      try { setContactDetailsState(JSON.parse(savedContact)); } catch (e) { console.error(e); }
+    }
+    if (savedRequests) {
+      try { setConsultationRequests(JSON.parse(savedRequests)); } catch (e) { console.error(e); }
+    }
     
     // Check for shared shortlist in URL
     const searchParams = new URLSearchParams(window.location.search);
     const sharedShortlist = searchParams.get('shortlist');
-    
     if (sharedShortlist) {
       try {
         const ids = sharedShortlist.split(',').filter(id => id.trim() !== '');
@@ -205,22 +210,14 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to parse shared shortlist', e);
       }
     }
-
-    const savedContact = localStorage.getItem(CONTACT_KEY);
-    if (savedContact) {
-      try { setContactDetailsState(JSON.parse(savedContact)); } catch (e) { console.error(e); }
-    }
-
-    const savedRequests = localStorage.getItem(REQUESTS_KEY);
-    if (savedRequests) {
-      try { setConsultationRequests(JSON.parse(savedRequests)); } catch (e) { console.error(e); }
-    }
-
-    // Fetch master area centers
-    getAreaCenters().then(data => {
-      if (data) setAreaCenters(data);
-    });
   }, []);
+
+  const loadAreaCentersOnce = React.useCallback(async () => {
+    if (areaCenters.length === 0) {
+      const data = await getAreaCenters();
+      if (data) setAreaCenters(data);
+    }
+  }, [areaCenters.length]);
 
   // Update localStorage when state changes
   useEffect(() => {
@@ -272,7 +269,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     if (contactDetails) {
       const sync = async () => {
         try {
-          await syncShortlist(contactDetails, shortlistItems, inquiries);
+          await syncShortlistAction(contactDetails, shortlistItems, inquiries);
         } catch (e) {
           console.error('Visitor sync failed:', e);
         }
@@ -371,8 +368,8 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     };
     setConsultationRequests([newRequest]);
 
-    // Also sync to Supabase (Lead generation)
-    submitConsultationRequest(newRequest).catch(e => console.error('Supabase lead sync failed', e));
+    // Also sync to Supabase (Lead generation) via Server Action
+    submitConsultationRequestAction(newRequest).catch(e => console.error('Supabase lead sync failed', e));
   };
 
   const updateConsultationRequest = (id: string, updates: Partial<ConsultationRequest>) => {
@@ -439,6 +436,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       updateConsultationRequest,
       removeConsultationRequest,
       areaCenters,
+      loadAreaCentersOnce,
     }}>
       {children}
     </ShortlistContext.Provider>

@@ -267,19 +267,19 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
 export function PropertyCardSkeleton() {
   return (
-    <div className="flex items-center gap-4 border border-zinc-100 bg-white p-3 rounded-[24px] shadow-sm animate-pulse">
-      <div className="h-20 w-20 shrink-0 rounded-[18px] bg-zinc-100" />
+    <div className="flex items-center gap-4 border border-zinc-100 bg-white p-3 rounded-[24px] shadow-sm relative overflow-hidden">
+      <div className="h-20 w-20 shrink-0 rounded-[18px] bg-zinc-100 shimmer-bg" />
       <div className="flex flex-1 flex-col gap-2 py-1">
-        <div className="h-6 w-24 rounded bg-zinc-100" />
-        <div className="h-4 w-32 rounded bg-zinc-50" />
-        <div className="h-4 w-28 rounded bg-zinc-50" />
+        <div className="h-6 w-3/4 rounded-lg bg-zinc-100 shimmer-bg" />
+        <div className="h-4 w-1/2 rounded-md bg-zinc-50 shimmer-bg" />
+        <div className="h-4 w-2/3 rounded-md bg-zinc-50 shimmer-bg" />
       </div>
       <div className="flex h-20 flex-col items-end justify-between py-1 shrink-0">
         <div className="flex gap-2">
-          <div className="h-9 w-9 rounded-full bg-zinc-50" />
-          <div className="h-9 w-9 rounded-full bg-zinc-50" />
+          <div className="h-9 w-9 rounded-full bg-zinc-50 shimmer-bg" />
+          <div className="h-9 w-9 rounded-full bg-zinc-50 shimmer-bg" />
         </div>
-        <div className="h-6 w-16 rounded-full bg-zinc-50" />
+        <div className="h-6 w-16 rounded-full bg-zinc-50 shimmer-bg" />
       </div>
     </div>
   );

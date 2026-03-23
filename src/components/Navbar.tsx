@@ -13,6 +13,7 @@ import { SelectionBottomSheet } from './SelectionBottomSheet';
 import { useCallback } from 'react';
 import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
 import { useBrand } from '@/context/BrandContext';
+import { getAreas } from '@/lib/supabase';
 
 
 export default function Navbar() {
@@ -51,14 +52,18 @@ export default function Navbar() {
     "Sonipat", "Delhi NCR", "Gurgaon", "Noida", "Rohtak"
   ];
 
-  useEffect(() => {
-    async function loadAreas() {
-      const { getAreas } = await import('@/lib/supabase');
+  const loadAreasOnce = useCallback(async () => {
+    if (allAreas.length === 0) {
       const areas = await getAreas(selectedCity);
       setAllAreas(areas);
     }
-    loadAreas();
+  }, [selectedCity, allAreas.length]);
+
+  useEffect(() => {
+    // Reset areas when city changes, but don't fetch until interaction
+    setAllAreas([]);
   }, [selectedCity]);
+
   const shouldShowCompact = (isScrolled || !isHomePage) && !isForceExpanded;
 
   useEffect(() => {
@@ -258,49 +263,86 @@ export default function Navbar() {
           {/* Top Row: Logo, Center (Tabs/Search), and Actions */}
           <div className="flex items-center justify-between gap-4">
             {/* Left Section: Logo & Mobile Search Trigger */}
-            <div className="flex flex-1 items-center gap-3 sm:gap-6 min-w-0">
-              <Link href="/" className="flex items-center gap-2 group shrink-0">
-                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
+            <div className="flex flex-1 items-center gap-0 sm:gap-6 min-w-0">
+              <div className="flex items-center gap-2 group shrink-0">
+                <Link href="/" className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
                   <Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                </div>
-                <span className={cn(
-                  "ty-subtitle font-bold tracking-tighter text-zinc-900 truncate",
-                  shouldShowCompact ? "hidden lg:block" : "block"
-                )}>
-                  {brand.logoText.styled ? (
-                    <>
-                      {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
-                    </>
-                  ) : (
-                    <span className="uppercase">{brand.logoText.text}</span>
-                  )}
-                </span>
-              </Link>
+                </Link>
 
-              {/* Mobile Search Pill - Visible on scroll or subpages */}
-              {shouldShowCompact && (
-                <div className="sm:hidden flex-1 px-2">
-                  <div
-                    className="flex w-full items-center gap-3 rounded-full border border-zinc-200 bg-white px-4 py-2.5 shadow-md shadow-zinc-200/50 hover:shadow-lg transition-all"
-                  >
-                    <div 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        handleApplyFilters(); 
-                      }}
-                      className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-90 transition-transform cursor-pointer"
+                <AnimatePresence mode="popLayout">
+                  {(!shouldShowCompact) ? (
+                    <motion.div
+                      key="brand-name"
+                      initial={{ opacity: 0, rotateX: 90 }}
+                      animate={{ opacity: 1, rotateX: 0 }}
+                      exit={{ opacity: 0, rotateX: -90 }}
+                      transition={{ duration: 0.05 }}
                     >
-                      <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
-                    </div>
-                    <button 
-                      onClick={() => setIsMobileSearchOpen(true)}
-                      className="flex-1 text-left ty-caption font-black text-zinc-900 truncate tracking-tight"
+                      <Link href="/" className="ty-subtitle font-bold tracking-tighter text-zinc-900 truncate block">
+                        {brand.logoText.styled ? (
+                          <>
+                            {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
+                          </>
+                        ) : (
+                          <span className="uppercase">{brand.logoText.text}</span>
+                        )}
+                      </Link>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="brand-name-desktop"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.05 }}
+                      className="hidden lg:block"
                     >
-                      {query ? `${query}, ${selectedCity}` : selectedCity}
-                    </button>
-                  </div>
-                </div>
-              )}
+                      <Link href="/" className="ty-subtitle font-bold tracking-tighter text-zinc-900 truncate block">
+                        {brand.logoText.styled ? (
+                          <>
+                            {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
+                          </>
+                        ) : (
+                          <span className="uppercase">{brand.logoText.text}</span>
+                        )}
+                      </Link>
+                    </motion.div>
+                  )}
+                  {shouldShowCompact && (
+                    <motion.div 
+                      key="mobile-search-pill"
+                      initial={{ opacity: 0, rotateX: -90, y: 10 }}
+                      animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                      exit={{ opacity: 0, rotateX: 90, y: -10 }}
+                      transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
+                      className="sm:hidden flex-1"
+                    >
+                      <div
+                        className="flex w-full items-center rounded-full border border-zinc-200 bg-white px-2 py-1 shadow-md shadow-zinc-200/50 hover:shadow-lg transition-all"
+                      >
+                        <div 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            handleApplyFilters(); 
+                          }}
+                          className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-90 transition-transform cursor-pointer"
+                        >
+                          <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
+                        </div>
+                        <button 
+                          onClick={() => {
+                            loadAreasOnce();
+                            setIsMobileSearchOpen(true);
+                          }}
+                          className="flex-1 text-left ty-caption font-black text-zinc-900 truncate tracking-tight"
+                          suppressHydrationWarning={true}
+                        >
+                          {query ? `${query}, ${selectedCity}` : selectedCity}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Middle Section: Desktop Tabs or Compact Search */}
@@ -312,6 +354,7 @@ export default function Navbar() {
                         isScrolled={true} 
                         {...searchProps} 
                         onExpand={(segment) => {
+                          loadAreasOnce();
                           setInitialSegment(segment || null);
                           setIsForceExpanded(true);
                         }}
@@ -341,6 +384,7 @@ export default function Navbar() {
                           "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all shrink-0",
                           selectedCity === tabCity ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
                         )}
+                        suppressHydrationWarning={true}
                       >
                         <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
                         <span className="ty-micro font-bold">{tabCity}</span>
@@ -357,6 +401,7 @@ export default function Navbar() {
                           "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all",
                           OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
                         )}
+                        suppressHydrationWarning={true}
                       >
                         <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
                         <div className="relative flex items-center justify-center">
@@ -450,6 +495,7 @@ export default function Navbar() {
                           if (window.innerWidth < 640) {
                             setIsMobileSearchOpen(true);
                           } else {
+                             loadAreasOnce();
                              setIsForceExpanded(true);
                              setInitialSegment('location');
                           }

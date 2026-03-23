@@ -75,7 +75,7 @@ export async function getProperties(
   userLat?: number | null,
   userLng?: number | null
 ) {
-  if (!supabase) return [];
+  if (!supabase) return { data: [], count: 0 };
 
   const safeLimit = Math.min(limit, 1000);
   const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${userLat || 'noLat'}_${userLng || 'noLng'}_${page}`;

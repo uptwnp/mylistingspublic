@@ -6,7 +6,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import './MapComponent.css';
 import { Plus, Minus, Satellite, Map as MapIcon, Locate, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check } from 'lucide-react';
 import { Property } from '@/types';
 import { formatPrice, getPropertyCoords, cn, formatSizeRange } from '@/lib/utils';

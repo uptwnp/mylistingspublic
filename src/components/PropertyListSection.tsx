@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Property } from '@/types';
 import { getPropertiesByIds } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from './PropertyCard';
@@ -17,8 +17,30 @@ interface PropertyListSectionProps {
 export function PropertyListSection({ title, subtitle, propertyIds, viewAllLink }: PropertyListSectionProps) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasEntered, setHasEntered] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasEntered(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!hasEntered) return;
+
     async function fetchProperties() {
       if (!propertyIds || propertyIds.length === 0) {
         setProperties([]);
@@ -44,14 +66,14 @@ export function PropertyListSection({ title, subtitle, propertyIds, viewAllLink 
     }
 
     fetchProperties();
-  }, [propertyIds, title]);
+  }, [hasEntered, propertyIds, title]);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  if (!loading && properties.length === 0) return null;
+  if (!loading && hasEntered && properties.length === 0) return null;
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6">
+    <div ref={sectionRef} className="w-full space-y-4 sm:space-y-6 scroll-mt-20">
       <div className="flex items-center justify-between">
         <div className="min-w-0 pr-4">
           <h2 className="ty-display font-black tracking-tight text-zinc-900 truncate">
