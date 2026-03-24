@@ -30,7 +30,8 @@ export default function Navbar() {
     maxSize, setMaxSize,
     selectedHighlights, setSelectedHighlights,
     clearFilters,
-    closeAllModals
+    closeAllModals,
+    syncFilters
   } = useShortlist();
   const brand = useBrand();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -180,75 +181,62 @@ export default function Navbar() {
     // Only sync if we're on the /explore page, /map page, OR an SEO route
     if (!isStandardExplore && !seoData) return;
     
+    const nextFilters: any = {};
+    
     if (seoData) {
-      // Priority: Hierarchical SEO segments
-      if (seoData.city && seoData.city.toLowerCase() !== selectedCity.toLowerCase()) setSelectedCity(seoData.city);
+      if (seoData.city) nextFilters.city = seoData.city;
       
       const normalizedType = (seoData.type || 'Any Type').trim();
-      if (normalizedType.toLowerCase() !== propertyType.toLowerCase()) {
-        const isActuallyAny = ['all-types', 'any type', 'any', 'everything', 'properties'].includes(normalizedType.toLowerCase());
-        setPropertyType(isActuallyAny ? 'Any Type' : normalizedType);
-      }
+      const isActuallyAny = ['all-types', 'any type', 'any', 'everything', 'properties'].includes(normalizedType.toLowerCase());
+      nextFilters.type = isActuallyAny ? 'Any Type' : normalizedType;
       
       const normalizedArea = (seoData.area || '').trim();
-      const currentQuery = query.toLowerCase();
-      const isCurrentAnywhere = !query || currentQuery === '' || currentQuery === 'anywhere';
       const isNewAnywhere = !normalizedArea || normalizedArea.toLowerCase() === 'anywhere';
-
-      if (!isCurrentAnywhere || !isNewAnywhere) {
-        if (normalizedArea && normalizedArea.toLowerCase() !== currentQuery) {
-          setQuery(normalizedArea);
-        } else if (isNewAnywhere && query !== '') {
-          setQuery(''); 
-        }
-      }
+      nextFilters.area = isNewAnywhere ? '' : normalizedArea;
 
       if (seoData.budget) {
-        const foundBudget = BUDGET_OPTIONS.find(opt => opt.label.toLowerCase() === seoData.budget?.toLowerCase()) || BUDGET_OPTIONS[0];
-        if (foundBudget.label.toLowerCase() !== budget.label.toLowerCase()) setBudget(foundBudget);
-      } else if (budget.label.toLowerCase() !== 'any budget') {
-        setBudget(BUDGET_OPTIONS[0]);
+        nextFilters.budget = BUDGET_OPTIONS.find(opt => opt.label.toLowerCase() === seoData.budget?.toLowerCase()) || BUDGET_OPTIONS[0];
+      } else {
+        nextFilters.budget = BUDGET_OPTIONS[0];
       }
-    }
+    } else {
+      // Standard explore/map
+      const city = searchParams.get('city');
+      if (city) nextFilters.city = city;
 
-    // Secondary: Sync other filters from search params (supports combination)
-    const keywordsParam = searchParams.get('q') || searchParams.get('keywords');
-    if (keywordsParam !== null && keywordsParam !== keywords) setKeywords(keywordsParam);
-    
-    const minSizeParam = searchParams.get('minSize');
-    if (minSizeParam !== null && minSizeParam !== minSize) setMinSize(minSizeParam);
-    
-    const maxSizeParam = searchParams.get('maxSize');
-    if (maxSizeParam !== null && maxSizeParam !== maxSize) setMaxSize(maxSizeParam);
-    
-    const highlightsParam = searchParams.get('highlights');
-    if (highlightsParam !== null) {
-      const hList = highlightsParam.split(',').filter(Boolean);
-      if (JSON.stringify(hList) !== JSON.stringify(selectedHighlights)) {
-        setSelectedHighlights(hList);
-      }
-    }
-
-    if (!seoData) {
       const area = searchParams.get('area');
-      if (area !== null && area !== query) setQuery(area);
+      if (area !== null) nextFilters.area = area === 'anywhere' ? '' : area;
 
       const budgetLabel = searchParams.get('budget');
-      if (budgetLabel !== null) {
-        const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === budgetLabel) || BUDGET_OPTIONS[0];
-        if (foundBudget.label !== budget.label) setBudget(foundBudget);
+      if (budgetLabel) {
+        nextFilters.budget = BUDGET_OPTIONS.find(opt => opt.label === budgetLabel) || BUDGET_OPTIONS[0];
       }
 
       const type = searchParams.get('type');
-      if (type !== null && type !== propertyType) setPropertyType(type);
-
-      const city = searchParams.get('city');
-      if (city && city !== selectedCity) setSelectedCity(city);
+      if (type) nextFilters.type = type;
     }
+
+    // Common filters
+    const keywordsParam = searchParams.get('q') || searchParams.get('keywords');
+    if (keywordsParam !== null) nextFilters.keywords = keywordsParam;
+    
+    const minSizeParam = searchParams.get('minSize');
+    if (minSizeParam !== null) nextFilters.minSize = minSizeParam;
+    
+    const maxSizeParam = searchParams.get('maxSize');
+    if (maxSizeParam !== null) nextFilters.maxSize = maxSizeParam;
+    
+    const highlightsParam = searchParams.get('highlights');
+    if (highlightsParam !== null) {
+      nextFilters.highlights = highlightsParam.split(',').filter(Boolean);
+    }
+
+    // Perform batch sync
+    syncFilters(nextFilters);
 
     lastSyncedPathRef.current = currentUrl;
     setHasSyncedInitialUrl(true);
-  }, [pathname, searchParams, isInitialized]);
+  }, [pathname, searchParams, isInitialized, syncFilters]);
 
 
 
@@ -473,7 +461,7 @@ export default function Navbar() {
                   className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-all hover:shadow-md cursor-pointer ml-1 "
                 >
                   <AnimatePresence mode="popLayout" initial={false}>
-                    { (shortlistItems.length > 0 || !isMobile) ? (
+                    { (shortlistItems.length > 0 || !isMobile || shouldShowCompact) ? (
                       <motion.div
                         key="cart-icon"
                         initial={{ opacity: 0, rotateX: -90, y: 10 }}
@@ -694,7 +682,7 @@ export default function Navbar() {
                   className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="ty-subtitle font-bold text-zinc-900">Where?</h2>
+                    <h2 className="ty-subtitle font-bold text-zinc-900">Where in {selectedCity}?</h2>
                     <MapPin className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">

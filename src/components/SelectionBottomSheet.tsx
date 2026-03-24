@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Locate } from 'lucide-react';
+import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Locate, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 import { getAreas } from '@/lib/supabase';
@@ -125,7 +125,9 @@ export function SelectionBottomSheet({
                 "flex items-center justify-between px-5 pb-3",
                 type === 'area' ? "pt-10" : "pt-1"
               )}>
-                <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
+                <h2 className="text-lg font-bold text-zinc-900">
+                  {type === 'area' ? `Where in ${selectedCity}?` : title}
+                </h2>
                 <button
                   onClick={onClose}
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 active:scale-[0.98]"
@@ -135,7 +137,7 @@ export function SelectionBottomSheet({
               </div>
 
               {/* Body */}
-              <div className="flex-1 overflow-y-auto p-4 pb-12">
+              <div className="flex-1 overflow-y-auto px-2">
                 {type === 'budget' && (
                   <div className="grid grid-cols-1 gap-3">
                     {BUDGET_OPTIONS.map((opt) => (
@@ -209,7 +211,7 @@ export function SelectionBottomSheet({
                 )}
 
                 {type === 'area' && (
-                  <div className="flex flex-col gap-6 h-full min-h-0 flex-1">
+                  <div className="flex flex-col h-full min-h-0 flex-1">
                     {/* Search Area Input */}
                     <div className="relative px-1 mb-2">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
@@ -275,6 +277,34 @@ export function SelectionBottomSheet({
                               Near Me
                             </span>
                             <span className="text-[10px] font-bold text-blue-600/70 uppercase tracking-wider">Use Current Location</span>
+                          </div>
+                        </button>
+                      )}
+
+                      {!searchQuery && (
+                        <button
+                          onClick={() => {
+                            onSelect('');
+                            onClose();
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 w-full rounded-xl border-2 px-4 py-3 text-left transition-all mb-4 mt-1",
+                            !selectedValue 
+                              ? "border-zinc-900 bg-zinc-100" 
+                              : "border-zinc-100 bg-zinc-50/50 active:border-zinc-300 shadow-sm"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                            !selectedValue ? "bg-zinc-900 text-white" : "bg-zinc-200 text-zinc-500"
+                          )}>
+                            <Globe className="h-4 w-4" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className={cn("text-sm font-bold", !selectedValue ? "text-zinc-900" : "text-zinc-700")}>
+                              {`Anywhere in ${selectedCity}`}
+                            </span>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Explore entire city</span>
                           </div>
                         </button>
                       )}

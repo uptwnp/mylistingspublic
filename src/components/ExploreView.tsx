@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
@@ -155,8 +155,17 @@ export function ExploreView({
     setPage(0);
   }, [selectedCity, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
 
+  const mountedRef = useRef(false);
+
   useEffect(() => {
     const fetchData = async () => {
+      // Logic to skip initial fetch if we have SSR data
+      // We only skip if this is the first execution AND we have initial properties
+      if (!mountedRef.current && initialProperties.length > 0) {
+        mountedRef.current = true;
+        return;
+      }
+
       try {
         setLoading(true);
         
@@ -173,7 +182,7 @@ export function ExploreView({
         const { data, count } = await getProperties(
           page, 
           itemsPerPage, 
-          false, 
+          true, 
           city === 'All' ? undefined : city,
           type || undefined,
           sortField === 'distance' ? 'distance' : sortField,
@@ -218,7 +227,7 @@ export function ExploreView({
       }
     };
     fetchData();
-  }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
+  }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget, initialProperties]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white pt-20 sm:pt-24">

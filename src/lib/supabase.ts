@@ -78,7 +78,9 @@ export async function getProperties(
   if (!supabase) return { data: [], count: 0 };
 
   const safeLimit = Math.min(limit, 20); // Strict maximum for pagination
-  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${userLat || 'noLat'}_${userLng || 'noLng'}_${page}`;
+  const cacheLat = userLat ? Math.round(userLat * 1000) / 1000 : 'noLat';
+  const cacheLng = userLng ? Math.round(userLng * 1000) / 1000 : 'noLng';
+  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${cacheLat}_${cacheLng}_${page}`;
   
   // 1. Try LocalStorage Cache (Browser Only) - Perceived Instant Speed
   if (useCache && typeof window !== 'undefined' && page === 0) {

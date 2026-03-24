@@ -60,7 +60,6 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
       <div className="flex items-center gap-4">
         {/* Left Image/Icon Box */}
         <motion.div 
-          layout
           className="group/image relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-[14px] sm:rounded-[18px]"
         >
           {hasImage ? (

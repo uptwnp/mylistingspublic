@@ -40,17 +40,16 @@ export function HomeClientWrapper({
         <div className="mt-10 px-0">
           <button
             onClick={() => setIsMobileSearchOpen(true)}
-            className="flex w-full items-center gap-3.5 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-2xl shadow-zinc-200/40 transition-all active:scale-[0.98] text-left ring-1 ring-black/5"
+            className="flex w-full items-center gap-3 rounded-full border border-blue-100 bg-blue-50/30 p-1.5 pl-6 shadow-xl shadow-blue-900/5 transition-all active:scale-[0.98] text-left"
           >
-            <Search className="h-5 w-5 text-zinc-400" strokeWidth={2.5} />
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[16px] font-bold text-zinc-900 leading-none mb-1">Start your search</span>
-              <span className="text-[13px] font-medium text-zinc-400 truncate leading-none tracking-tight">
+              <span className="text-[13px] font-black text-brand-primary leading-none tracking-tight uppercase mb-1">Start your search</span>
+              <span className="text-[12px] font-bold text-zinc-400 truncate leading-none tracking-tight">
                 {`Search plots, villas & more in ${selectedCity}`}
               </span>
             </div>
-            <div className="flex h-10 px-4 items-center justify-center rounded-xl bg-zinc-900 text-white shadow-lg shadow-zinc-900/10">
-              <span className="text-[11px] font-black uppercase tracking-widest">Find</span>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-blue-200">
+              <Search className="h-5 w-5" strokeWidth={3} />
             </div>
           </button>
         </div>
