@@ -75,7 +75,7 @@ export function PropertySection({ title, city, type, initialData }: PropertySect
           <h2 className="ty-display font-black tracking-tight text-zinc-900 truncate">
             {title}
           </h2>
-          <p className="ty-caption text-zinc-500 font-medium truncate">Hand-picked properties in {city}.</p>
+          <p className="ty-caption text-zinc-500 font-medium truncate">Latest properties in {city}.</p>
         </div>
         <Link 
           href={getSeoUrl(city, type) || `/explore?city=${city}&type=${type}`}

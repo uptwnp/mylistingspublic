@@ -113,17 +113,17 @@ export function SellClient() {
                <Zap className="h-3.5 w-3.5 fill-brand-primary" /> Skip the Portals
              </span>
              <h1 className="ty-hero font-black tracking-tight text-zinc-900 uppercase mb-8">
-               The Direct Route to a <span className="text-brand-primary">Premium Exit</span>
+               Sale your property <span className="text-brand-primary">faster</span>
              </h1>
              <p className="mx-auto max-w-xl ty-subtitle font-medium text-zinc-500 mb-12 leading-relaxed">
-               Generic portals are crowded and noisy. {brand.name} connects you directly to a private circle of 1 Lakh+ verified, ready investors.
+               Generic portals are crowded and noisy. {brand.name} connects you directly to verified, ready investors.
              </p>
              <div className="flex flex-col items-center gap-4">
                <button 
                  onClick={() => setIsModalOpen(true)}
                  className="group relative inline-flex items-center gap-6 rounded-full bg-zinc-900 px-10 py-5 transition-all hover:bg-black hover:scale-[1.02] active:scale-[0.99] shadow-2xl shadow-zinc-200"
                >
-                 <span className="ty-title font-bold text-white uppercase tracking-tight">Post Your Listing</span>
+                  <span className="ty-title font-bold text-white uppercase tracking-tight">Post your property</span>
                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 group-hover:bg-brand-primary transition-colors">
                    <ArrowRight className="h-4 w-4 text-white" />
                  </div>
@@ -142,23 +142,23 @@ export function SellClient() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/5 blur-[100px] rounded-full -z-10" />
         
         <div className="mx-auto max-w-4xl text-center">
-           <h2 className="ty-display font-black text-zinc-900 uppercase mb-4 tracking-tighter">Purely Success-Based.</h2>
-           <p className="ty-subtitle text-zinc-500 mb-16 max-w-md mx-auto">Zero listing fees. Zero upfront risk. We only earn when you successfully exit.</p>
+           <h2 className="ty-display font-black text-zinc-900 uppercase mb-4 tracking-tighter">Success based commission</h2>
+           <p className="ty-subtitle text-zinc-500 mb-16 max-w-md mx-auto">Zero upfront cost. We only charge when you successfully sell your property.</p>
            
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
               <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-zinc-100 shadow-sm text-left group transition-all hover:border-brand-primary hover:shadow-xl hover:shadow-brand-primary/5">
                  <div className="h-14 w-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mb-10 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
                     <CheckCircle2 className="h-7 w-7" />
                  </div>
-                 <h3 className="ty-title font-black text-zinc-900 uppercase mb-4 tracking-tight">Verified Listing (Free)</h3>
-                 <p className="ty-body text-zinc-500 leading-relaxed font-medium">Get a professional verification and high-authority display for your property without paying a single rupee today.</p>
+                 <h3 className="ty-title font-black text-zinc-900 uppercase mb-4 tracking-tight">Verified Listing</h3>
+                 <p className="ty-body text-zinc-500 leading-relaxed font-medium">Get a professional verification and priority display for your property for free.</p>
               </div>
               <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-zinc-100 shadow-sm text-left group transition-all hover:border-brand-primary hover:shadow-xl hover:shadow-brand-primary/5">
                  <div className="h-14 w-14 rounded-2xl bg-brand-primary text-white flex items-center justify-center mb-10 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
                     <IndianRupee className="h-7 w-7" />
                  </div>
-                 <h3 className="ty-title font-black text-zinc-900 uppercase mb-4 tracking-tight">1% Achievement Fee</h3>
-                 <p className="ty-body text-zinc-500 leading-relaxed font-medium">A standardized 1% fee is only payable after you clear the 10% payment milestone with your buyer.</p>
+                 <h3 className="ty-title font-black text-zinc-900 uppercase mb-4 tracking-tight">Standard 1% Fee</h3>
+                 <p className="ty-body text-zinc-500 leading-relaxed font-medium">A standardized 1% fee is only payable after you receive the 10% payment milestone from your buyer.</p>
               </div>
            </div>
         </div>
@@ -171,8 +171,8 @@ export function SellClient() {
         <div className="mx-auto max-w-4xl text-center">
            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-orange-100 text-orange-600 ty-micro font-bold mb-10 uppercase tracking-[0.2em] border border-orange-200/50 shadow-sm">Insider Insight</div>
            <h2 className="ty-hero font-black text-zinc-900 uppercase mb-10 leading-[1.05] tracking-tighter">
-             Bad Pricing Kills Momentum, <br/> 
-             <span className="bg-gradient-to-r from-orange-400 to-yellow-600 bg-clip-text text-transparent italic">Even for Prime Listings.</span>
+             Overpricing kills momentum, <br/> 
+             <span className="bg-gradient-to-r from-orange-400 to-yellow-600 bg-clip-text text-transparent italic">even for good properties.</span>
            </h2>
            <p className="ty-subtitle font-medium text-zinc-500 max-w-2xl mx-auto leading-relaxed">
              The market never waits for an unrealistic price. Overpricing wastes the critical "New Listing" period. We help you find the sweet spot that triggers immediate, competitive buyer intent.
@@ -188,10 +188,10 @@ export function SellClient() {
            <h2 className="ty-display font-black text-white uppercase mb-16 text-center tracking-tight">Common Questions</h2>
            <div className="space-y-4">
               {[
-                { q: "What does 'Verified' mean on {brand.name}?", a: "Every listing is cross-checked by our team to ensure the location, ownership status, and property details are 100% accurate before it goes live." },
-                { q: "Is the 1% fee negotiable?", a: "To maintain the highest platform quality and provide direct access to thousands of verified buyers, our success fee is standardized at 1% for all residential and commercial properties." },
-                { q: "How long does a typical sale take?", a: "Properties priced at market rates typically see serious movement within 14-21 days of listing on the {brand.name} portal." },
-                { q: "Can I list multiple properties?", a: "Absolutely. Whether you're an individual owner or an investor, you can manage your entire portfolio from your {brand.name} dashboard." },
+                { q: `What does 'Verified' mean on ${brand.name}?`, a: "Our team verifies the location and ownership of every listing before it goes live." },
+                { q: "Is the 1% fee negotiable?", a: "To maintain direct access to our verified buyers, we have a standard 1% fee on all residential and commercial properties." },
+                { q: "How long does a typical sale take?", a: `Most properties priced at market rates sell within 14-21 days on ${brand.name}.` },
+                { q: "Can I list multiple properties?", a: `Yes, you can manage all your listings easily from your ${brand.name} dashboard.` },
               ].map((faq, i) => (
                 <div key={i} className="p-8 rounded-[32px] bg-white/5 border border-white/10 transition-all hover:bg-white/10 hover:border-white/20">
                    <h3 className="ty-title font-black text-white uppercase mb-4 tracking-tight leading-snug">{faq.q}</h3>
@@ -206,8 +206,8 @@ export function SellClient() {
       <section className="py-32 sm:py-48 px-6 text-center relative bg-white">
         <div className="absolute inset-0 bg-brand-primary/[0.01] -z-10" />
         <div className="mx-auto max-w-4xl text-center">
-           <h2 className="ty-display font-black text-zinc-900 uppercase mb-4 tracking-tight">Unlock Market Access</h2>
-           <p className="ty-subtitle text-zinc-500 mb-14 max-w-sm mx-auto leading-relaxed">Join the circle of homeowners who skipped the noise and exited successfully on {brand.name}.</p>
+           <h2 className="ty-display font-black text-zinc-900 uppercase mb-4 tracking-tight">Sell your property</h2>
+           <p className="ty-subtitle text-zinc-500 mb-14 max-w-sm mx-auto leading-relaxed">Join the homeowners who managed to sell their property faster with {brand.name}.</p>
            
            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <a href="tel:+919518091945" className="inline-flex w-full sm:w-auto items-center justify-center gap-4 rounded-full bg-white border-2 border-zinc-100 px-10 py-5 ty-title font-bold text-zinc-900 transition-all hover:border-zinc-900  shadow-xl shadow-zinc-100/50">
@@ -217,7 +217,7 @@ export function SellClient() {
                 onClick={() => setIsModalOpen(true)}
                 className="inline-flex w-full sm:w-auto items-center justify-center gap-4 rounded-full bg-brand-primary px-10 py-5 ty-title font-bold text-white shadow-2xl shadow-brand-primary/20 transition-all hover:bg-blue-700 "
               >
-                Launch Your Listing <ArrowRight className="h-5 w-5" />
+                 Post your property <ArrowRight className="h-5 w-5" />
               </button>
            </div>
         </div>

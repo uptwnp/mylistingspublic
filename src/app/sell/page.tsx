@@ -7,6 +7,11 @@ export const revalidate = 3600;
 // Use Edge runtime for global speed
 export const runtime = 'edge';
 
+export const metadata = {
+  title: 'Sale your property faster | Verified Property Network',
+  description: 'List your property on our exclusive network and connect with verified buyers instantly.',
+};
+
 export default function SellPropertyPage() {
   return (
     <main className="min-h-screen">

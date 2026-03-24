@@ -452,7 +452,7 @@ export default function Navbar() {
                 href="/sell" 
                 className="hidden xl:block rounded-full px-4 py-2 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-100"
               >
-                Sell Property
+                Sale Property
               </Link>
 
               <div className="relative" ref={menuRef}>
@@ -524,7 +524,7 @@ export default function Navbar() {
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <Home className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
-                          Sell Property
+                          Sale Property
                         </Link>
                         <Link 
                           href="/agent" 

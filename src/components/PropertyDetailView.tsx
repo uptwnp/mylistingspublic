@@ -305,8 +305,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                   <div className="flex flex-col items-center scale-90 sm:scale-100">
                     <Icon className={cn("h-20 w-20 md:h-32 md:w-32 opacity-20", config.color)} />
                     <div className="text-center mt-3 md:mt-4">
-                      <p className="ty-subtitle md:ty-title font-bold text-zinc-900">No photos available</p>
-                      <p className="mt-1 md:mt-2 ty-caption text-zinc-500 max-w-[280px] sm:max-w-sm mb-4 md:mb-6">Owner has restricted public photos. You can request exclusive access.</p>
+                      <p className="ty-subtitle md:ty-title font-normal text-zinc-400 mb-4">No photos available</p>
                       <button className="rounded-full bg-black px-6 py-2 md:px-8 md:py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-[0.98]">
                         Request photos
                       </button>

@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { calculateDistance, getPropertyCoords } from '@/lib/utils';
+import { calculateDistance, getPropertyCoords, isValidLatLng } from '@/lib/utils';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { parseSeoSlug, getSeoUrl } from '@/lib/seo-utils';
 import { FilterChips } from '@/components/FilterChips';
@@ -201,14 +201,14 @@ export function ExploreView({
         setTotalCount(count || 0);
 
         // Calculate distances locally only for card labels ("1.2 km away")
-        if (userLocation && !isNaN(userLocation.lat) && !isNaN(userLocation.lng)) {
+        if (userLocation && isValidLatLng([userLocation.lat, userLocation.lng])) {
           finalData = finalData.map(p => {
-            const [pLat, pLng] = getPropertyCoords(p, finalData, areaCenters);
+            const coords = getPropertyCoords(p, finalData, areaCenters);
             // Defensive distance check
-            if (!isNaN(pLat) && !isNaN(pLng)) {
+            if (isValidLatLng(coords)) {
               return {
                 ...p,
-                landmark_location_distance: calculateDistance(userLocation.lat, userLocation.lng, pLat, pLng)
+                landmark_location_distance: calculateDistance(userLocation.lat, userLocation.lng, coords[0], coords[1])
               };
             }
             return p;
@@ -230,7 +230,7 @@ export function ExploreView({
   }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget, initialProperties]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pt-20 sm:pt-24">
+    <div className="flex min-h-screen flex-col bg-white pt-20 sm:pt-20">
       {/* Mobile-only Filter Chips (Shows directly) */}
       <div className="mb-4 sm:mb-2">
         <FilterChips 
@@ -243,7 +243,10 @@ export function ExploreView({
       <div className="mx-auto max-w-[1440px] w-full px-4 sm:px-6 lg:px-12 flex-1 flex flex-col">
 
         {/* Main Content Area */}
-        <div className="relative flex flex-1 gap-8 lg:gap-8">
+        <div className={cn(
+          "relative flex flex-1 gap-4 lg:gap-8",
+          viewMode === 'map' ? "flex-col-reverse lg:flex-row" : "flex-col lg:flex-row"
+        )}>
           
           {/* List Side */}
           <div 
@@ -252,7 +255,7 @@ export function ExploreView({
               "flex flex-col",
               !isFirstMount && "transition-all duration-300",
               viewMode === 'split' ? 'w-full lg:w-[35%]' : 
-              viewMode === 'list' ? 'w-full' : 'hidden'
+              viewMode === 'list' ? 'w-full' : (viewMode === 'map' ? 'w-full lg:hidden' : 'hidden')
             )}>
             {/* Section Header */}
             <div className="pt-2 sm:pt-4 pb-2">
@@ -410,11 +413,11 @@ export function ExploreView({
 
           {/* Map Side */}
           <div className={cn(
-            "sticky top-20 h-[calc(100vh-80px)]",
+            "sticky top-20 h-[60dvh] sm:h-[calc(100vh-80px)]",
             !isFirstMount && "transition-all duration-300",
             viewMode === 'split' ? 'hidden lg:flex lg:flex-1' : 
             viewMode === 'map' ? 'w-full flex' : 'hidden',
-            "items-center justify-center pt-2 lg:pt-4 pb-5"
+            "items-center justify-center pt-1 lg:pt-4 pb-3 lg:pb-5"
           )}>
             <div className="relative h-full w-full overflow-hidden sm:rounded-3xl border border-zinc-200 shadow-sm group">
               <div className="absolute top-4 right-4 z-40 flex gap-2">

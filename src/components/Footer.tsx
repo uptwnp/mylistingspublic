@@ -46,7 +46,7 @@ export default function Footer() {
             <h4 className="ty-label text-zinc-900 mb-6">Network</h4>
             <ul className="space-y-4">
               <li><Link href="/agent" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Agent Portal</Link></li>
-              <li><Link href="/sell" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">List Your Property</Link></li>
+              <li><Link href="/sell" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Sale Property</Link></li>
               <li><Link href="/refer" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Partner Program</Link></li>
             </ul>
           </div>

@@ -9,7 +9,7 @@ import L from 'leaflet';
 import './MapComponent.css';
 import { Plus, Minus, Satellite, Map as MapIcon, Locate, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check } from 'lucide-react';
 import { Property } from '@/types';
-import { formatPrice, getPropertyCoords, cn, formatSizeRange } from '@/lib/utils';
+import { formatPrice, getPropertyCoords, cn, formatSizeRange, isValidLatLng } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import * as ReactDOMServer from 'react-dom/server';
 import Link from 'next/link';
@@ -183,13 +183,7 @@ interface MapComponentProps {
   disableCard?: boolean;
 }
 
-const isValidLatLng = (coords: any): coords is [number, number] => 
-  Array.isArray(coords) && 
-  coords.length === 2 && 
-  typeof coords[0] === 'number' && 
-  typeof coords[1] === 'number' &&
-  !isNaN(coords[0]) && 
-  !isNaN(coords[1]);
+// isValidLatLng helper moved to utils.ts
 
 // Component to handle map center and zoom changes only when selected property changes
 function MapController({ selectedProperty, zoomLevel, properties, areaCenters }: { selectedProperty: Property | null; zoomLevel: number; properties: Property[]; areaCenters: any[] }) {
@@ -197,30 +191,34 @@ function MapController({ selectedProperty, zoomLevel, properties, areaCenters }:
   const prevPropertyIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!map) return;
+
     if (selectedProperty && selectedProperty.property_id !== prevPropertyIdRef.current) {
       const coords = getPropertyCoords(selectedProperty, properties, areaCenters);
       
       // Defensive check: Ensure we have valid numeric coordinates before calling Leaflet
-      if (!coords || isNaN(coords[0]) || isNaN(coords[1])) {
-        console.error('MapController: Invalid coordinates for property', selectedProperty.property_id, coords);
+      if (!isValidLatLng(coords)) {
+        console.warn('MapController: Skipping flyTo due to invalid coordinates', selectedProperty.property_id, coords);
         return;
       }
 
-      // Intelligent zoom logic:
-      // If the property is already visible in the current view, don't zoom out.
-      // Simply pan to it at the current zoom level.
       try {
+        // Ensure map is ready and has bounds
         const currentBounds = map.getBounds();
+        if (!currentBounds || typeof currentBounds.contains !== 'function') return;
+
         const latLng = L.latLng(coords[0], coords[1]);
         const isAlreadyVisible = currentBounds.contains(latLng);
         
         const currentZoom = map.getZoom();
-        const safeZoom = isNaN(currentZoom) ? zoomLevel : currentZoom;
+        const safeZoom = (typeof currentZoom === 'number' && !isNaN(currentZoom)) ? currentZoom : zoomLevel;
         const targetZoom = isAlreadyVisible ? Math.max(safeZoom, zoomLevel) : zoomLevel;
+
+        if (isNaN(targetZoom)) return;
 
         map.flyTo(coords, targetZoom, { 
           animate: true, 
-          duration: isAlreadyVisible ? 0.8 : 1.5, // Faster flight if already on screen
+          duration: isAlreadyVisible ? 0.8 : 1.5,
           easeLinearity: 0.25
         });
         prevPropertyIdRef.current = selectedProperty.property_id;
@@ -433,6 +431,8 @@ function CollisionAwareMarkers({
 
     sortedProps.forEach(prop => {
       const coords = getPropertyCoords(prop, properties, areaCenters);
+      if (!isValidLatLng(coords)) return; // Skip invalid coords in markers
+
       const point = map.project(L.latLng(coords[0], coords[1]), zoom);
       const isSelected = prop.property_id === selectedProperty?.property_id;
 
@@ -516,8 +516,14 @@ function CollisionAwareMarkers({
   const onClusterClick = (clusterProps: Property[]) => {
     if (clusterProps.length <= 1) return;
     
-    const lats = clusterProps.map(p => getPropertyCoords(p, properties, areaCenters)[0]);
-    const lngs = clusterProps.map(p => getPropertyCoords(p, properties, areaCenters)[1]);
+    const validCoords = clusterProps
+      .map(p => getPropertyCoords(p, properties, areaCenters))
+      .filter(isValidLatLng);
+    
+    if (validCoords.length === 0) return;
+
+    const lats = validCoords.map(c => c[0]);
+    const lngs = validCoords.map(c => c[1]);
     
     const bounds = L.latLngBounds(
       [Math.min(...lats), Math.min(...lngs)],
