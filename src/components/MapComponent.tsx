@@ -310,51 +310,51 @@ function MapControls({
     <>
       {/* Zoom & GPS Group (Right Side) */}
       <div className={cn(
-        "absolute right-4 sm:right-8 z-[1000] flex flex-col gap-4 transition-all duration-500",
-        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-6 sm:bottom-8"
+        "absolute right-3 sm:right-8 z-[1000] flex flex-col gap-3 sm:gap-4 transition-all duration-500",
+        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-5 sm:bottom-8"
       )}>
-        <div className="flex flex-col overflow-hidden rounded-[16px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+        <div className="flex flex-col overflow-hidden rounded-[12px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
           <button 
             onClick={handleZoomIn}
             title="Zoom In"
-            className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" />
+            <Plus className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
           
-          <div className="mx-3 h-px bg-zinc-200/50" />
+          <div className="mx-2 sm:mx-3 h-px bg-zinc-200/50" />
           
           <button 
             onClick={handleZoomOut}
             title="Zoom Out"
-            className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" />
+            <Minus className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
 
-          <div className="mx-3 h-px bg-zinc-200/50" />
+          <div className="mx-2 sm:mx-3 h-px bg-zinc-200/50" />
 
           <button 
             onClick={handleGPS}
             title="My Location"
-            className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Locate className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" />
+            <Locate className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
         </div>
       </div>
 
       {/* Satellite Toggle (Left Side) */}
       <div className={cn(
-        "absolute left-4 sm:left-8 z-[1000] transition-all duration-500",
-        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-6 sm:bottom-8"
+        "absolute left-3 sm:left-8 z-[1000] transition-all duration-500",
+        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-5 sm:bottom-8"
       )}>
         <button 
           onClick={() => setIsSatellite(!isSatellite)}
           title={isSatellite ? "Show Map" : "Show Satellite"}
-          className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-[16px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-[0.98]"
+          className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-[12px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-[0.98]"
         >
-          {isSatellite ? <MapIcon className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" /> : <Satellite className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" />}
+          {isSatellite ? <MapIcon className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" /> : <Satellite className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" />}
         </button>
       </div>
     </>
@@ -760,7 +760,7 @@ export default function MapComponent({
             initial={{ y: -20, opacity: 0, x: '-50%' }}
             animate={{ y: 0, opacity: 1, x: '-50%' }}
             exit={{ y: -20, opacity: 0, x: '-50%' }}
-            className="absolute top-6 left-1/2 z-[1001]"
+            className="absolute top-4 left-1/2 z-[1001]"
           >
             <button 
               onClick={() => {
@@ -778,9 +778,9 @@ export default function MapComponent({
                   setShowSearchArea(false);
                 }
               }}
-              className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-zinc-100 transition-all hover:scale-105 active:scale-[0.98]"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-white px-3 py-1.5 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-zinc-100 active:scale-[0.98]"
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Search this area</span>
             </button>
           </motion.div>
