@@ -244,6 +244,7 @@ export function InquiryModal() {
                           onChange={(e) => setNote(e.target.value)}
                           placeholder="e.g. Open from two sides? Clear registry?"
                           rows={2}
+                          spellCheck={false}
                           className="w-full rounded-2xl border border-zinc-100 bg-zinc-50/80 p-3.5 text-sm font-medium text-zinc-900 outline-none transition-all focus:border-zinc-900 focus:bg-white focus:ring-1 focus:ring-zinc-900/5 placeholder:text-zinc-300 resize-none"
                         />
                       </div>

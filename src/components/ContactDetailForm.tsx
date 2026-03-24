@@ -97,6 +97,7 @@ export function ContactDetailForm() {
                     placeholder="e.g. Rahul Sharma"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    autoComplete="name"
                     className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-11 pr-4 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
                   />
                 </div>
@@ -116,6 +117,7 @@ export function ContactDetailForm() {
                       placeholder="98765 43210"
                       value={formData.phoneNumber}
                       onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                      autoComplete="tel"
                       className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-11 pr-4 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
@@ -131,6 +133,7 @@ export function ContactDetailForm() {
                       placeholder="98765 43210"
                       value={formData.alternateNumber}
                       onChange={(e) => setFormData({ ...formData, alternateNumber: e.target.value })}
+                      autoComplete="tel"
                       className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-11 pr-4 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
@@ -150,6 +153,8 @@ export function ContactDetailForm() {
                     rows={2}
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    autoComplete="street-address"
+                    spellCheck={false}
                     className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 pl-11 pr-4 py-3 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner resize-none"
                   />
                 </div>

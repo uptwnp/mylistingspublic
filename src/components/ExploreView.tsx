@@ -54,21 +54,31 @@ export function ExploreView({
   const [loading, setLoading] = useState(initialProperties.length === 0);
   const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
   const [isFirstMount, setIsFirstMount] = useState(true);
-
-  useEffect(() => {
-    // Determine actual view mode based on screen width
-    if (window.innerWidth < 1024) {
-      setViewMode('list');
-    }
-    // Small delay to enable animations AFTER layout is settled
-    const timer = setTimeout(() => setIsFirstMount(false), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const [page, setPage] = useState(0);
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Determine actual view mode based on screen width and URL params
+    const viewParam = searchParams.get('view');
+    
+    if (viewParam === 'map') {
+      setViewMode('map');
+    } else if (viewParam === 'list') {
+      setViewMode('list');
+    } else if (viewParam === 'split') {
+      setViewMode('split');
+    } else if (window.innerWidth < 1024) {
+      setViewMode('list');
+    }
+    
+    // Small delay to enable animations AFTER layout is settled
+    const timer = setTimeout(() => setIsFirstMount(false), 100);
+    return () => clearTimeout(timer);
+  }, [searchParams]);
+
+  const [page, setPage] = useState(0);
+
   const activeArea = overrideArea || searchParams.get('area');
 
   const { 

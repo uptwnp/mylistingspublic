@@ -105,6 +105,10 @@ export function HomeSearch() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setActiveSegment('location')}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
               className="w-full bg-transparent ty-caption font-semibold text-zinc-500 outline-none placeholder:text-zinc-400 min-w-0"
             />
             {activeSegment === 'location' && query && (

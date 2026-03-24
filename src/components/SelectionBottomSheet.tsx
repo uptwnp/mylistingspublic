@@ -218,6 +218,10 @@ export function SelectionBottomSheet({
                         type="text"
                         placeholder="Search areas..."
                         value={searchQuery}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         className="w-full h-11 rounded-xl border border-zinc-100 bg-zinc-50 pl-11 pr-11 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />

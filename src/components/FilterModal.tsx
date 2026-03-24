@@ -112,6 +112,10 @@ export function FilterModal({
                       type="text"
                       value={localKeywords}
                       onChange={(e) => setLocalKeywords(e.target.value)}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
                       placeholder="e.g. Near Market, Corner, 3BHK"
                       className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-12 pr-4 ty-body font-bold text-zinc-900 outline-none ring-zinc-900 transition-all focus:border-zinc-900 focus:bg-white focus:ring-1"
                     />
@@ -128,6 +132,10 @@ export function FilterModal({
                         type="number"
                         value={localMinSize}
                         onChange={(e) => setLocalMinSize(e.target.value)}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         placeholder="Min Size"
                         className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-10 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white"
                       />
@@ -138,6 +146,10 @@ export function FilterModal({
                         type="number"
                         value={localMaxSize}
                         onChange={(e) => setLocalMaxSize(e.target.value)}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         placeholder="Max Size"
                         className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-10 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white"
                       />

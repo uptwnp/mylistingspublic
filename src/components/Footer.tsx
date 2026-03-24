@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Globe, Instagram, Twitter, Mail, Home } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { useBrand } from '@/context/BrandContext';
 
 
@@ -36,8 +36,8 @@ export default function Footer() {
           <div>
             <h4 className="ty-label text-zinc-900 mb-6">Discover</h4>
             <ul className="space-y-4">
-              <li><Link href="/" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Featured Estates</Link></li>
-              <li><Link href="/explore" className="ty-caption font-bold text-zinc-500 hover:text-rose-500 transition-colors">Explore Map</Link></li>
+              <li><Link href="/shortlist" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Shortlisted</Link></li>
+              <li><Link href="/explore?view=map" className="ty-caption font-bold text-zinc-500 hover:text-rose-500 transition-colors">Explore Map</Link></li>
               <li><Link href="/favorites" className="ty-caption font-bold text-zinc-500 hover:text-rose-500 transition-colors">Saved Properties</Link></li>
             </ul>
           </div>
@@ -56,25 +56,13 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center gap-6 ty-label text-zinc-400">
             <span>© 2026 {brand.name} Network</span>
             <div className="flex gap-6">
-              <Link href="/privacy" className="hover:text-zinc-900 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-zinc-900 transition-colors">Terms & Conditions</Link>
+              <Link href="/privacy" className="hover:text-zinc-900 transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-zinc-900 transition-colors">T&C</Link>
               <Link href="/sitemap.xml" className="hover:text-zinc-900 transition-colors">Sitemap</Link>
             </div>
           </div>
           
           <div className="flex items-center gap-8">
-            <button className="flex items-center gap-2 ty-label text-zinc-900 hover:text-zinc-600 transition-colors">
-              <Globe className="h-4 w-4" />
-              English (IN)
-            </button>
-            <div className="flex gap-4">
-              <a href="#" className="text-zinc-400 hover:text-zinc-900 transition-colors">
-                <Twitter className="h-4 w-4" />
-              </a>
-              <a href="#" className="text-zinc-400 hover:text-zinc-900 transition-colors">
-                <Instagram className="h-4 w-4" />
-              </a>
-            </div>
           </div>
         </div>
       </div>

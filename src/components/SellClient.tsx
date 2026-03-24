@@ -330,6 +330,10 @@ export function SellClient() {
                                 <label className="ty-micro font-black text-zinc-400 mb-2 block">Search Area</label>
                                 <input type="text" value={formData.area} onFocus={() => setShowAreaSuggestions(true)}
                                   onChange={(e) => { updateFormData('area', e.target.value); setAreaSearch(e.target.value); }}
+                                  autoComplete="off"
+                                  autoCorrect="off"
+                                  autoCapitalize="none"
+                                  spellCheck={false}
                                   className="w-full rounded-2xl border-2 border-zinc-100 py-4 px-6 font-bold text-zinc-900 focus:border-brand-primary outline-none bg-zinc-50/20 transition-all" 
                                   placeholder="e.g. Model Town" />
                                 {showAreaSuggestions && filteredAreas.length > 0 && (
@@ -352,11 +356,19 @@ export function SellClient() {
                                <div className="space-y-2">
                                  <label className="ty-micro font-black text-zinc-400">Asking Price (Cr)</label>
                                  <input type="number" step="0.01" value={formData.price} onChange={(e) => updateFormData('price', e.target.value)} 
+                                   autoComplete="off"
+                                   autoCorrect="off"
+                                   autoCapitalize="none"
+                                   spellCheck={false}
                                    className="w-full rounded-2xl border-2 border-zinc-100 py-4 px-6 font-black text-zinc-900 focus:border-brand-primary outline-none" placeholder="0.00" />
                                </div>
                                <div className="space-y-2">
                                  <label className="ty-micro font-black text-zinc-400">Size (Sq. Yards)</label>
                                  <input type="number" value={formData.size} onChange={(e) => updateFormData('size', e.target.value)} 
+                                   autoComplete="off"
+                                   autoCorrect="off"
+                                   autoCapitalize="none"
+                                   spellCheck={false}
                                    className="w-full rounded-2xl border-2 border-zinc-100 py-4 px-6 font-black text-zinc-900 focus:border-brand-primary outline-none" placeholder="0" />
                                </div>
                             </motion.div>
