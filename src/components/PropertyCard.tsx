@@ -67,7 +67,6 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
               src={property.image_urls[0]}
               alt={property.description || 'Property Image'}
               fill
-              unoptimized
               className="object-cover"
               sizes="(max-width: 640px) 64px, 80px"
             />

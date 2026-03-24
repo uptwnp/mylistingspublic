@@ -3,7 +3,7 @@
 'use client';
 
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import './MapComponent.css';
@@ -19,7 +19,27 @@ import { PropertyCard } from './PropertyCard';
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+// Simple debounce utility
+function debounce<T extends (...args: any[]) => any>(fn: T, ms: number): T {
+  let timer: ReturnType<typeof setTimeout>;
+  return ((...args: any[]) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  }) as T;
+}
+
+// ─── Icon caches ─────────────────────────────────────────────────────────────
+// Avoids calling ReactDOMServer.renderToStaticMarkup on every zoom/pan event.
+const customIconCache = new Map<string, L.DivIcon>();
+const clusterIconCache = new Map<string, L.DivIcon>();
+
+
 const createCustomIcon = (property: Property, isSelected: boolean, zoom: number, hideLabel?: boolean) => {
+  // Zoom is bucketed so we don't make a unique icon per integer zoom level
+  const zoomBucket = zoom >= 16 ? 'hi' : zoom >= 14 ? 'mid' : 'lo';
+  const cacheKey = `${property.property_id}-${isSelected}-${zoomBucket}-${hideLabel}`;
+  if (customIconCache.has(cacheKey)) return customIconCache.get(cacheKey)!;
+
   const price = formatPrice(property.price_min);
   const config = getPropertyConfig(property.type);
   const IconComponent = config.icon;
@@ -114,8 +134,7 @@ const createCustomIcon = (property: Property, isSelected: boolean, zoom: number,
 
   // Locked Anchor Point Logic
   // Using a deterministic box where the bottom center is the anchor
-  
-  return L.divIcon({
+  const icon = L.divIcon({
     html,
     className: 'custom-property-marker',
     iconSize: [totalWidth, totalHeight],
@@ -123,9 +142,15 @@ const createCustomIcon = (property: Property, isSelected: boolean, zoom: number,
     // Total height of Pin (36) + Tail (~10 visible) = ~46
     iconAnchor: [totalWidth / 2, (46 * scale)],
   });
+  customIconCache.set(cacheKey, icon);
+  return icon;
 };
 
 const createClusterIcon = (count: number, zoom: number) => {
+  const zoomBucket = zoom >= 16 ? 'hi' : zoom >= 14 ? 'mid' : 'lo';
+  const cacheKey = `cluster-${count}-${zoomBucket}`;
+  if (clusterIconCache.has(cacheKey)) return clusterIconCache.get(cacheKey)!;
+
   const scale = zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85);
   const size = 52 * scale; // Increased for better visibility
   
@@ -164,12 +189,14 @@ const createClusterIcon = (count: number, zoom: number) => {
     </div>
   );
 
-  return L.divIcon({
+  const icon = L.divIcon({
     html,
     className: 'custom-cluster-marker',
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
+  clusterIconCache.set(cacheKey, icon);
+  return icon;
 };
 
 
@@ -234,38 +261,35 @@ function MapController({ selectedProperty, zoomLevel, properties, areaCenters }:
   return null;
 }
 
-// Handler for container resizing
+// Handler for container resizing — uses ResizeObserver instead of polling interval
 function InvalidateSize({ trigger }: { trigger?: any }) {
   const map = useMap();
   useEffect(() => {
-    // Initial invalidate
-    const timer1 = setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
+    // Two quick invalidations to catch initial layout
+    const timer1 = setTimeout(() => map.invalidateSize(), 100);
+    const timer2 = setTimeout(() => map.invalidateSize(), 400);
 
-    const timer2 = setTimeout(() => {
-      map.invalidateSize();
-    }, 400);
-
-    // Watch for window resize
-    const handleResize = () => map.invalidateSize();
-    window.addEventListener('resize', handleResize);
-    
-    // Also run it periodically for a bit to catch layout shifts
-    const interval = setInterval(() => {
-      map.invalidateSize();
-    }, 1000);
-
-    const timer3 = setTimeout(() => {
-      clearInterval(interval);
-    }, 3000);
+    // ResizeObserver for any subsequent container size changes
+    let ro: ResizeObserver | null = null;
+    const container = map.getContainer();
+    if (container && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => map.invalidateSize());
+      ro.observe(container);
+    } else {
+      // Fallback for very old browsers
+      const handleResize = () => map.invalidateSize();
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      clearInterval(interval);
+      ro?.disconnect();
       clearTimeout(timer1);
       clearTimeout(timer2);
-      clearTimeout(timer3);
     };
   }, [map, trigger]);
   return null;
@@ -592,9 +616,13 @@ function MapEvents({
   setZoom: (z: number) => void,
   onBoundsChange?: (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => void
 }) {
+  // Debounce zoom updates so the expensive collision detection memo
+  // doesn't recalculate mid-gesture on every intermediate zoom level.
+  const setZoomDebounced = useMemo(() => debounce(setZoom, 150), [setZoom]);
+
   const map = useMapEvents({
     zoomend: () => {
-      setZoom(map.getZoom());
+      setZoomDebounced(map.getZoom());
       handleBoundsChange();
     },
     moveend: () => {
@@ -665,10 +693,18 @@ export default function MapComponent({
   const userCoords: [number, number] | null = (userLocation && !isNaN(userLocation.lat) && !isNaN(userLocation.lng)) 
     ? [userLocation.lat, userLocation.lng] 
     : null;
-    
-  const curvedPath = (isValidLatLng(userCoords) && isValidLatLng(propertyCoords)) 
-    ? getCurvedPath(userCoords, propertyCoords) 
-    : null;
+
+  // Memoized so the 50-point bezier doesn't recompute on every render
+  const curvedPath = useMemo(() => {
+    if (isValidLatLng(userCoords) && isValidLatLng(propertyCoords)) {
+      return getCurvedPath(userCoords!, propertyCoords!);
+    }
+    return null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    userCoords?.[0], userCoords?.[1],
+    propertyCoords?.[0], propertyCoords?.[1]
+  ]);
 
   return (
     <div className="relative h-full w-full">

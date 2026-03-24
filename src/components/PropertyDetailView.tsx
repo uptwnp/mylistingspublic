@@ -52,21 +52,6 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
   };
 
   useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        null,
-        { timeout: 5000 }
-      );
-    }
-  }, []);
-
-  useEffect(() => {
     addRecentlyVisited(property.property_id);
 
     const fetchSimilar = async () => {
@@ -127,6 +112,8 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
   const Icon = config.icon;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
   const [lat, lng] = getPropertyCoords(property, similarProperties);
+  // Stable array ref so MapComponent doesn't re-render on every keystroke
+  const mapProperties = React.useMemo(() => [property], [property.property_id]);
 
   return (
     <div className="min-h-screen bg-white pb-32">
@@ -217,7 +204,6 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                             src={property.image_urls[heroImageIndex]}
                             alt={property.description || 'Property Image'}
                             fill
-                            unoptimized
                             className="object-cover"
                             draggable={false}
                             priority
@@ -290,7 +276,6 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                           src={url}
                           alt={`Thumb ${i + 1}`}
                           fill
-                          unoptimized
                           className="object-cover"
                         />
                       </button>
@@ -407,19 +392,14 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 </a>
               </div>
               <div className="h-[400px] w-full rounded-2xl border border-zinc-100 bg-zinc-50 overflow-hidden">
-                {(() => {
-                  const mapProperties = React.useMemo(() => [property], [property.property_id]);
-                  return (
-                    <MapComponent 
-                      properties={mapProperties} 
-                      selectedProperty={property} 
-                      onSelectProperty={() => {}}
-                      userLocation={userLocation} 
-                      showDistance={true} 
-                      disableCard={true} 
-                    />
-                  );
-                })()}
+                <MapComponent 
+                  properties={mapProperties} 
+                  selectedProperty={property} 
+                  onSelectProperty={() => {}}
+                  userLocation={userLocation} 
+                  showDistance={true} 
+                  disableCard={true} 
+                />
               </div>
               {userLocation && (
                 <div className="flex items-center gap-2 text-emerald-600">
@@ -560,7 +540,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
             <div className="relative flex-1 flex items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.div key={activePhotoIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative h-full w-full max-w-5xl">
-                  <Image src={property.image_urls[activePhotoIndex]} alt="Gallery" fill unoptimized className="object-contain" />
+                  <Image src={property.image_urls[activePhotoIndex]} alt="Gallery" fill className="object-contain" />
                 </motion.div>
               </AnimatePresence>
               <button onClick={prevPhoto} className="absolute left-6 h-14 w-14 rounded-full bg-white/10 text-white flex items-center justify-center"><ChevronLeft className="h-6 w-6" /></button>
@@ -569,7 +549,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
             <div className="flex justify-center gap-2 p-8 overflow-x-auto">
               {property.image_urls.map((url, i) => (
                 <button key={i} onClick={() => setActivePhotoIndex(i)} className={cn("relative h-16 w-16 rounded-xl border-2 transition-all", activePhotoIndex === i ? "border-white" : "border-transparent opacity-40")}>
-                  <Image src={url} alt="Thumb" fill unoptimized className="object-cover" />
+                  <Image src={url} alt="Thumb" fill className="object-cover" />
                 </button>
               ))}
             </div>

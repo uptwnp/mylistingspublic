@@ -220,8 +220,9 @@ export function ExploreView({
 
         setProperties(finalData);
         cacheProperties(finalData);
+        // Scroll before React paints the new list to avoid visible jump
+        requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
         setLoading(false);
-        window.scrollTo({ top: 0, behavior: 'instant' });
       } catch (err) {
         console.error('Explore fetch crash:', err);
         setLoading(false);

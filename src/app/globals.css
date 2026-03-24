@@ -148,27 +148,31 @@ h1, h2, h3, h4, h5, h6 {
 
 a,
 button,
-label,
-select,
-summary,
 [role="button"],
-[type="button"],
-[type="submit"],
-[type="reset"],
-input[type="checkbox"],
-input[type="radio"],
 .cursor-pointer,
 .property-card-interactive {
   cursor: pointer !important;
   touch-action: manipulation;
-  transition: transform 0.1s ease-out;
 }
 
-button:active, 
-a:active, 
+button:active,
+a:active,
 .cursor-pointer:active {
   transform: scale(0.96);
-  transition: transform 0.05s ease-out;
+  transition: transform 0.05s linear;
+}
+
+/* Specific interactive inputs — no transform cost */
+label,
+select,
+summary,
+[type="button"],
+[type="submit"],
+[type="reset"],
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer !important;
+  touch-action: manipulation;
 }
 
 .glass {
