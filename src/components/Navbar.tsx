@@ -470,10 +470,13 @@ export default function Navbar() {
                         transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
                       >
                         <Link href="/shortlist" onClick={(e) => e.stopPropagation()}>
-                          <div className="relative flex h-8 w-8 items-center justify-center transition-colors">
-                            <ShoppingCart className="h-5 w-5 text-zinc-600" />
+                          <div className={cn(
+                            "relative flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                            shortlistItems.length > 0 ? "bg-zinc-900 text-white hover:bg-zinc-700" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                          )}>
+                            <ShoppingCart className={cn("h-5 w-5", shortlistItems.length > 0 ? "text-zinc-300" : "text-zinc-600")} />
                             {shortlistItems.length > 0 && (
-                              <span className="absolute -top-1.5 -right-1.5 flex h-[16px] w-[16px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[8px] font-black text-white shadow-md">
+                              <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
                                 {shortlistItems.length}
                               </span>
                             )}

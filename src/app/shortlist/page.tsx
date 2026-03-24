@@ -109,25 +109,25 @@ export default function ShortlistPage() {
                 <Link href="/explore" className="mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-500 hover:text-black">
                   <ArrowLeft className="h-3.5 w-3.5" /> Back to Discover
                 </Link>
-                 <div className="flex items-center justify-between gap-4">
-                   <div>
+                 <div>
+                   <div className="flex items-center justify-between gap-3">
                      <h1 className="ty-display font-bold tracking-tight text-zinc-900 leading-tight">
                        Shortlist
                      </h1>
-                     <p className="mt-2 ty-caption font-medium text-zinc-500">
-                       {properties.length} {properties.length === 1 ? 'property' : 'properties'} selected for consultation.
-                     </p>
+                     <button 
+                       onClick={handleShare}
+                       title={isShared ? 'Link Copied!' : 'Share Shortlist'}
+                       className={cn(
+                         "flex items-center justify-center p-1.5 transition-all active:scale-[0.98]",
+                         isShared ? "text-emerald-500" : "text-zinc-400 hover:text-zinc-700"
+                       )}
+                     >
+                       {isShared ? <CheckCircle2 className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
+                     </button>
                    </div>
-                   <button 
-                     onClick={handleShare}
-                     className={cn(
-                       "flex h-10 items-center justify-center gap-2 rounded-2xl px-5 ty-caption font-bold shadow-sm transition-all active:scale-[0.98] border whitespace-nowrap",
-                       isShared ? "bg-emerald-500 text-white border-emerald-500" : "bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50"
-                     )}
-                   >
-                     {isShared ? <CheckCircle2 className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                     {isShared ? 'Link Copied!' : 'Share Shortlist'}
-                   </button>
+                   <p className="mt-1.5 ty-caption font-medium text-zinc-500">
+                     {properties.length} {properties.length === 1 ? 'property' : 'properties'} selected for consultation.
+                   </p>
                  </div>
                </div>
 
