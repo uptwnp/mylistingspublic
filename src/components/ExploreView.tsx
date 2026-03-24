@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
-import { SlidersHorizontal, Map as MapIcon, X, Maximize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, Map as MapIcon, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
@@ -447,8 +447,17 @@ export function ExploreView({
       {/* Full-screen map overlay — mobile & desktop 'map' mode */}
       {viewMode === 'map' && (
         <div className="fixed inset-0 z-[60] bg-white">
-          {/* X close button — top right, above Leaflet */}
+          {/* Controls: top-right — Minimize (desktop only) + Close */}
           <div className="absolute top-4 right-4 z-[1001] flex gap-2">
+            {/* Minimize to split — desktop only */}
+            <button
+              onClick={() => setViewMode('split')}
+              className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-600 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]"
+              title="Split view"
+            >
+              <Minimize2 className="h-5 w-5" />
+            </button>
+            {/* Close to list — all screens */}
             <button
               onClick={() => setViewMode('list')}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-600 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]"
