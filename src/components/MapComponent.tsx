@@ -7,7 +7,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import './MapComponent.css';
-import { Plus, Minus, Satellite, Map as MapIcon, Locate, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check } from 'lucide-react';
+import { Plus, Minus, Satellite, Map as MapIcon, Locate, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check, Search } from 'lucide-react';
 import { Property } from '@/types';
 import { formatPrice, getPropertyCoords, cn, formatSizeRange, isValidLatLng } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
@@ -181,6 +181,7 @@ interface MapComponentProps {
   userLocation?: { lat: number; lng: number; isFallback?: boolean } | null;
   showDistance?: boolean;
   disableCard?: boolean;
+  onBoundsChange?: (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => void;
 }
 
 // isValidLatLng helper moved to utils.ts
@@ -574,15 +575,48 @@ function CollisionAwareMarkers({
 }
 
 
-function MapEvents({ onSelectProperty, setZoom }: { onSelectProperty: (p: Property | null) => void, setZoom: (z: number) => void }) {
+function MapReady({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    onReady(map);
+  }, [map, onReady]);
+  return null;
+}
+
+function MapEvents({ 
+  onSelectProperty, 
+  setZoom, 
+  onBoundsChange 
+}: { 
+  onSelectProperty: (p: Property | null) => void, 
+  setZoom: (z: number) => void,
+  onBoundsChange?: (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => void
+}) {
   const map = useMapEvents({
     zoomend: () => {
       setZoom(map.getZoom());
+      handleBoundsChange();
+    },
+    moveend: () => {
+      handleBoundsChange();
     },
     click: () => {
       onSelectProperty(null);
     }
   });
+
+  const handleBoundsChange = () => {
+    if (onBoundsChange) {
+      const b = map.getBounds();
+      onBoundsChange({
+        minLat: b.getSouthWest().lat,
+        maxLat: b.getNorthEast().lat,
+        minLng: b.getSouthWest().lng,
+        maxLng: b.getNorthEast().lng
+      });
+    }
+  };
+
   return null;
 }
 
@@ -592,18 +626,40 @@ export default function MapComponent({
   onSelectProperty, 
   userLocation,
   showDistance = false,
-  disableCard = false
+  disableCard = false,
+  onBoundsChange
 }: MapComponentProps) {
   const router = useRouter();
   const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave, areaCenters } = useShortlist();
   const [isSatellite, setIsSatellite] = useState(false);
   const [zoom, setZoom] = useState(13);
+  const [showSearchArea, setShowSearchArea] = useState(false);
+  const [lastSearchBounds, setLastSearchBounds] = useState<string>('');
 
   const rawCenter = selectedProperty 
     ? getCoords(selectedProperty, properties, areaCenters)
     : [29.3909, 76.9635];
   
   const center: [number, number] = isValidLatLng(rawCenter) ? rawCenter : [29.3909, 76.9635];
+
+  const handleBoundsChange = (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => {
+    const boundsKey = `${bounds.minLat.toFixed(4)},${bounds.maxLat.toFixed(4)},${bounds.minLng.toFixed(4)},${bounds.maxLng.toFixed(4)}`;
+    
+    // Show 'Search this area' button if bounds changed significantly and we aren't currently searching them
+    if (boundsKey !== lastSearchBounds) {
+      setShowSearchArea(true);
+    }
+  };
+
+  const handleSearchThisArea = () => {
+    if (onBoundsChange) {
+      // Get current map bounds directly for accuracy
+      const map = (window as any).leafletMap; // We'll need a way to access the map instance if we use a button
+      // Alternatively, we can just use the state from MapEvents if we lift it up or use a ref.
+    }
+    // Re-triggering search with current bounds
+    setShowSearchArea(false);
+  };
 
   const propertyCoords = selectedProperty ? getCoords(selectedProperty, properties, areaCenters) : null;
   const userCoords: [number, number] | null = (userLocation && !isNaN(userLocation.lat) && !isNaN(userLocation.lng)) 
@@ -622,7 +678,12 @@ export default function MapComponent({
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
-        <MapEvents onSelectProperty={onSelectProperty} setZoom={setZoom} />
+        <MapReady onReady={(map) => { (window as any).leafletMap = map; }} />
+        <MapEvents 
+          onSelectProperty={onSelectProperty} 
+          setZoom={setZoom} 
+          onBoundsChange={handleBoundsChange}
+        />
         <InvalidateSize trigger={properties} />
         <MapController selectedProperty={selectedProperty} zoomLevel={15} properties={properties} areaCenters={areaCenters} />
         <TileLayer
@@ -691,6 +752,40 @@ export default function MapComponent({
           areaCenters={areaCenters}
         />
       </MapContainer>
+
+      {/* Search this area button */}
+      <AnimatePresence>
+        {showSearchArea && !selectedProperty && (
+          <motion.div 
+            initial={{ y: -20, opacity: 0, x: '-50%' }}
+            animate={{ y: 0, opacity: 1, x: '-50%' }}
+            exit={{ y: -20, opacity: 0, x: '-50%' }}
+            className="absolute top-6 left-1/2 z-[1001]"
+          >
+            <button 
+              onClick={() => {
+                const map = (window as any).leafletMap;
+                if (map && onBoundsChange) {
+                  const b = map.getBounds();
+                  const bounds = {
+                    minLat: b.getSouthWest().lat,
+                    maxLat: b.getNorthEast().lat,
+                    minLng: b.getSouthWest().lng,
+                    maxLng: b.getNorthEast().lng
+                  };
+                  onBoundsChange(bounds);
+                  setLastSearchBounds(`${bounds.minLat.toFixed(4)},${bounds.maxLat.toFixed(4)},${bounds.minLng.toFixed(4)},${bounds.maxLng.toFixed(4)}`);
+                  setShowSearchArea(false);
+                }
+              }}
+              className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-zinc-100 transition-all hover:scale-105 active:scale-[0.98]"
+            >
+              <Search className="h-4 w-4" />
+              <span>Search this area</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Card UI */}
       <AnimatePresence>

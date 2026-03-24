@@ -27,7 +27,7 @@ export const BUDGET_OPTIONS = [
 ];
 
 export const PROPERTY_TYPES = [
-  "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Factory", "Godown"
+  "Any Type", "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Factory", "Godown"
 ];
 
 interface HeaderSearchProps {

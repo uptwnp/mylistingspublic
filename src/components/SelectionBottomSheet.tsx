@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Locate, Globe } from 'lucide-react';
+import { X, Wallet, Home as HomeIcon, Trees, Store, Building2, Search, MapPin, Locate, Globe, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 import { getAreas } from '@/lib/supabase';
@@ -20,6 +20,7 @@ const BUDGET_OPTIONS = [
 ];
 
 const PROPERTY_TYPES = [
+  { label: "Any Type", value: "Any Type", icon: LayoutGrid },
   { label: "Plots", value: "Residential Plot", icon: Trees },
   { label: "Houses", value: "Residential House", icon: HomeIcon },
   { label: "Shop", value: "Shop", icon: Store },

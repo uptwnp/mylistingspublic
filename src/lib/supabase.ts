@@ -36,9 +36,7 @@ const formatPropertyData = (property: Record<string, unknown>) => {
     ...property,
     public_id: String(property.public_id ?? ''),
     property_id: String(property.property_id ?? ''),
-    tags: typeof property.tags === 'string' 
-      ? property.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-      : Array.isArray(property.tags) ? (property.tags as any).filter(Boolean) : [],
+
     highlights: typeof property.highlights === 'string'
       ? property.highlights.split(',').map((h: string) => h.trim()).filter(Boolean)
       : Array.isArray(property.highlights) ? (property.highlights as any).filter(Boolean) : [],
@@ -56,7 +54,7 @@ const formatPropertyData = (property: Record<string, unknown>) => {
   return formatted;
 };
 
-const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,tags,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status';
+const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status';
 
 export async function getProperties(
   page = 0, 
@@ -73,17 +71,19 @@ export async function getProperties(
   highlights?: string,
   keywords?: string,
   userLat?: number | null,
-  userLng?: number | null
+  userLng?: number | null,
+  bounds?: { minLat: number; maxLat: number; minLng: number; maxLng: number } | null
 ) {
   if (!supabase) return { data: [], count: 0 };
 
-  const safeLimit = Math.min(limit, 20); // Strict maximum for pagination
+  const safeLimit = Math.min(limit, bounds ? 100 : 20); // Higher limit when searching by bounds
   const cacheLat = userLat ? Math.round(userLat * 1000) / 1000 : 'noLat';
   const cacheLng = userLng ? Math.round(userLng * 1000) / 1000 : 'noLng';
-  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${cacheLat}_${cacheLng}_${page}`;
+  const boundsKey = bounds ? `${bounds.minLat}_${bounds.maxLat}_${bounds.minLng}_${bounds.maxLng}` : 'noBounds';
+  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${cacheLat}_${cacheLng}_${boundsKey}_${page}`;
   
   // 1. Try LocalStorage Cache (Browser Only) - Perceived Instant Speed
-  if (useCache && typeof window !== 'undefined' && page === 0) {
+  if (useCache && typeof window !== 'undefined' && page === 0 && !bounds) {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
@@ -100,9 +100,9 @@ export async function getProperties(
   let p_max_price = null;
   
   // Normalize params for SQL search
-  const normalizedCity = (!city || city === 'All' || city === 'any') ? 'All' : city;
+  const normalizedCity = (!city || city === 'All' || city === 'any' || !!bounds) ? 'All' : city; // If we have bounds, we ignore city/area filters to catch everything in view
   const normalizedType = (!type || ['All', 'Any Type', 'all-types', 'anything', 'any'].includes(type)) ? 'All' : type;
-  const normalizedArea = (!area || ['All', 'anywhere', 'any', 'Anywhere'].includes(area)) ? 'All' : area;
+  const normalizedArea = (!area || ['All', 'anywhere', 'any', 'Anywhere'].includes(area) || !!bounds) ? 'All' : area;
 
   if (budget && !['All', 'Any Budget', 'any-budget', 'Any'].includes(budget)) {
     const b = budget.toLowerCase();
@@ -135,7 +135,11 @@ export async function getProperties(
       p_sort_field: sortField,
       p_sort_order: sortOrder,
       p_page: page,
-      p_limit: safeLimit
+      p_limit: safeLimit,
+      p_min_lat: bounds?.minLat || null,
+      p_max_lat: bounds?.maxLat || null,
+      p_min_lng: bounds?.minLng || null,
+      p_max_lng: bounds?.maxLng || null
     });
 
     if (error) {

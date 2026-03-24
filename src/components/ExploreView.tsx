@@ -54,6 +54,7 @@ export function ExploreView({
   const [loading, setLoading] = useState(initialProperties.length === 0);
   const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
   const [isFirstMount, setIsFirstMount] = useState(true);
+  const [mapBounds, setMapBounds] = useState<{ minLat: number; maxLat: number; minLng: number; maxLng: number } | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -150,9 +151,10 @@ export function ExploreView({
     }
   }, [activeArea, userLocation, selectedCity]); // Removed sortField from here to stop the 'sorting trap'
 
-  // Reset page when any core search filter changes
+  // Reset page and mapBounds when any core search filter changes
   useEffect(() => {
     setPage(0);
+    setMapBounds(null);
   }, [selectedCity, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
 
   const mountedRef = useRef(false);
@@ -194,7 +196,8 @@ export function ExploreView({
           highlights || undefined,
           keywords || undefined,
           userLocation?.lat,
-          userLocation?.lng
+          userLocation?.lng,
+          mapBounds
         );
         
         let finalData = data ? [...data] : [];
@@ -227,7 +230,7 @@ export function ExploreView({
       }
     };
     fetchData();
-  }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget, initialProperties]);
+  }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget, initialProperties, mapBounds]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white pt-20 sm:pt-20">
@@ -386,7 +389,7 @@ export function ExploreView({
             </div>
 
             {/* Pagination */}
-            {!loading && properties.length > 0 && totalCount > itemsPerPage && (
+            {!loading && properties.length > 0 && totalCount > itemsPerPage && !mapBounds && (
               <div className="mt-8 border-t border-zinc-100 bg-white py-6 mb-20 lg:mb-0">
                 <div className="flex items-center justify-between gap-4">
                   <button
@@ -435,6 +438,7 @@ export function ExploreView({
                 onSelectProperty={setSelectedProperty}
                 userLocation={userLocation}
                 showDistance={activeArea === 'Near Me' || sortField === 'distance'}
+                onBoundsChange={setMapBounds}
               />
             </div>
           </div>

@@ -121,11 +121,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
             <span className="truncate">{property.area}, {property.city}</span>
           </div>
 
-          {Array.isArray(property.tags) && property.tags.length > 0 ? (
-            <p className="mt-1 ty-micro font-black text-brand-primary truncate uppercase tracking-widest opacity-90">
-              {property.tags.join(' • ')}
-            </p>
-          ) : property.description && (
+          {property.description && (
             <p className="mt-1 ty-caption text-zinc-400 truncate w-full italic font-medium opacity-80">
               {property.description}
             </p>
@@ -175,19 +171,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                 </p>
               )}
 
-              {/* Tags */}
-              {Array.isArray(property.tags) && property.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {property.tags.map((tag, i) => (
-                    <span 
-                      key={i} 
-                      className="px-2 py-0.5 bg-zinc-50 ty-caption font-medium text-zinc-500 rounded-lg border border-zinc-100"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
+
 
               <div className="flex flex-col gap-2 pt-2">
                 <div className="flex gap-2">
