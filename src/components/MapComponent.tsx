@@ -290,12 +290,21 @@ function MapControls({
   const handleZoomOut = () => map.zoomOut();
   
   const handleGPS = () => {
-    map.locate().on("locationfound", function (e) {
-      map.flyTo(e.latlng, 16, {
-        animate: true,
-        duration: 1.5
-      });
-    });
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          map.flyTo([position.coords.latitude, position.coords.longitude], 16, {
+            animate: true,
+            duration: 1.5
+          });
+        },
+        (error) => {
+          console.error("GPS error:", error);
+          // Fallback if needed, but usually just log it
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
   };
 
   return (
@@ -303,15 +312,15 @@ function MapControls({
       {/* Zoom & GPS Group (Right Side) */}
       <div className={cn(
         "absolute right-4 sm:right-8 z-[1000] flex flex-col gap-4 transition-all duration-500",
-        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-24 sm:bottom-12"
+        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-6 sm:bottom-8"
       )}>
-        <div className="flex flex-col overflow-hidden rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+        <div className="flex flex-col overflow-hidden rounded-[16px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
           <button 
             onClick={handleZoomIn}
             title="Zoom In"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Plus className="h-5 w-5 text-zinc-900" />
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
           
           <div className="mx-3 h-px bg-zinc-200/50" />
@@ -319,9 +328,9 @@ function MapControls({
           <button 
             onClick={handleZoomOut}
             title="Zoom Out"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Minus className="h-5 w-5 text-zinc-900" />
+            <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
 
           <div className="mx-3 h-px bg-zinc-200/50" />
@@ -329,9 +338,9 @@ function MapControls({
           <button 
             onClick={handleGPS}
             title="My Location"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Locate className="h-5 w-5 text-zinc-900" />
+            <Locate className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
         </div>
       </div>
@@ -339,14 +348,14 @@ function MapControls({
       {/* Satellite Toggle (Left Side) */}
       <div className={cn(
         "absolute left-4 sm:left-8 z-[1000] transition-all duration-500",
-        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-24 sm:bottom-12"
+        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-6 sm:bottom-8"
       )}>
         <button 
           onClick={() => setIsSatellite(!isSatellite)}
           title={isSatellite ? "Show Map" : "Show Satellite"}
-          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-[0.98]"
+          className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-[16px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-[0.98]"
         >
-          {isSatellite ? <MapIcon className="h-5 w-5 text-zinc-900" /> : <Satellite className="h-5 w-5 text-zinc-900" />}
+          {isSatellite ? <MapIcon className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" /> : <Satellite className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-900" />}
         </button>
       </div>
     </>
@@ -623,7 +632,7 @@ export default function MapComponent({
         <MapControls 
           isSatellite={isSatellite} 
           setIsSatellite={setIsSatellite} 
-          hasSelectedProperty={!!selectedProperty}
+          hasSelectedProperty={!!selectedProperty && !disableCard}
         />
         
         {curvedPath && (
