@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
-import { SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, Map as MapIcon, X, Maximize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
@@ -447,7 +447,7 @@ export function ExploreView({
       {/* Full-screen map overlay — mobile & desktop 'map' mode */}
       {viewMode === 'map' && (
         <div className="fixed inset-0 z-40 bg-white">
-          {/* Controls: X top-right */}
+          {/* X close button — top right */}
           <div className="absolute top-4 right-4 z-[1001] flex gap-2">
             <button
               onClick={() => setViewMode('list')}
@@ -457,15 +457,6 @@ export function ExploreView({
               <X className="h-5 w-5" />
             </button>
           </div>
-
-          {/* Show List pill — bottom center */}
-          <button
-            onClick={() => setViewMode('list')}
-            className="absolute bottom-8 left-1/2 z-[1001] -translate-x-1/2 flex items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl active:scale-[0.98]"
-          >
-            <LayoutGrid className="h-4 w-4" />
-            <span>Show List</span>
-          </button>
 
           <MapComponent
             properties={properties}
@@ -477,6 +468,7 @@ export function ExploreView({
           />
         </div>
       )}
+
 
       {/* Floating 'Show Map' pill — only shown in list mode on mobile */}
       {properties.length > 0 && viewMode === 'list' && (
