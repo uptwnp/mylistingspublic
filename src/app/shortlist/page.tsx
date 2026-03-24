@@ -97,7 +97,7 @@ export default function ShortlistPage() {
             </div>
             <h2 className="ty-title font-bold">Your shortlist is empty</h2>
             <p className="mt-2 ty-caption text-zinc-500">Add properties you're interested in to your shortlist.</p>
-            <Link href="/" className="mt-6 sm:mt-8 rounded-full bg-black px-6 sm:px-8 py-2.5 sm:py-3 ty-caption font-bold uppercase tracking-widest text-white">
+            <Link href="/explore" className="mt-6 sm:mt-8 rounded-full bg-black px-6 sm:px-8 py-2.5 sm:py-3 ty-caption font-bold uppercase tracking-widest text-white">
               Explore Properties
             </Link>
           </div>
@@ -106,7 +106,7 @@ export default function ShortlistPage() {
             {/* List of Properties */}
             <div className="lg:col-span-2 space-y-6 sm:space-y-8">
               <div className="mb-4 sm:mb-8 px-2 sm:px-0">
-                <Link href="/" className="mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-500 hover:text-black">
+                <Link href="/explore" className="mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-500 hover:text-black">
                   <ArrowLeft className="h-3.5 w-3.5" /> Back to Discover
                 </Link>
                  <div className="flex items-center justify-between gap-4">

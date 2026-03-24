@@ -65,7 +65,7 @@ export default function FavoritesPage() {
     <div className="min-h-screen bg-zinc-50 pt-32 pb-20">
       <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
         <div className="mb-12">
-          <Link href="/" className="mb-4 flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-black">
+          <Link href="/explore" className="mb-4 flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-black">
             <ArrowLeft className="h-4 w-4" /> Back to Discover
           </Link>
           <h1 className="ty-display font-black tracking-tight text-zinc-900">
@@ -83,7 +83,7 @@ export default function FavoritesPage() {
             </div>
             <h2 className="ty-title font-bold">No saved properties</h2>
             <p className="mt-2 ty-body text-zinc-500">Tap the heart icon on any property to save it here.</p>
-            <Link href="/" className="mt-8 rounded-full bg-black px-8 py-3 ty-caption font-bold uppercase tracking-widest text-white">
+            <Link href="/explore" className="mt-8 rounded-full bg-black px-8 py-3 ty-caption font-bold uppercase tracking-widest text-white">
               Start Exploring
             </Link>
           </div>
