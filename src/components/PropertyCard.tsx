@@ -199,7 +199,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                     className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-2.5 ty-caption font-bold text-zinc-900 transition-all hover:bg-zinc-50 active:scale-[0.98]"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    Full Property Page
+                    View Full Details
                   </a>
                   
                   <button
