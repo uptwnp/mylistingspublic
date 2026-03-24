@@ -166,7 +166,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     const savedRequests = localStorage.getItem(REQUESTS_KEY);
     
     if (savedCart) {
-      try { setShortlistItems(JSON.parse(savedCart)); } catch (e) { console.error(e); }
+      try { setShortlistItems([...new Set(JSON.parse(savedCart) as string[])]); } catch (e) { console.error(e); }
     }
     if (savedProps) {
       try { setSavedIds(JSON.parse(savedProps)); } catch (e) { console.error(e); }
@@ -396,6 +396,18 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     }
   }, [contactDetails, shortlistItems, inquiries]);
 
+  // Auto-sync consultation requests if sync is enabled
+  useEffect(() => {
+    if (consultationRequests.length > 0) {
+      const needsSync = consultationRequests.some(r => r.isSyncEnabled);
+      if (needsSync) {
+        setConsultationRequests(prev => prev.map(r => 
+          r.isSyncEnabled ? { ...r, propertyIds: shortlistItems } : r
+        ));
+      }
+    }
+  }, [shortlistItems]);
+
   const clearFilters = () => {
     setQuery('');
     setKeywords('');
@@ -520,7 +532,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     setConsultationRequests([newRequest]);
 
     // Also sync to Supabase (Lead generation) via Server Action
-    submitConsultationRequestAction(newRequest).catch(e => console.error('Supabase lead sync failed', e));
+    submitConsultationRequestAction({ ...newRequest, inquiries }).catch(e => console.error('Supabase lead sync failed', e));
   };
 
   const updateConsultationRequest = (id: string, updates: Partial<ConsultationRequest>) => {

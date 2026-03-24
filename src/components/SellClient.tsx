@@ -203,14 +203,14 @@ export function SellClient() {
         </div>
       </section>
 
-      {/* ── YOUR LISTINGS ── */}
-      {contactDetails?.phoneNumber && (
+      {/* ── YOUR LISTING REQUESTS ── */}
+      {!listingsLoading && listings.length > 0 && (
         <section className="py-16 sm:py-24 px-6 bg-zinc-50/50 border-y border-zinc-100">
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="ty-title font-black text-zinc-900 uppercase tracking-tight">Your Listings</h2>
-                <p className="ty-caption text-zinc-500 mt-1">All properties you've submitted for sale</p>
+                <h2 className="ty-title font-black text-zinc-900 uppercase tracking-tight">Your Listing Requests</h2>
+                <p className="ty-caption text-zinc-500 mt-1">Properties you've submitted for sale</p>
               </div>
               <button
                 onClick={openModal}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
-import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Locate } from 'lucide-react';
+import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Locate, MessageCircleQuestion } from 'lucide-react';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +8,7 @@ import { cn, formatPrice, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import { useRouter } from 'next/navigation';
 import { NoPhotosPlaceholder } from './NoPhotosPlaceholder';
+import { AskQuestionModal } from './AskQuestionModal';
 
 interface PropertyCardProps {
   property: Property;
@@ -20,6 +21,7 @@ interface PropertyCardProps {
 export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeFallback, showDistance }: PropertyCardProps) {
   const router = useRouter();
   const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave } = useShortlist();
+  const [isAskModalOpen, setIsAskModalOpen] = useState(false);
 
   const inCart = isInShortlist(property.property_id);
   const saved = isSaved(property.property_id);
@@ -258,11 +260,27 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                     <Heart className={cn("h-5 w-5", saved && "fill-current")} />
                   </button>
                 </div>
+
+                {/* Ask Question */}
+                <button
+                  onClick={(e) => handleActionClick(e, () => setIsAskModalOpen(true))}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-zinc-200 py-2.5 ty-caption font-bold text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-all active:scale-[0.98]"
+                >
+                  <MessageCircleQuestion className="h-4 w-4" />
+                  Ask a Question
+                </button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Ask Question Modal */}
+      <AskQuestionModal
+        property={property}
+        isOpen={isAskModalOpen}
+        onClose={() => setIsAskModalOpen(false)}
+      />
     </motion.div>
   );
 }

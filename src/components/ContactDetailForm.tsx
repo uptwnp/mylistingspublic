@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, KeyboardEvent, useRef } from 'react';
+import { useState, useEffect, KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Phone, MapPin, Check, ArrowRight, ArrowLeft, Building2, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,15 @@ export function ContactDetailForm() {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState(1);
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+
+  // Focus the first focusable input in the step after animation completes
+  const focusActiveInput = () => {
+    // Only auto-focus on non-touch (desktop) — on mobile the keyboard popping up causes layout shift
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      const el = document.querySelector<HTMLInputElement | HTMLTextAreaElement>('[data-autofocus]');
+      el?.focus();
+    }
+  };
 
   const TOTAL_STEPS = 5;
 
@@ -75,18 +83,7 @@ export function ContactDetailForm() {
     }
   }, [formData, currentStep, isContactFormOpen, contactDetails]);
 
-  // Focus input on step change
-  useEffect(() => {
-    if (isContactFormOpen) {
-      // small delay to allow animation to complete
-      const timer = setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [currentStep, isContactFormOpen]);
+  // Auto-focus is now triggered via onAnimationComplete inside the motion.div (see JSX below)
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -176,7 +173,7 @@ export function ContactDetailForm() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="relative w-full sm:max-w-3xl h-[85vh] sm:h-[650px] overflow-hidden rounded-t-[32px] sm:rounded-[40px] bg-white shadow-2xl pointer-events-auto flex flex-col"
+            className="relative w-full sm:max-w-3xl h-[100dvh] sm:h-[650px] overflow-hidden sm:rounded-[40px] bg-white shadow-2xl pointer-events-auto flex flex-col"
           >
             {/* Progress Bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-zinc-100 z-10">
@@ -214,6 +211,7 @@ export function ContactDetailForm() {
                   initial="enter"
                   animate="center"
                   exit="exit"
+                  onAnimationComplete={(def) => { if (def === 'center') focusActiveInput(); }}
                   transition={{
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 }
@@ -226,7 +224,7 @@ export function ContactDetailForm() {
                      <div className="space-y-6 sm:space-y-10">
                         <div className="space-y-3">
                            <p className="text-zinc-400 font-bold tracking-widest text-xs uppercase flex items-center gap-2">
-                              1 &rarr; Personal Info
+                              1 &rarr; Contact Info
                            </p>
                            <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 leading-[1.1]">
                               What's your full name?
@@ -234,7 +232,7 @@ export function ContactDetailForm() {
                         </div>
                         <div className="space-y-4 relative">
                            <input
-                              ref={inputRef as React.RefObject<HTMLInputElement>}
+                              data-autofocus
                               required
                               type="text"
                               placeholder="e.g. Rahul Sharma"
@@ -263,7 +261,7 @@ export function ContactDetailForm() {
                            <div>
                               <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 block">Primary Number</label>
                               <input
-                                 ref={inputRef as React.RefObject<HTMLInputElement>}
+                                 data-autofocus
                                  required
                                  type="tel"
                                  placeholder="98765 43210"
@@ -303,7 +301,7 @@ export function ContactDetailForm() {
                         </div>
                         <div className="space-y-4">
                            <textarea
-                              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                              data-autofocus
                               required
                               placeholder="e.g. Sector 12, Panipat"
                               rows={2}

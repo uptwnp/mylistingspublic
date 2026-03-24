@@ -191,9 +191,10 @@ export async function getPropertyById(id: string | number) {
 export async function getPropertiesByIds(ids: string[]) {
   if (!supabase || !ids || ids.length === 0) return [];
   
-  const cleanIds = ids.map(id => String(id).trim())
-    .filter(id => /^\d+$/.test(id))
-    .slice(0, 20);
+  // Deduplicate IDs before querying to prevent duplicate-key React errors
+  const cleanIds = [...new Set(
+    ids.map(id => String(id).trim()).filter(id => /^\d+$/.test(id))
+  )].slice(0, 20);
   
   if (cleanIds.length === 0) return [];
 
@@ -208,7 +209,17 @@ export async function getPropertiesByIds(ids: string[]) {
       return [];
     }
 
-    return (data as Record<string, unknown>[])?.map(formatPropertyData) || [];
+    // Deduplicate results by property_id as a defensive guard
+    const seen = new Set<string>();
+    const unique = (data as Record<string, unknown>[])
+      ?.map(formatPropertyData)
+      .filter(p => {
+        if (seen.has(p.property_id)) return false;
+        seen.add(p.property_id);
+        return true;
+      }) || [];
+
+    return unique;
   } catch (err) {
     console.error('Critical error in getPropertiesByIds:', err);
     return [];

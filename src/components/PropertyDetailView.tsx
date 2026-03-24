@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
-import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink, MessageCircleQuestion } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ import { getPropertyConfig } from '@/lib/property-icons';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard } from '@/components/PropertyCard';
 import dynamic from 'next/dynamic';
+import { AskQuestionModal } from '@/components/AskQuestionModal';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { 
   ssr: false,
@@ -44,6 +45,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
   const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isAskModalOpen, setIsAskModalOpen] = useState(false);
 
   const paginate = (newDirection: number) => {
     const totalSlides = property.image_urls.length + 1;
@@ -332,6 +334,13 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 <MapIcon className="h-4 w-4" />
                 Map
               </button>
+              <button
+                onClick={() => setIsAskModalOpen(true)}
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap"
+              >
+                <MessageCircleQuestion className="h-4 w-4" />
+                Ask Question
+              </button>
             </div>
 
             {/* Highlights */}
@@ -464,6 +473,13 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 >
                   {inCart ? 'Go to Shortlist' : 'Proceed with it'}
                 </button>
+                <button
+                  onClick={() => setIsAskModalOpen(true)}
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-zinc-200 py-3 ty-label text-zinc-700 hover:bg-zinc-50 transition-all active:scale-[0.98]"
+                >
+                  <MessageCircleQuestion className="h-4 w-4" />
+                  Ask a Question
+                </button>
               </div>
               <div className="h-px bg-zinc-100" />
               <div className="flex items-center justify-between">
@@ -482,11 +498,18 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
 
       {/* Mobile Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 px-4 pt-4 pb-8 sm:p-6 shadow-[0_-20px_40px_rgba(0,0,0,0.08)] md:hidden">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-col">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col shrink-0">
             <span className="ty-label text-zinc-400">Price</span>
             <p className="ty-subtitle font-bold text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
           </div>
+          <button
+            onClick={() => setIsAskModalOpen(true)}
+            className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-zinc-200 px-3 py-3.5 ty-caption font-bold text-zinc-700 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all"
+          >
+            <MessageCircleQuestion className="h-4 w-4" />
+            Ask
+          </button>
           <button 
              onClick={() => {
               if (!inCart) addToShortlist(property);
@@ -498,6 +521,13 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
           </button>
         </div>
       </div>
+
+      {/* Ask Question Modal */}
+      <AskQuestionModal
+        property={property}
+        isOpen={isAskModalOpen}
+        onClose={() => setIsAskModalOpen(false)}
+      />
 
       {/* Photo Request Modal */}
       <AnimatePresence>

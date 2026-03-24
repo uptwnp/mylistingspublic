@@ -75,15 +75,39 @@ export async function submitInquiryAction(inquiryData: any) {
 }
 
 export async function submitConsultationRequestAction(request: any) {
-  // 1. Upsert Visitor first
+  // Build a valid timestamptz or null for pref_ts.
+  // A specific date (YYYY-MM-DD) can be coerced to a timestamptz;
+  // a time-of-day label like "Afternoon (1 - 4)" cannot — store that in active_request_type.
+  let pref_ts: string | null = null;
+  if (request.preferredDate) {
+    // Handle both "YYYY-MM-DD" (date only) and "YYYY-MM-DDTHH:mm" (datetime-local)
+    const d = new Date(request.preferredDate);
+    if (!isNaN(d.getTime())) {
+      pref_ts = d.toISOString();
+    }
+  }
+
+  // Encode preferred time slot in the request type so it's not lost
+  const activeRequestType = request.preferredTime
+    ? `${request.type}:${request.preferredTime}`
+    : request.type;
+
+  // Build shortlist_items_json including any property notes (inquiries)
+  const inquiries: Record<string, any> = request.inquiries || {};
+  const shortlistItems = (request.propertyIds ?? []).map((id: string) => ({
+    property_id: id,
+    notes: inquiries[id]?.question || '',
+    added_at: Date.now(),
+  }));
+
+  // 1. Upsert Visitor
   const visitor = await upsertVisitorAction({
     ...request.contactDetails,
-    active_request_type: request.type,
-    pref_ts: request.preferredDate || request.preferredTime
+    active_request_type: activeRequestType,
+    pref_ts,
+    shortlist_items_json: shortlistItems,
   });
 
-  // 2. We can log the specific consultation details if you have a table for it
-  // For now, syncing with your current logic in ShortlistContext.tsx
   return visitor;
 }
 
