@@ -48,11 +48,8 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
   return (
     <motion.div 
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.99 }}
+      whileTap={{ scale: 0.98 }}
       onClick={handleCardToggle}
       className={cn(
         "group relative flex flex-col border bg-white p-3 rounded-[24px] shadow-sm cursor-pointer overflow-hidden",
@@ -60,7 +57,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
       )}
     >
       {/* Top Section - Always Visible */}
-      <motion.div layout className="flex items-center gap-4">
+      <div className="flex items-center gap-4">
         {/* Left Image/Icon Box */}
         <motion.div 
           layout
@@ -79,35 +76,43 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
             <NoPhotosPlaceholder isMini propertyType={property.type} />
           )}
           
-          {/* Selection Indicator for Cart */}
-          {inCart && (
-            <motion.div layout className={cn(
-              "absolute inset-0 bg-zinc-900/40 flex items-center justify-center backdrop-blur-[1px] transition-opacity duration-200",
-              "group-hover/image:opacity-0"
-            )}>
-              <div className="bg-white rounded-full p-1 shadow-lg">
-                <Check className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-zinc-900" strokeWidth={4} />
-              </div>
-            </motion.div>
-          )}
+          {/* Selection Indicator for Cart (Single Top-Right Badge) */}
+          <AnimatePresence>
+            {inCart && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-20 pointer-events-none"
+              >
+                <motion.div
+                  initial={{ scale: 0, x: 10, y: -10 }}
+                  animate={{ scale: 1, x: 0, y: 0 }}
+                  className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white shadow-xl ring-2 ring-white"
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={5} />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Open in New Tab Overlay */}
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-all duration-200 z-10">
+          {/* Open in New Tab Overlay (Visible on Hover, Above Cart State) */}
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 opacity-0 group-hover/image:opacity-100 transition-all duration-300 backdrop-blur-[1px]">
             <a 
               href={`/property/${property.property_id}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="bg-white/95 hover:bg-white text-zinc-900 p-2 rounded-full shadow-lg transform scale-50 group-hover/image:scale-110 transition-all duration-200"
-              title="Open property in new tab"
+              className="bg-white text-zinc-900 p-2.5 rounded-full shadow-2xl transform scale-50 group-hover/image:scale-100 transition-all duration-300"
+              title="View property details"
             >
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-[18px] w-[18px]" strokeWidth={3} />
             </a>
           </div>
         </motion.div>
 
         {/* Main Content Area */}
-        <motion.div layout className="flex flex-1 flex-col min-w-0 py-0.5">
+        <div className="flex flex-1 flex-col min-w-0 py-0.5">
           <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight truncate">
             {formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min)} {property.type}
           </h3>
@@ -136,9 +141,9 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
               </span>
             </div>
           )}
-        </motion.div>
+        </div>
 
-        <motion.div layout className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
+        <div className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
           <span className="px-2 sm:px-3 py-1 bg-zinc-100 rounded-full ty-micro font-black text-zinc-900 shadow-sm border border-zinc-200">
             {property.formatted_price || formatPrice(property.price_min)}
           </span>
@@ -150,8 +155,8 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
           >
             <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-400" />
           </motion.div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Expandable Area */}
       <AnimatePresence>
@@ -215,7 +220,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                         }
                       }
                     }}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-95"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-[0.98]"
                   >
                     <Share2 className="h-5 w-5" />
                   </button>
@@ -246,7 +251,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
                   <button 
                     className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-90",
+                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-[0.98]",
                       saved 
                         ? "text-rose-500 bg-rose-50 border-rose-100" 
                         : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
@@ -267,19 +272,18 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
 export function PropertyCardSkeleton() {
   return (
-    <div className="flex items-center gap-4 border border-zinc-100 bg-white p-3 rounded-[24px] shadow-sm animate-pulse">
-      <div className="h-20 w-20 shrink-0 rounded-[18px] bg-zinc-100" />
-      <div className="flex flex-1 flex-col gap-2 py-1">
-        <div className="h-6 w-24 rounded bg-zinc-100" />
-        <div className="h-4 w-32 rounded bg-zinc-50" />
-        <div className="h-4 w-28 rounded bg-zinc-50" />
-      </div>
-      <div className="flex h-20 flex-col items-end justify-between py-1 shrink-0">
-        <div className="flex gap-2">
-          <div className="h-9 w-9 rounded-full bg-zinc-50" />
-          <div className="h-9 w-9 rounded-full bg-zinc-50" />
+    <div className="flex flex-col border border-zinc-100 bg-white p-3 rounded-[24px] shadow-sm relative overflow-hidden">
+      <div className="flex items-center gap-4">
+        <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-[14px] sm:rounded-[18px] bg-zinc-100 shimmer-bg" />
+        <div className="flex flex-1 flex-col gap-2 py-1">
+          <div className="h-5 sm:h-6 w-3/4 rounded-lg bg-zinc-100 shimmer-bg" />
+          <div className="h-3.5 sm:h-4 w-1/2 rounded-md bg-zinc-50 shimmer-bg" />
+          <div className="h-3 sm:h-4 w-2/3 rounded-md bg-zinc-50 shimmer-bg" />
         </div>
-        <div className="h-6 w-16 rounded-full bg-zinc-50" />
+        <div className="flex h-16 sm:h-20 flex-col items-end justify-between py-1 shrink-0">
+          <div className="h-6 w-16 rounded-full bg-zinc-50 shimmer-bg" />
+          <div className="h-4 w-4 rounded-full bg-zinc-50 shimmer-bg" />
+        </div>
       </div>
     </div>
   );

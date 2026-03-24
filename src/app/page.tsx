@@ -1,101 +1,31 @@
-'use client';
+import { getProperties } from "@/lib/supabase";
+import { HomeClientWrapper } from "@/components/HomeClientWrapper";
+import { cookies } from "next/headers";
 
 export const runtime = 'edge';
+export const revalidate = 3600; // Cache page for 1 hour (ISR)
 
-import { Search } from 'lucide-react';
+const CITY_KEY = 'dealer_network_selected_city';
 
-import { PropertySection } from "@/components/PropertySection";
-import { PropertyListSection } from "@/components/PropertyListSection";
-import { ContinueExploringBanner } from "@/components/ContinueExploringBanner";
-import { useShortlist } from "@/context/ShortlistContext";
+export default async function Home() {
+  // Read previous city selection from cookie for Server-Side Pre-fetching
+  const cookieStore = await cookies();
+  const serverCity = cookieStore.get(CITY_KEY)?.value || 'Panipat';
 
-export default function Home() {
-  const { selectedCity, setIsMobileSearchOpen, recentlyVisitedIds, shortlistItems, savedIds } = useShortlist();
+  // Only pre-fetch the first section (Plots) for the hero/above-fold
+  // Rest of the sections will lazy-load via Intersection Observer for speed
+  const plotData = await getProperties(0, 6, false, serverCity, 'Residential Plot');
+
+  // Transform is now a simple pass-through since RPC handles filtering
+  const processForSection = (results: any) => ({
+    data: results.data || [],
+    count: results.count || 0
+  });
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Spacer for fixed Navbar — mobile is shorter because hero is in content now */}
-      <div className="h-[72px] sm:h-[360px] lg:h-80" />
-
-      {/* Mobile-only Hero Section — hidden on sm+ where navbar shows the full hero */}
-      <section className="sm:hidden px-4 pt-8 pb-4 text-center">
-        <h1 className="ty-hero font-bold tracking-tight text-zinc-900 leading-[1.05]">
-          Find your dream property
-        </h1>
-        <p className="mt-3 ty-label text-zinc-400 opacity-80">
-          Choose from biggest property pool
-        </p>
-        <div className="mt-8 px-0">
-          <button
-            onClick={() => setIsMobileSearchOpen(true)}
-            className="flex w-full items-center gap-4 rounded-[32px] border border-zinc-200/80 bg-white p-4 shadow-2xl shadow-zinc-200/60 transition-all hover:scale-[1.02] active:scale-95 text-left"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
-              <Search className="h-5 w-5" strokeWidth={3} />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="ty-body font-bold text-zinc-900 uppercase tracking-tighter">Start your search</span>
-              <span className="ty-caption font-bold text-zinc-400 truncate tracking-tight">
-                {`Near Me, ${selectedCity}`}
-              </span>
-            </div>
-          </button>
-        </div>
-      </section>
-
-      <ContinueExploringBanner />
-
-      <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12 pt-8 pb-32 space-y-10 sm:space-y-16">
-        {recentlyVisitedIds.length > 0 && (
-          <PropertyListSection
-            title="Recently Visited"
-            propertyIds={recentlyVisitedIds}
-          />
-        )}
-
-        {shortlistItems.length > 0 && (
-          <PropertyListSection
-            title="Your Shortlist"
-            propertyIds={shortlistItems}
-            viewAllLink="/shortlist"
-          />
-        )}
-
-        {savedIds.length > 0 && (
-          <PropertyListSection
-            title="Saved Properties"
-            propertyIds={savedIds}
-          />
-        )}
-
-        <PropertySection 
-          title={`Residential Plots for sale`} 
-          city={selectedCity}
-          type="Residential Plot" 
-        />
-
-        <PropertySection 
-          title={`Apartments for sale`} 
-          city={selectedCity}
-          type="Flat/Apartment" 
-        />
-
-        <PropertySection 
-          title={`Villas for sale`} 
-          city={selectedCity}
-          type="House/Villa" 
-        />
-
-        <PropertySection 
-          title={`Commercial Space`} 
-          city={selectedCity}
-          type="Commercial" 
-        />
-
-
-      </section>
-    </div>
+    <HomeClientWrapper 
+       initialPlots={processForSection(plotData)}
+       serverCity={serverCity}
+    />
   );
 }
-
-

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { syncShortlist, submitConsultationRequest, getAreaCenters } from '@/lib/supabase';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { getAreaCenters } from '@/lib/supabase';
+import { syncShortlistAction, submitConsultationRequestAction } from '@/app/actions/leads';
 
 import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
 
@@ -91,6 +92,13 @@ interface ShortlistContextType {
   updateConsultationRequest: (id: string, updates: Partial<ConsultationRequest>) => void;
   removeConsultationRequest: (id: string) => void;
   areaCenters: any[];
+  loadAreaCentersOnce: () => Promise<void>;
+  closeAllModals: (skipHistory?: boolean) => void;
+  isInitialized: boolean;
+  
+  // Property Cache for instant navigation
+  cachedProperties: Record<string, any>;
+  cacheProperties: (properties: any[]) => void;
 }
 
 const ShortlistContext = createContext<ShortlistContextType | undefined>(undefined);
@@ -105,6 +113,7 @@ const CONTACT_KEY = 'dealer_network_contact_details';
 const REQUESTS_KEY = 'dealer_network_consultation_requests';
 
 export function ShortlistProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const [shortlistItems, setShortlistItems] = useState<string[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [recentlyVisitedIds, setRecentlyVisitedIds] = useState<string[]>([]);
@@ -134,14 +143,17 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
 
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
   const [areaCenters, setAreaCenters] = useState<any[]>([]);
+  const [cachedProperties, setCachedProperties] = useState<Record<string, any>>({});
 
-  // Initialize from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_KEY);
     const savedProps = localStorage.getItem(SAVED_KEY);
+    const savedRecent = localStorage.getItem(RECENT_KEY);
     const savedCity = localStorage.getItem(CITY_KEY);
     const savedInquiries = localStorage.getItem(INQUIRIES_KEY);
     const savedFilters = localStorage.getItem(FILTERS_KEY);
+    const savedContact = localStorage.getItem(CONTACT_KEY);
+    const savedRequests = localStorage.getItem(REQUESTS_KEY);
     
     if (savedCart) {
       try { setShortlistItems(JSON.parse(savedCart)); } catch (e) { console.error(e); }
@@ -149,7 +161,6 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     if (savedProps) {
       try { setSavedIds(JSON.parse(savedProps)); } catch (e) { console.error(e); }
     }
-    const savedRecent = localStorage.getItem(RECENT_KEY);
     if (savedRecent) {
       try { setRecentlyVisitedIds(JSON.parse(savedRecent)); } catch (e) { console.error(e); }
     }
@@ -159,16 +170,10 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     if (savedInquiries) {
       try { 
         const parsed = JSON.parse(savedInquiries);
-        // Migration logic for old string-based inquiries
         const migrated: Record<string, InquiryData> = {};
         Object.entries(parsed).forEach(([id, val]) => {
           if (typeof val === 'string') {
-            migrated[id] = {
-              wantSiteVisit: false,
-              interestedInPurchase: false,
-              haveQuestion: true,
-              question: val
-            };
+            migrated[id] = { wantSiteVisit: false, interestedInPurchase: false, haveQuestion: true, question: val };
           } else {
             migrated[id] = val as InquiryData;
           }
@@ -188,11 +193,16 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
         if (f.selectedHighlights !== undefined) setSelectedHighlights(f.selectedHighlights);
       } catch (e) { console.error(e); }
     }
+    if (savedContact) {
+      try { setContactDetailsState(JSON.parse(savedContact)); } catch (e) { console.error(e); }
+    }
+    if (savedRequests) {
+      try { setConsultationRequests(JSON.parse(savedRequests)); } catch (e) { console.error(e); }
+    }
     
     // Check for shared shortlist in URL
     const searchParams = new URLSearchParams(window.location.search);
     const sharedShortlist = searchParams.get('shortlist');
-    
     if (sharedShortlist) {
       try {
         const ids = sharedShortlist.split(',').filter(id => id.trim() !== '');
@@ -205,22 +215,15 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to parse shared shortlist', e);
       }
     }
-
-    const savedContact = localStorage.getItem(CONTACT_KEY);
-    if (savedContact) {
-      try { setContactDetailsState(JSON.parse(savedContact)); } catch (e) { console.error(e); }
-    }
-
-    const savedRequests = localStorage.getItem(REQUESTS_KEY);
-    if (savedRequests) {
-      try { setConsultationRequests(JSON.parse(savedRequests)); } catch (e) { console.error(e); }
-    }
-
-    // Fetch master area centers
-    getAreaCenters().then(data => {
-      if (data) setAreaCenters(data);
-    });
+    setMounted(true);
   }, []);
+
+  const loadAreaCentersOnce = React.useCallback(async () => {
+    if (areaCenters.length === 0) {
+      const data = await getAreaCenters();
+      if (data) setAreaCenters(data);
+    }
+  }, [areaCenters.length]);
 
   // Update localStorage when state changes
   useEffect(() => {
@@ -243,6 +246,10 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem(CITY_KEY, selectedCity);
+    // Also set a cookie so the server can read it for pre-fetching
+    if (typeof document !== 'undefined') {
+      document.cookie = `${CITY_KEY}=${selectedCity}; path=/; max-age=31536000; SameSite=Lax`;
+    }
   }, [selectedCity]);
 
   useEffect(() => {
@@ -252,6 +259,102 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem(REQUESTS_KEY, JSON.stringify(consultationRequests));
   }, [consultationRequests]);
+
+  // Prevent background scrolling when any modal/overlay is open
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const isAnyModalOpen = 
+      isFilterModalOpen || 
+      activeSelectionSheet !== null || 
+      isMobileSearchOpen || 
+      inquiryProperty !== null || 
+      isContactFormOpen;
+
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mounted, isFilterModalOpen, activeSelectionSheet, isMobileSearchOpen, inquiryProperty, isContactFormOpen]);
+
+  // Device back button support for modals
+  const modalHistoryRef = useRef({ pushed: 0, isInternal: false });
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const openModals = [
+      isFilterModalOpen,
+      activeSelectionSheet !== null,
+      isMobileSearchOpen,
+      inquiryProperty !== null,
+      isContactFormOpen
+    ].filter(Boolean).length;
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (modalHistoryRef.current.isInternal) {
+        modalHistoryRef.current.isInternal = false;
+        return;
+      }
+
+      // If we land on a "modal" state but no modals are actually open, 
+      // it means we're passing through a stale history state from a previous jump.
+      // Automatically go back one more time to reach the original page.
+      if (!openModals && event.state?.modal) {
+        modalHistoryRef.current.isInternal = true;
+        window.history.back();
+        return;
+      }
+
+      // If browser back is pressed, close the "top-most" logical modal
+      if (activeSelectionSheet) {
+        setActiveSelectionSheet(null);
+      } else if (isContactFormOpen) {
+        setIsContactFormOpen(false);
+      } else if (isFilterModalOpen) {
+        setIsFilterModalOpen(false);
+      } else if (isMobileSearchOpen) {
+        setIsMobileSearchOpen(false);
+      } else if (inquiryProperty) {
+        setInquiryProperty(null);
+      }
+      
+      modalHistoryRef.current.pushed = Math.max(0, modalHistoryRef.current.pushed - 1);
+    };
+
+    if (openModals > modalHistoryRef.current.pushed) {
+      // Something opened, push a state
+      window.history.pushState({ modal: true }, '');
+      modalHistoryRef.current.pushed++;
+    } else if (openModals < modalHistoryRef.current.pushed) {
+      // Something closed manually, pop a state if we have any
+      if (modalHistoryRef.current.pushed > 0) {
+        // Only call back() if the current state is actually our modal state.
+        // If the user has already navigated away (changing history state), calling back()
+        // would reverse that navigation.
+        if (typeof window !== 'undefined' && window.history.state?.modal === true) {
+          modalHistoryRef.current.isInternal = true;
+          window.history.back();
+        }
+        modalHistoryRef.current.pushed--;
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [
+    mounted, 
+    isFilterModalOpen, 
+    activeSelectionSheet, 
+    isMobileSearchOpen, 
+    inquiryProperty, 
+    isContactFormOpen
+  ]);
 
   // Save filters to localStorage whenever they change
   useEffect(() => {
@@ -272,7 +375,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     if (contactDetails) {
       const sync = async () => {
         try {
-          await syncShortlist(contactDetails, shortlistItems, inquiries);
+          await syncShortlistAction(contactDetails, shortlistItems, inquiries);
         } catch (e) {
           console.error('Visitor sync failed:', e);
         }
@@ -343,6 +446,26 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const cacheProperties = React.useCallback((props: any[]) => {
+    if (!props || props.length === 0) return;
+    setCachedProperties(prev => {
+      const next = { ...prev };
+      props.forEach(p => {
+        if (p?.property_id) next[p.property_id] = p;
+      });
+      
+      // Keep only latest 100 properties to prevent memory bloat
+      const keys = Object.keys(next);
+      if (keys.length > 100) {
+        // Clear oldest entries (keys at the beginning)
+        const keysToRemove = keys.slice(0, keys.length - 100);
+        keysToRemove.forEach(k => delete next[k]);
+      }
+      
+      return next;
+    });
+  }, []);
+
   const setContactDetails = (details: ContactDetails) => {
     setContactDetailsState(details);
     localStorage.setItem(CONTACT_KEY, JSON.stringify(details));
@@ -371,12 +494,23 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     };
     setConsultationRequests([newRequest]);
 
-    // Also sync to Supabase (Lead generation)
-    submitConsultationRequest(newRequest).catch(e => console.error('Supabase lead sync failed', e));
+    // Also sync to Supabase (Lead generation) via Server Action
+    submitConsultationRequestAction(newRequest).catch(e => console.error('Supabase lead sync failed', e));
   };
 
   const updateConsultationRequest = (id: string, updates: Partial<ConsultationRequest>) => {
     setConsultationRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  };
+
+  const closeAllModals = (skipHistory = false) => {
+    if (skipHistory) {
+      modalHistoryRef.current.pushed = 0;
+    }
+    setIsFilterModalOpen(false);
+    setActiveSelectionSheet(null);
+    setIsMobileSearchOpen(false);
+    setInquiryProperty(null);
+    setIsContactFormOpen(false);
   };
 
   const removeConsultationRequest = (id: string) => {
@@ -439,6 +573,11 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       updateConsultationRequest,
       removeConsultationRequest,
       areaCenters,
+      loadAreaCentersOnce,
+      closeAllModals,
+      isInitialized: mounted,
+      cachedProperties,
+      cacheProperties,
     }}>
       {children}
     </ShortlistContext.Provider>

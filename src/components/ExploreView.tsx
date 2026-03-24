@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
-import { Loader2, SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
@@ -13,6 +13,8 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { calculateDistance, getPropertyCoords } from '@/lib/utils';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { parseSeoSlug } from '@/lib/seo-utils';
+import { FilterChips } from '@/components/FilterChips';
+
 
 import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 
@@ -20,9 +22,10 @@ import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-zinc-100">
+    <div className="flex h-full w-full items-center justify-center bg-zinc-50 animate-pulse">
       <div className="text-center">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-zinc-400" />
+        <MapIcon className="mx-auto h-8 w-8 text-zinc-200 mb-3" />
+        <span className="ty-micro font-bold text-zinc-400 uppercase tracking-widest">Initialising Map...</span>
       </div>
     </div>
   ),
@@ -33,27 +36,33 @@ interface ExploreViewProps {
   overrideType?: string;
   overrideArea?: string;
   overrideBudget?: string;
+  initialProperties?: Property[];
+  initialTotalCount?: number;
 }
 
 export function ExploreView({ 
   overrideCity, 
   overrideType,
   overrideArea,
-  overrideBudget
+  overrideBudget,
+  initialProperties = [],
+  initialTotalCount = 0
 }: ExploreViewProps) {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
+  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const [totalCount, setTotalCount] = useState(initialTotalCount);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('list');
+  const [loading, setLoading] = useState(initialProperties.length === 0);
+  const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
+  const [isFirstMount, setIsFirstMount] = useState(true);
 
   useEffect(() => {
-    // Determine initial view mode based on screen width
-    if (window.innerWidth >= 1024) {
-      setViewMode('split');
-    } else {
+    // Determine actual view mode based on screen width
+    if (window.innerWidth < 1024) {
       setViewMode('list');
     }
+    // Small delay to enable animations AFTER layout is settled
+    const timer = setTimeout(() => setIsFirstMount(false), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const [page, setPage] = useState(0);
@@ -66,8 +75,13 @@ export function ExploreView({
     shortlistItems, selectedCity, isFilterModalOpen, setIsFilterModalOpen, 
     setActiveSelectionSheet, setKeywords, setMinSize, setMaxSize, 
     setSelectedHighlights, clearFilters, userLocation, setUserLocation,
-    sortField, sortOrder, setSortField, setSortOrder, areaCenters
+    sortField, sortOrder, setSortField, setSortOrder, areaCenters, loadAreaCentersOnce,
+    cacheProperties, keywords, minSize, maxSize, selectedHighlights
   } = useShortlist();
+
+  useEffect(() => {
+    loadAreaCentersOnce();
+  }, [loadAreaCentersOnce]);
 
   // Re-derive active category from context strings:
   const allSortCategories = [...SORT_CATEGORIES, ...NEARBY_SORT_CATEGORY];
@@ -178,15 +192,26 @@ export function ExploreView({
       }
 
       setProperties(finalData);
+      cacheProperties(finalData);
       setLoading(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
     };
     fetchData();
   }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white pt-20 sm:pt-24">
+      {/* Mobile-only Filter Chips (Shows directly) */}
+      <div className="mb-4 sm:mb-2">
+        <FilterChips 
+          hasResults={properties.length > 0 || loading} 
+          onToggleMap={() => setViewMode(window.innerWidth >= 1024 ? 'split' : 'map')}
+        />
+      </div>
+
+
       <div className="mx-auto max-w-[1440px] w-full px-4 sm:px-6 lg:px-12 flex-1 flex flex-col">
+
         {/* Main Content Area */}
         <div className="relative flex flex-1 gap-8 lg:gap-8">
           
@@ -194,15 +219,16 @@ export function ExploreView({
           <div 
             id="property-list-container"
             className={cn(
-              "flex flex-col transition-all duration-300",
+              "flex flex-col",
+              !isFirstMount && "transition-all duration-300",
               viewMode === 'split' ? 'w-full lg:w-[35%]' : 
               viewMode === 'list' ? 'w-full' : 'hidden'
             )}>
             {/* Section Header */}
             <div className="pt-2 sm:pt-4 pb-2">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex flex-col gap-1">
-                  <h1 className="ty-title font-bold tracking-tight text-zinc-900 capitalize" suppressHydrationWarning={true}>
+                <div className="flex flex-col gap-2">
+                  <h1 className="ty-title tracking-tight text-zinc-800" suppressHydrationWarning={true}>
                     {(() => {
                       const type = overrideType || searchParams.get('type');
                       const area = overrideArea || searchParams.get('area');
@@ -216,38 +242,60 @@ export function ExploreView({
                       const displayArea = !isPlaceholder(area) ? area : '';
                       const displayBudget = !isPlaceholder(budget) ? budget : '';
 
-                      let titleParts = [displayType, "for sale"];
+                      // Result count logic
+                      const countText = totalCount > 0 ? `${totalCount}+ ` : '0 ';
                       
-                      if (displayArea) {
-                        if (displayArea.toLowerCase() === 'near me' || displayArea.toLowerCase() === 'near-me') titleParts.push("Near Me");
-                        else titleParts.push(`in ${displayArea}, ${city}`);
-                      } else if (city && city !== 'All') {
-                        titleParts.push(`in ${city}`);
-                      }
-
-                      if (displayBudget) {
-                        titleParts.push(displayBudget);
-                      }
-
-                      return titleParts.filter(Boolean).join(' ');
+                      return (
+                        <>
+                          <span className="font-bold">{countText}</span>
+                          <span className="font-bold capitalize">{displayType}</span>
+                          <span className="font-normal text-zinc-400 lowercase"> for sale </span>
+                          {displayArea && (
+                            <>
+                              <span className="font-normal text-zinc-400 lowercase">in </span>
+                              <span className="font-bold capitalize">
+                                {displayArea.toLowerCase() === 'near me' || displayArea.toLowerCase() === 'near-me' ? 'Near Me' : `${displayArea}, ${city}`}
+                              </span>
+                            </>
+                          )}
+                          {!displayArea && city && city !== 'All' && (
+                            <>
+                              <span className="font-normal text-zinc-400 lowercase">in </span>
+                              <span className="font-bold capitalize">{city}</span>
+                            </>
+                          )}
+                          {displayBudget && displayBudget !== 'Any Budget' && (
+                            <>
+                              <span className="font-normal text-zinc-400 lowercase"> in </span>
+                              <span className="font-bold capitalize">{displayBudget}</span>
+                            </>
+                          )}
+                        </>
+                      );
                     })()}
                   </h1>
-                  <div className="flex items-center gap-2">
-                    <span className="ty-micro font-bold text-zinc-400 leading-none">
-                      {totalCount} Results Found
-                    </span>
-                    <div className="h-1 w-1 rounded-full bg-zinc-300" />
-                    <span className="ty-micro font-medium text-zinc-400 leading-none">
-                      {overrideCity || selectedCity || "All Localities"}
-                    </span>
-                  </div>
+
+
+
+                  
+                  {/* Additional Filter Description */}
+                  {(keywords || minSize || maxSize || selectedHighlights.length > 0) && (
+                    <p className="ty-caption font-medium text-zinc-500">
+                      Including: {[
+                        keywords && `"${keywords}"`,
+                        minSize && `Min ${minSize} Sq.Yds`,
+                        maxSize && `Max ${maxSize} Sq.Yds`,
+                        ...selectedHighlights
+                      ].filter(Boolean).join(', ')}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-3">
                   {viewMode === 'list' && (
                     <button 
                       onClick={() => setViewMode(window.innerWidth >= 1024 ? 'split' : 'map')}
-                      className="hidden lg:flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
+                      className="hidden lg:flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.98]"
                     >
                       <MapIcon className="h-3.5 w-3.5" />
                       <span>Show Map</span>
@@ -290,7 +338,7 @@ export function ExploreView({
                       clearFilters();
                       router.push('/explore');
                     }} 
-                    className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-95"
+                    className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-[0.98]"
                   >
                     Clear all filters
                   </button>
@@ -326,7 +374,8 @@ export function ExploreView({
 
           {/* Map Side */}
           <div className={cn(
-            "sticky top-20 h-[calc(100vh-80px)] transition-all duration-300",
+            "sticky top-20 h-[calc(100vh-80px)]",
+            !isFirstMount && "transition-all duration-300",
             viewMode === 'split' ? 'hidden lg:flex lg:flex-1' : 
             viewMode === 'map' ? 'w-full flex' : 'hidden',
             "items-center justify-center pt-2 lg:pt-4 pb-5"

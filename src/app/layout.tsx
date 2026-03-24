@@ -17,11 +17,15 @@ import { InquiryModal } from "@/components/InquiryModal";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
+  display: 'swap',
+  weight: ['600', '700', '800'],
 });
 
 export async function generateMetadata(): Promise<Metadata> {

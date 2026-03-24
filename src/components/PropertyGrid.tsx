@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from './PropertyCard';
-import { RefreshCcw, Loader2 } from 'lucide-react';
+import { RefreshCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCallback } from 'react';
 import { useShortlist } from '@/context/ShortlistContext';
 
 export function PropertyGrid() {
-  const { selectedCity } = useShortlist();
+  const { selectedCity, cacheProperties } = useShortlist();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,6 +49,7 @@ export function PropertyGrid() {
       }
       
       setHasMore(properties.length + data.length < count);
+      if (data && data.length > 0) cacheProperties(data);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {
@@ -111,7 +112,7 @@ export function PropertyGrid() {
               key={type}
               onClick={() => setSelectedType(type)}
               className={cn(
-                "whitespace-nowrap rounded-full px-5 py-2.5 text-xs font-bold tracking-tight transition-all active:scale-95",
+                "whitespace-nowrap rounded-full px-5 py-2.5 text-xs font-bold tracking-tight transition-all active:scale-[0.98]",
                 selectedType === type
                   ? "bg-zinc-900 text-white shadow-lg"
                   : "bg-white text-zinc-500 border border-zinc-100 hover:border-zinc-200"
@@ -148,10 +149,10 @@ export function PropertyGrid() {
             className="flex items-center gap-2 rounded-xl bg-zinc-900 px-8 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-800 disabled:opacity-50"
           >
             {loadingMore ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading More Properties...
-              </>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-white opacity-40 animate-pulse" />
+                <span className="animate-pulse">Loading More...</span>
+              </div>
             ) : (
               'Load More Results'
             )}

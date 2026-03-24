@@ -39,16 +39,16 @@ export default function MapPage() {
     <div className="relative h-screen w-full bg-zinc-100 overflow-hidden">
       {/* Map Control Bar */}
       <div className="absolute top-20 left-4 right-4 z-50 flex items-center justify-between sm:left-8 sm:right-8">
-        <Link href="/" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-xl transition-transform hover:scale-110 active:scale-95">
+        <Link href="/" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-xl transition-transform hover:scale-110 active:scale-[0.98]">
           <ArrowLeft className="h-6 w-6" />
         </Link>
         
         <div className="flex gap-2">
-          <button className="flex h-12 items-center gap-2 rounded-2xl bg-white px-4 font-bold shadow-xl transition-transform hover:scale-105 active:scale-95">
+          <button className="flex h-12 items-center gap-2 rounded-2xl bg-white px-4 font-bold shadow-xl transition-transform hover:scale-105 active:scale-[0.98]">
             <Layers className="h-5 w-5" />
             <span className="hidden sm:inline">Standard</span>
           </button>
-          <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-xl transition-transform hover:scale-110 active:scale-95">
+          <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-xl transition-transform hover:scale-110 active:scale-[0.98]">
             <Locate className="h-5 w-5" />
           </button>
         </div>

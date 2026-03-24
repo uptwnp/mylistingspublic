@@ -45,9 +45,9 @@ export default function Footer() {
           <div>
             <h4 className="ty-label text-zinc-900 mb-6">Network</h4>
             <ul className="space-y-4">
-              <li><Link href="#" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Agent Portal</Link></li>
+              <li><Link href="/agent" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Agent Portal</Link></li>
               <li><Link href="/sell" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">List Your Property</Link></li>
-              <li><Link href="#" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Partner Program</Link></li>
+              <li><Link href="/refer" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Partner Program</Link></li>
             </ul>
           </div>
         </div>
@@ -56,9 +56,9 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center gap-6 ty-label text-zinc-400">
             <span>© 2026 {brand.name} Network</span>
             <div className="flex gap-6">
-              <Link href="#" className="hover:text-zinc-900">Privacy Policy</Link>
-              <Link href="#" className="hover:text-zinc-900">Terms of Service</Link>
-              <Link href="#" className="hover:text-zinc-900">Sitemap</Link>
+              <Link href="/privacy" className="hover:text-zinc-900 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-zinc-900 transition-colors">Terms & Conditions</Link>
+              <Link href="/sitemap.xml" className="hover:text-zinc-900 transition-colors">Sitemap</Link>
             </div>
           </div>
           

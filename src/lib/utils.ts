@@ -65,17 +65,29 @@ function getMedian(arr: number[]) {
 }
 
 export function getPropertyCoords(property: Partial<Property>, allProperties?: Partial<Property>[], areaCenters?: any[]): [number, number] {
-  // Use pre-parsed coordinates from our new view
-  const lat = property.latitude;
-  const lng = property.longitude;
+  // Use pre-parsed coordinates from our new view, but insure they are actually numbers
+  const lat = typeof property.latitude === 'number' ? property.latitude : Number(property.latitude);
+  const lng = typeof property.longitude === 'number' ? property.longitude : Number(property.longitude);
 
-  if (!lat || !lng) {
-    // Absolute Fallback to City Center (should theoretically rarely happen now)
-    const hash = (property.property_id || property.area || 'unknown').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const baseLat = property.city?.toLowerCase() === 'karnal' ? 29.6857 : 29.3909;
-    const baseLng = property.city?.toLowerCase() === 'karnal' ? 76.9907 : 76.9635;
-    const lOff = ((hash % 100) / 5000) - 0.01;
-    const gOff = (((hash * 13) % 100) / 5000) - 0.01;
+  const isValid = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+
+  if (!isValid) {
+    // Absolute Fallback to City Center
+    const hashStr = String(property.property_id || property.area || 'unknown');
+    let hash = 0;
+    for (let i = 0; i < hashStr.length; i++) {
+        hash = ((hash << 5) - hash) + hashStr.charCodeAt(i);
+        hash |= 0; // Convert to 32bit integer
+    }
+    const absHash = Math.abs(hash);
+    
+    const isKarnal = property.city?.toLowerCase() === 'karnal';
+    const baseLat = isKarnal ? 29.6857 : 29.3909;
+    const baseLng = isKarnal ? 76.9907 : 76.9635;
+    
+    const lOff = ((absHash % 100) / 5000) - 0.01;
+    const gOff = (((absHash * 13) % 100) / 5000) - 0.01;
+    
     return [baseLat + lOff, baseLng + gOff];
   }
 
@@ -83,11 +95,16 @@ export function getPropertyCoords(property: Partial<Property>, allProperties?: P
   // so properties in the same area don't overlap completely on the map.
   if (property.loc_fallback) {
     const hashStr = `${property.property_id || ''}-${property.area || 'unknown'}`;
-    const hash = hashStr.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+    let hash = 0;
+    for (let i = 0; i < hashStr.length; i++) {
+        hash = ((hash << 5) - hash) + hashStr.charCodeAt(i);
+        hash |= 0;
+    }
+    const absHash = Math.abs(hash);
     
     // ~500m randomization
-    const scatterLat = ((hash % 100) / 10000) - 0.005; 
-    const scatterLng = (((hash * 13) % 100) / 10000) - 0.005;
+    const scatterLat = ((absHash % 100) / 10000) - 0.005; 
+    const scatterLng = (((absHash * 13) % 100) / 10000) - 0.005;
     
     return [lat + scatterLat, lng + scatterLng];
   }

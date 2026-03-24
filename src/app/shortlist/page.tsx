@@ -7,17 +7,19 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { Property } from '@/types';
 import { getPropertiesByIds } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
-import { Trash2, Phone, Home, ArrowLeft, Loader2, Building2, MapPin, CheckCircle2, Share2, Pencil, Plus, Check, X } from 'lucide-react';
+import { Trash2, Phone, Home, ArrowLeft, Building2, MapPin, CheckCircle2, Share2, Pencil, Plus, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
-import { cn } from '@/lib/utils';
+import { MiniImageCarousel } from '@/components/MiniImageCarousel';
+import { useRouter } from 'next/navigation';
 
 
 export default function ShortlistPage() {
-  const { shortlistItems, inquiries, updateInquiry, removeFromShortlist, clearShortlist, requireContactDetails, contactDetails, consultationRequests, addConsultationRequest, updateConsultationRequest, removeConsultationRequest } = useShortlist();
+  const router = useRouter();
+  const { shortlistItems, inquiries, updateInquiry, removeFromShortlist, clearShortlist, requireContactDetails, contactDetails, consultationRequests, addConsultationRequest, updateConsultationRequest, removeConsultationRequest, isInitialized } = useShortlist();
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
@@ -42,6 +44,8 @@ export default function ShortlistPage() {
   };
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     const fetchShortlistProperties = async () => {
       if (shortlistItems.length === 0) {
         setProperties([]);
@@ -60,12 +64,23 @@ export default function ShortlistPage() {
     };
 
     fetchShortlistProperties();
-  }, [shortlistItems]);
+  }, [shortlistItems, isInitialized]);
 
-  if (loading) {
+  if (!isInitialized || (loading && shortlistItems.length > 0)) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-zinc-900" />
+      <div className="min-h-screen bg-zinc-50 pt-32 pb-20">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
+          <div className="grid gap-8 lg:grid-cols-3">
+             <div className="lg:col-span-2 space-y-6 animate-pulse">
+                <div className="h-4 w-48 bg-zinc-200 rounded-full mb-8" />
+                <div className="h-12 w-64 bg-zinc-200 rounded-2xl mb-8" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-32 w-full bg-white rounded-2xl p-4 shadow-sm border border-zinc-100" />
+                ))}
+             </div>
+             <div className="h-[500px] w-full bg-white rounded-3xl animate-pulse shadow-sm border border-zinc-100" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -134,22 +149,24 @@ export default function ShortlistPage() {
                           const Icon = config.icon;
                           const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
                           return (
-                            <Link href={`/property/${property.property_id}`} className="flex flex-1 gap-3 sm:gap-4 overflow-hidden">
-                              <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 overflow-hidden rounded-xl">
+                            <div className="flex flex-1 gap-3 sm:gap-4 overflow-hidden">
+                              <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-100">
                                 {hasImage ? (
-                                  <Image 
-                                    src={property.image_urls[0]} 
-                                    alt={property.description}
-                                    fill
-                                    className="object-cover transition-transform duration-500 group-hover/card:scale-110"
+                                  <MiniImageCarousel 
+                                    images={property.image_urls} 
+                                    alt={property.description} 
+                                    onTap={() => router.push(`/property/${property.property_id}`)}
                                   />
                                 ) : (
-                                  <div className={cn("flex h-full w-full items-center justify-center transition-colors", config.bgColor)}>
+                                  <div 
+                                    onClick={() => router.push(`/property/${property.property_id}`)}
+                                    className={cn("flex h-full w-full items-center justify-center transition-colors cursor-pointer", config.bgColor)}
+                                  >
                                     <Icon className={cn("h-8 w-8 sm:h-10 sm:w-10 opacity-30", config.color)} />
                                   </div>
                                 )}
                               </div>
-                              <div className="flex flex-1 flex-col justify-center min-w-0">
+                              <Link href={`/property/${property.property_id}`} className="flex flex-1 flex-col justify-center min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
                                   <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-zinc-500">
                                     ID: {property.property_id}
@@ -161,8 +178,8 @@ export default function ShortlistPage() {
                                   {property.type}
                                 </h3>
                                 <p className="ty-caption font-bold text-black mt-0.5 sm:mt-1">{formatPrice(property.price_min)}</p>
-                              </div>
-                            </Link>
+                              </Link>
+                            </div>
                           );
                         })()}
                         <button 
@@ -211,14 +228,14 @@ export default function ShortlistPage() {
                                         });
                                         setEditingNoteId(null);
                                       }}
-                                      className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white transition-all active:scale-95"
+                                      className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white transition-all active:scale-[0.98]"
                                     >
                                       <Check className="h-3 w-3" strokeWidth={3} />
                                       Save Note
                                     </button>
                                     <button
                                       onClick={() => setEditingNoteId(null)}
-                                      className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-[10px] font-bold text-zinc-500 transition-all hover:bg-zinc-50 active:scale-95"
+                                      className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-[10px] font-bold text-zinc-500 transition-all hover:bg-zinc-50 active:scale-[0.98]"
                                     >
                                       <X className="h-3 w-3" />
                                       Cancel
@@ -241,7 +258,7 @@ export default function ShortlistPage() {
                                       setNoteText(inquiries[property.property_id]?.question || '');
                                       setEditingNoteId(property.property_id);
                                     }}
-                                    className="shrink-0 flex items-center gap-1 rounded-lg border border-blue-100 bg-white px-2 py-1 text-[9px] font-bold text-blue-500 shadow-sm transition-all hover:border-blue-200 active:scale-95"
+                                    className="shrink-0 flex items-center gap-1 rounded-lg border border-blue-100 bg-white px-2 py-1 text-[9px] font-bold text-blue-500 shadow-sm transition-all hover:border-blue-200 active:scale-[0.98]"
                                   >
                                     <Pencil className="h-2.5 w-2.5" />
                                     Edit

@@ -13,6 +13,7 @@ import { SelectionBottomSheet } from './SelectionBottomSheet';
 import { useCallback } from 'react';
 import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
 import { useBrand } from '@/context/BrandContext';
+import { getAreas } from '@/lib/supabase';
 
 
 export default function Navbar() {
@@ -28,7 +29,8 @@ export default function Navbar() {
     minSize, setMinSize,
     maxSize, setMaxSize,
     selectedHighlights, setSelectedHighlights,
-    clearFilters
+    clearFilters,
+    closeAllModals
   } = useShortlist();
   const brand = useBrand();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -37,6 +39,7 @@ export default function Navbar() {
 
   const [initialSegment, setInitialSegment] = useState<string | null>(null);
   const [isOtherCityDropdownOpen, setIsOtherCityDropdownOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -51,20 +54,26 @@ export default function Navbar() {
     "Sonipat", "Delhi NCR", "Gurgaon", "Noida", "Rohtak"
   ];
 
+  const loadAreasOnce = useCallback(async () => {
+    // This is now just a placeholder as components handle their own lazy loading
+  }, []);
+
   useEffect(() => {
-    async function loadAreas() {
-      const { getAreas } = await import('@/lib/supabase');
-      const areas = await getAreas(selectedCity);
-      setAllAreas(areas);
-    }
-    loadAreas();
+    // Reset areas when city changes, but don't fetch until interaction
+    setAllAreas([]);
   }, [selectedCity]);
+
   const shouldShowCompact = (isScrolled || !isHomePage) && !isForceExpanded;
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
+      setIsMobile(window.innerWidth < 640);
     };
+    
+    // Initial check
+    setIsMobile(window.innerWidth < 640);
+    handleScroll();
     
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -110,8 +119,9 @@ export default function Navbar() {
     const seoUrl = getSeoUrl(finalCity, finalType, finalArea, finalBudget.label);
     if (seoUrl) {
       const queryString = params.toString();
-      router.push(queryString ? `${seoUrl}${queryString ? `?${queryString}` : ''}` : seoUrl);
-      setIsFilterModalOpen(false);
+      const url = queryString ? `${seoUrl}${queryString ? `?${queryString}` : ''}` : seoUrl;
+      router.push(url);
+      closeAllModals(true);
       return;
     }
 
@@ -121,9 +131,10 @@ export default function Navbar() {
     if (finalBudget.value > 0) params.set('budget', finalBudget.label);
     if (finalType !== "Any Type") params.set('type', finalType);
 
-    router.push(`/explore?${params.toString()}`);
-    setIsFilterModalOpen(false);
-  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router]);
+    const url = `/explore?${params.toString()}`;
+    router.push(url);
+    closeAllModals(true);
+  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, closeAllModals]);
 
   // Sync search state from URL
   useEffect(() => {
@@ -189,35 +200,38 @@ export default function Navbar() {
     }
   }, [pathname, searchParams]);
 
-  // Auto-apply when on Explore page
+  // Auto-apply when on Explore or SEO property pages
   useEffect(() => {
-    if (pathname === '/explore') {
+    const isStandardExplore = pathname === '/explore' || pathname === '/map';
+    const isSeoPage = !!parseSeoSlug(pathname.slice(1));
+
+    if (isStandardExplore || isSeoPage) {
       // Avoid recursive updates: only push if state changed from URL
-      const areaInUrl = searchParams.get('area') || '';
-      const budgetInUrl = searchParams.get('budget') || 'Any Budget';
-      const typeInUrl = searchParams.get('type') || 'Any Type';
-      const keywordsInUrl = searchParams.get('keywords') || '';
-      const minSizeInUrl = searchParams.get('minSize') || '';
-      const maxSizeInUrl = searchParams.get('maxSize') || '';
-      const highlightsInUrl = searchParams.get('highlights') || '';
+      const seoData = parseSeoSlug(pathname.slice(1));
+      
+      const areaInUrl = (seoData?.area || searchParams.get('area') || '').trim();
+      const budgetInUrl = (seoData?.budget || searchParams.get('budget') || 'Any Budget').trim();
+      const typeInUrl = (seoData?.type || searchParams.get('type') || 'Any Type').trim();
+      const keywordsInUrl = (searchParams.get('q') || searchParams.get('keywords') || '').trim();
+      const minSizeInUrl = (searchParams.get('minSize') || '').trim();
+      const maxSizeInUrl = (searchParams.get('maxSize') || '').trim();
+      const highlightsInUrl = (searchParams.get('highlights') || '').trim();
       
       const isDifferent = 
-        query !== areaInUrl || 
-        budget.label !== budgetInUrl || 
-        propertyType !== typeInUrl ||
-        keywords !== keywordsInUrl ||
-        minSize !== minSizeInUrl ||
-        maxSize !== maxSizeInUrl ||
+        query.trim() !== areaInUrl || 
+        budget.label.trim() !== budgetInUrl || 
+        propertyType.trim() !== typeInUrl ||
+        keywords.trim() !== keywordsInUrl ||
+        minSize.toString().trim() !== minSizeInUrl ||
+        maxSize.toString().trim() !== maxSizeInUrl ||
         selectedHighlights.join(',') !== highlightsInUrl;
         
       if (isDifferent) {
-        const timeout = setTimeout(() => {
-          handleApplyFilters();
-        }, 50);
-        return () => clearTimeout(timeout);
+        handleApplyFilters();
       }
     }
   }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname, searchParams]);
+
 
   const additionalFiltersCount = [
     keywords,
@@ -238,9 +252,7 @@ export default function Navbar() {
     additionalFiltersCount,
     onSearch: () => {
       setIsForceExpanded(false);
-      if (pathname !== '/explore') {
-        handleApplyFilters();
-      }
+      handleApplyFilters();
     }
   };
 
@@ -258,49 +270,67 @@ export default function Navbar() {
           {/* Top Row: Logo, Center (Tabs/Search), and Actions */}
           <div className="flex items-center justify-between gap-4">
             {/* Left Section: Logo & Mobile Search Trigger */}
-            <div className="flex flex-1 items-center gap-3 sm:gap-6 min-w-0">
-              <Link href="/" className="flex items-center gap-2 group shrink-0">
-                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-transform group-hover:scale-105">
+            <div className="flex flex-1 items-center gap-0 sm:gap-6 min-w-0">
+              <div className="flex items-center gap-2 group shrink-0">
+                <Link href="/" className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-all hover:scale-105 ">
                   <Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                </div>
-                <span className={cn(
-                  "ty-subtitle font-bold tracking-tighter text-zinc-900 truncate",
-                  shouldShowCompact ? "hidden lg:block" : "block"
-                )}>
-                  {brand.logoText.styled ? (
-                    <>
-                      {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
-                    </>
-                  ) : (
-                    <span className="uppercase">{brand.logoText.text}</span>
-                  )}
-                </span>
-              </Link>
+                </Link>
 
-              {/* Mobile Search Pill - Visible on scroll or subpages */}
-              {shouldShowCompact && (
-                <div className="sm:hidden flex-1 px-2">
-                  <div
-                    className="flex w-full items-center gap-3 rounded-full border border-zinc-200 bg-white px-4 py-2.5 shadow-md shadow-zinc-200/50 hover:shadow-lg transition-all"
-                  >
-                    <div 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        handleApplyFilters(); 
-                      }}
-                      className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-90 transition-transform cursor-pointer"
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {(isMobile && shouldShowCompact) ? (
+                    <motion.div 
+                      key="mobile-search-pill"
+                      initial={{ opacity: 0, rotateX: -90, y: 10 }}
+                      animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                      exit={{ opacity: 0, rotateX: 90, y: -10 }}
+                      transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
+                      className="sm:hidden flex-1"
                     >
-                      <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
-                    </div>
-                    <button 
-                      onClick={() => setIsMobileSearchOpen(true)}
-                      className="flex-1 text-left ty-caption font-black text-zinc-900 truncate tracking-tight"
+                      <div
+                        className="flex w-full items-center rounded-full border border-zinc-200 bg-white px-2 py-1 shadow-md shadow-zinc-200/50 hover:shadow-lg transition-all"
+                      >
+                        <div 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            handleApplyFilters(); 
+                          }}
+                          className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-[0.98] transition-transform cursor-pointer"
+                        >
+                          <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
+                        </div>
+                        <button 
+                          onClick={() => {
+                            loadAreasOnce();
+                            setIsMobileSearchOpen(true);
+                          }}
+                          className="flex-1 text-left ty-caption font-black text-zinc-900 truncate tracking-tight"
+                          suppressHydrationWarning={true}
+                        >
+                          {query ? `${query}, ${selectedCity}` : selectedCity}
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="brand-name"
+                      initial={{ opacity: 0, rotateX: -90, y: 10 }}
+                      animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                      exit={{ opacity: 0, rotateX: 90, y: -10 }}
+                      transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
                     >
-                      {query ? `${query}, ${selectedCity}` : selectedCity}
-                    </button>
-                  </div>
-                </div>
-              )}
+                      <Link href="/" className="ty-subtitle font-bold tracking-tighter text-zinc-900 truncate block">
+                        {brand.logoText.styled ? (
+                          <>
+                            {brand.logoText.prefix}<span className="text-zinc-400 font-medium">{brand.logoText.suffix}</span>
+                          </>
+                        ) : (
+                          <span className="uppercase">{brand.logoText.text}</span>
+                        )}
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Middle Section: Desktop Tabs or Compact Search */}
@@ -312,6 +342,7 @@ export default function Navbar() {
                         isScrolled={true} 
                         {...searchProps} 
                         onExpand={(segment) => {
+                          loadAreasOnce();
                           setInitialSegment(segment || null);
                           setIsForceExpanded(true);
                         }}
@@ -341,8 +372,9 @@ export default function Navbar() {
                           "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all shrink-0",
                           selectedCity === tabCity ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
                         )}
+                        suppressHydrationWarning={true}
                       >
-                        <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
+                        <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 ", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
                         <span className="ty-micro font-bold">{tabCity}</span>
                         {selectedCity === tabCity && (
                           <div 
@@ -357,8 +389,9 @@ export default function Navbar() {
                           "group relative flex flex-col items-center gap-1 px-4 sm:px-6 py-1 transition-all",
                           OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
                         )}
+                        suppressHydrationWarning={true}
                       >
-                        <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:scale-110", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
+                        <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 active:scale-[0.98]", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
                         <div className="relative flex items-center justify-center">
                           <span className="ty-micro font-bold leading-none">
                             {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
@@ -418,38 +451,44 @@ export default function Navbar() {
               <div className="relative" ref={menuRef}>
                 <div 
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-shadow hover:shadow-md cursor-pointer ml-1"
+                  className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-all hover:shadow-md cursor-pointer ml-1 "
                 >
-                  <AnimatePresence mode="wait">
-                    {shortlistItems.length > 0 ? (
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    { (shortlistItems.length > 0 || !isMobile) ? (
                       <motion.div
                         key="cart-icon"
-                        initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, x: -20 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        initial={{ opacity: 0, rotateX: -90, y: 10 }}
+                        animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                        exit={{ opacity: 0, rotateX: 90, y: -10 }}
+                        transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
                       >
                         <Link href="/shortlist" onClick={(e) => e.stopPropagation()}>
-                          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white hover:bg-zinc-700 transition-colors">
-                            <ShoppingCart className="h-5 w-5 text-zinc-300" />
-                            <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
-                              {shortlistItems.length}
-                            </span>
+                          <div className={cn(
+                            "relative flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                            shortlistItems.length > 0 ? "bg-zinc-900 text-white hover:bg-zinc-700" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                          )}>
+                            <ShoppingCart className={cn("h-5 w-5", shortlistItems.length > 0 ? "text-zinc-300" : "text-zinc-600")} />
+                            {shortlistItems.length > 0 && (
+                              <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
+                                {shortlistItems.length}
+                              </span>
+                            )}
                           </div>
                         </Link>
                       </motion.div>
                     ) : (
                       <motion.div
                         key="search-icon"
-                        initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, x: -20 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        initial={{ opacity: 0, rotateX: -90, y: 10 }}
+                        animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                        exit={{ opacity: 0, rotateX: 90, y: -10 }}
+                        transition={{ type: "spring", damping: 40, stiffness: 600, mass: 0.2 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (window.innerWidth < 640) {
                             setIsMobileSearchOpen(true);
                           } else {
+                             loadAreasOnce();
                              setIsForceExpanded(true);
                              setInitialSegment('location');
                           }
@@ -477,7 +516,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Home className="h-4 w-4 text-zinc-400" />
+                          <Home className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
                           Sell Property
                         </Link>
                         <Link 
@@ -563,7 +602,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-50">
               <button 
                 onClick={() => setIsMobileSearchOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-100 text-zinc-900 shadow-sm transition-all active:scale-90"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-100 text-zinc-900 shadow-sm transition-all active:scale-[0.98]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -633,54 +672,54 @@ export default function Navbar() {
                 {/* Where Card */}
                 <button 
                   onClick={() => setActiveSelectionSheet('area')}
-                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                  className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="ty-title font-bold text-zinc-900">Where to?</h2>
-                    <MapPin className="h-6 w-6 text-zinc-400" />
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="ty-subtitle font-bold text-zinc-900">Where?</h2>
+                    <MapPin className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-base font-bold", !query ? "text-zinc-400" : "text-zinc-900")}>
+                    <span className={cn("text-sm font-bold", !query ? "text-zinc-400" : "text-zinc-900")}>
                       {query || "Search areas..."}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                    <ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
 
                 {/* Budget Card - OPTIONS SHOWN VIA BOTTOM SHEET */}
                 <button 
                   onClick={() => setActiveSelectionSheet('budget')}
-                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                  className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="ty-title font-bold text-zinc-900">What's your budget?</h2>
-                    <Wallet className="h-6 w-6 text-zinc-400" />
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="ty-subtitle font-bold text-zinc-900">What's your budget?</h2>
+                    <Wallet className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-base font-bold", budget.label === "Any Budget" ? "text-zinc-400" : "text-zinc-900")}>
+                    <span className={cn("text-sm font-bold", budget.label === "Any Budget" ? "text-zinc-400" : "text-zinc-900")}>
                       {budget.label === "Any Budget" ? "Select your price range" : budget.label}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                    <ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
 
                 {/* Property Type Card - OPTIONS SHOWN VIA BOTTOM SHEET */}
                 <button 
                   onClick={() => setActiveSelectionSheet('type')}
-                  className="rounded-3xl border border-zinc-100 bg-white p-6 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
+                  className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="ty-title font-bold text-zinc-900">Property type?</h2>
-                    <Home className="h-6 w-6 text-zinc-400" />
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="ty-subtitle font-bold text-zinc-900">Property type?</h2>
+                    <Home className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-base font-bold", propertyType === "Any Type" ? "text-zinc-400" : "text-zinc-900")}>
+                    <span className={cn("text-sm font-bold", propertyType === "Any Type" ? "text-zinc-400" : "text-zinc-900")}>
                       {propertyType === "Any Type" ? "What are you looking for?" : propertyType}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                    <ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
               </div>
@@ -691,20 +730,15 @@ export default function Navbar() {
               <button 
                 onClick={() => {
                   clearFilters();
-                  if (pathname !== '/explore') {
-                    router.push('/explore');
-                  }
+                  handleApplyFilters();
                 }}
                 className="ty-caption font-black text-zinc-900 underline underline-offset-4"
               >
                 Clear all
               </button>
               <button 
-                onClick={() => {
-                  handleApplyFilters();
-                  setIsMobileSearchOpen(false);
-                }}
-                className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all active:scale-95"
+                onClick={() => handleApplyFilters()}
+                className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all "
               >
                 <Search className="h-4 w-4" strokeWidth={3} />
                 <span>Search</span>
@@ -736,7 +770,11 @@ export default function Navbar() {
         selectedValue={budget}
         onSelect={(val) => {
           setBudget(val);
-          setTimeout(() => setActiveSelectionSheet('type'), 100);
+          if (isMobileSearchOpen) {
+            setTimeout(() => setActiveSelectionSheet('type'), 100);
+          } else {
+            setActiveSelectionSheet(null);
+          }
         }}
       />
 
@@ -757,17 +795,22 @@ export default function Navbar() {
       <SelectionBottomSheet
         isOpen={activeSelectionSheet === 'area'}
         onClose={() => setActiveSelectionSheet(null)}
-        title="Where to?"
+        title="Where?"
         type="area"
         selectedValue={query}
+        selectedCity={selectedCity}
+        data={allAreas}
         onSelect={(val) => {
           setQuery(val);
-          setTimeout(() => setActiveSelectionSheet('budget'), 100);
+          if (isMobileSearchOpen) {
+            setTimeout(() => setActiveSelectionSheet('budget'), 100);
+          } else {
+            setActiveSelectionSheet(null);
+          }
         }}
-        data={allAreas}
       />
 
-      {/* Fixed Bottom Category Filters (Mobile Only) */}
     </>
   );
 }
+
