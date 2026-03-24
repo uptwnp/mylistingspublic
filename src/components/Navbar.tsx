@@ -268,7 +268,7 @@ export default function Navbar() {
       <nav 
         ref={navRef}
         className={cn(
-        "fixed top-0 z-50 w-full transition-all duration-700 ease-in-out",
+        "fixed top-0 z-[70] w-full transition-all duration-700 ease-in-out",
         shouldShowCompact 
           ? "border-b border-zinc-200/50 bg-[#fafafa]/80 backdrop-blur-3xl py-3 shadow-sm" 
           : "bg-white/40 backdrop-blur-xl py-4 sm:py-6"

@@ -444,9 +444,9 @@ export function ExploreView({
         </div>
       </div>
 
-      {/* Full-screen map overlay — mobile & desktop 'map' mode */}
+      {/* Full-screen map overlay — sits below navbar (top-20) */}
       {viewMode === 'map' && (
-        <div className="fixed inset-0 z-[9999] bg-white">
+        <div className="fixed top-20 bottom-0 left-0 right-0 z-[60] bg-white">
           {/* Controls: top-right — Minimize (desktop only) + Close */}
           <div className="absolute top-4 right-4 z-[1001] flex gap-2">
             {/* Minimize to split — desktop only */}
