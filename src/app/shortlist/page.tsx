@@ -31,17 +31,32 @@ export default function ShortlistPage() {
   const [shortlistType, setShortlistType] = useState<'phone' | 'home' | 'office' | 'site'>('phone');
   const [isShared, setIsShared] = useState(false);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (shortlistItems.length === 0) return;
-    
+
     const baseUrl = window.location.origin + window.location.pathname;
     const shareUrl = `${baseUrl}?shortlist=${shortlistItems.join(',')}`;
-    
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      setIsShared(true);
-      setTimeout(() => setIsShared(false), 2000);
-    });
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Property Shortlist',
+          text: `Check out the ${shortlistItems.length} ${shortlistItems.length === 1 ? 'property' : 'properties'} I shortlisted`,
+          url: shareUrl,
+        });
+      } catch {
+        // user cancelled or share failed — silently ignore
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setIsShared(true);
+        setTimeout(() => setIsShared(false), 2000);
+      });
+    }
   };
+
+
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -167,17 +182,14 @@ export default function ShortlistPage() {
                                 )}
                               </div>
                               <Link href={`/property/${property.property_id}`} className="flex flex-1 flex-col justify-center min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
-                                  <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-zinc-500">
-                                    ID: {property.property_id}
-                                  </span>
-                                  <span className="text-[9px] sm:text-[10px] font-bold text-zinc-400 truncate">{property.area}</span>
-                                </div>
-                                <h3 className="flex items-center gap-1.5 font-bold text-zinc-900 text-sm sm:text-base line-clamp-1 leading-tight group-hover/card:text-blue-600 transition-colors">
-                                  <Icon className={cn("h-3 w-3", config.color)} />
+                                <h3 className="font-bold text-zinc-900 text-sm sm:text-base line-clamp-1 leading-tight group-hover/card:text-blue-600 transition-colors">
                                   {property.type}
                                 </h3>
+                                <p className="text-[9px] sm:text-[10px] font-bold text-zinc-400 truncate mt-0.5">{property.area}{property.city ? `, ${property.city}` : ''}</p>
                                 <p className="ty-caption font-bold text-black mt-0.5 sm:mt-1">{formatPrice(property.price_min)}</p>
+                                <span className="mt-1 inline-block rounded bg-zinc-100 px-1.5 py-0.5 text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-zinc-500 w-fit">
+                                  ID: {property.property_id}
+                                </span>
                               </Link>
                             </div>
                           );

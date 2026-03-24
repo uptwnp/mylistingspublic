@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, KeyboardEvent, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Phone, MapPin, Check } from 'lucide-react';
+import { X, User, Phone, MapPin, Check, ArrowRight, ArrowLeft, Building2, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 
@@ -15,6 +15,12 @@ export function ContactDetailForm() {
     address: '',
     budget: ''
   });
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+
+  const TOTAL_STEPS = 5;
 
   const BUDGET_CHIPS = [
     "Under 50L",
@@ -33,14 +39,86 @@ export function ContactDetailForm() {
         address: contactDetails.address || '',
         budget: contactDetails.budget || ''
       });
+      setCurrentStep(0);
+      setDirection(1);
     }
   }, [contactDetails, isContactFormOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.fullName || !formData.phoneNumber || !formData.address) return;
+  // Focus input on step change
+  useEffect(() => {
+    if (isContactFormOpen) {
+      // small delay to allow animation to complete
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, isContactFormOpen]);
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!formData.fullName || !formData.phoneNumber || !formData.address || !formData.budget) return;
     setContactDetails(formData);
+    setIsContactFormOpen(false);
   };
+
+  const isCurrentStepValid = () => {
+    if (currentStep === 0) return formData.fullName.trim().length > 0;
+    if (currentStep === 1) return formData.phoneNumber.trim().length > 0;
+    if (currentStep === 2) return formData.address.trim().length > 0;
+    if (currentStep === 3) return formData.budget.trim().length > 0;
+    return true;
+  };
+
+  const nextStep = () => {
+    if (!isCurrentStepValid()) return;
+    if (currentStep < TOTAL_STEPS - 1) {
+      setDirection(1);
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setDirection(-1);
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (currentStep === TOTAL_STEPS - 1) {
+         handleSubmit();
+      } else {
+         nextStep();
+      }
+    }
+  };
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 30 : -30,
+      opacity: 0,
+      scale: 0.98,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+      scale: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? -30 : 30,
+      opacity: 0,
+      scale: 0.98,
+    }),
+  };
+
+  const progressPercentage = ((currentStep + 1) / TOTAL_STEPS) * 100;
 
   return (
     <AnimatePresence>
@@ -52,7 +130,7 @@ export function ContactDetailForm() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsContactFormOpen(false)}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md pointer-events-auto"
           />
 
           {/* Modal */}
@@ -61,143 +139,303 @@ export function ContactDetailForm() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="relative w-full sm:max-w-md overflow-hidden rounded-t-[32px] sm:rounded-[28px] bg-white shadow-2xl pointer-events-auto flex flex-col max-h-[95vh] sm:max-h-[600px]"
+            className="relative w-full sm:max-w-3xl h-[85vh] sm:h-[650px] overflow-hidden rounded-t-[32px] sm:rounded-[40px] bg-white shadow-2xl pointer-events-auto flex flex-col"
           >
+            {/* Progress Bar */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-zinc-100 z-10">
+              <motion.div 
+                className="h-full bg-zinc-900" 
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercentage}%` }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+              />
+            </div>
+
             {/* Handle (mobile) */}
-            <div className="flex justify-center p-3 sm:hidden">
+            <div className="flex justify-center p-3 sm:hidden mt-1 z-20">
               <div className="h-1.5 w-12 rounded-full bg-zinc-200" />
             </div>
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 pb-4 pt-2 sm:pt-6">
-              <div>
-                <h2 className="text-xl font-bold text-zinc-900">Contact Details</h2>
-                <p className="text-xs font-medium text-zinc-500 mt-1">Please provide your details to proceed</p>
-              </div>
-              <button
+            {/* Header / Close */}
+            <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-20">
+               <button
                 onClick={() => setIsContactFormOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 active:scale-[0.98] hover:bg-zinc-200 transition-colors"
+                className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-zinc-100/50 text-zinc-500 active:scale-[0.98] hover:bg-zinc-200 hover:text-zinc-900 transition-colors backdrop-blur-sm"
+                title="Close (Esc)"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
 
-            {/* Body */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 pt-0 space-y-5 custom-scrollbar">
-              {/* Full Name */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-                  Full Name
-                </label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 transition-colors group-focus-within:text-zinc-900" />
-                  <input
-                    required
-                    type="text"
-                    placeholder="e.g. Rahul Sharma"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    autoComplete="name"
-                    className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-11 pr-4 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
-                  />
-                </div>
-              </div>
-
-              {/* Phone Numbers */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-                    Phone Number
-                  </label>
-                  <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 transition-colors group-focus-within:text-zinc-900" />
-                    <input
-                      required
-                      type="tel"
-                      placeholder="98765 43210"
-                      value={formData.phoneNumber}
-                      onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                      autoComplete="tel"
-                      className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-11 pr-4 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-                    Alternate <span className="lowercase font-medium text-zinc-300">(opt)</span>
-                  </label>
-                  <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300 transition-colors group-focus-within:text-zinc-900" />
-                    <input
-                      type="tel"
-                      placeholder="98765 43210"
-                      value={formData.alternateNumber}
-                      onChange={(e) => setFormData({ ...formData, alternateNumber: e.target.value })}
-                      autoComplete="tel"
-                      className="w-full h-12 rounded-2xl border border-zinc-100 bg-zinc-50 pl-11 pr-4 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-                  City / Address
-                </label>
-                <div className="relative group">
-                  <MapPin className="absolute left-4 top-3.5 h-4 w-4 text-zinc-400 transition-colors group-focus-within:text-zinc-900" />
-                  <textarea
-                    required
-                    placeholder="e.g. Sector 12, Panipat"
-                    rows={2}
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    autoComplete="street-address"
-                    spellCheck={false}
-                    className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 pl-11 pr-4 py-3 text-sm font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white transition-all shadow-inner resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Budget Chips */}
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-                  Budget Range
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {BUDGET_CHIPS.map((chip) => {
-                    const isActive = formData.budget === chip;
-                    return (
-                      <button
-                        key={chip}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, budget: chip })}
-                        className={cn(
-                          "px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border-2",
-                          isActive 
-                            ? "bg-zinc-900 border-zinc-900 text-white shadow-lg shadow-zinc-200" 
-                            : "bg-white border-zinc-100 text-zinc-400 hover:border-zinc-200 hover:text-zinc-600"
-                        )}
-                      >
-                        {chip}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-4 pb-6 sticky bottom-0 bg-white">
-                <button
-                  type="submit"
-                  className="w-full h-14 rounded-2xl bg-zinc-900 text-white font-bold text-base shadow-xl shadow-zinc-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2 hover:bg-black group"
+            {/* Main Interactive Area */}
+            <div className="flex-1 relative flex flex-col justify-center px-6 sm:px-16 pt-12 pb-24 overflow-y-auto no-scrollbar">
+              <AnimatePresence initial={false} custom={direction} mode="wait">
+                <motion.div
+                  key={currentStep}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 }
+                  }}
+                  className="w-full max-w-xl mx-auto"
                 >
-                  Confirm & Save Details
-                  <Check className="h-5 w-5 transition-transform group-hover:scale-110" />
-                </button>
-              </div>
-            </form>
+                  
+                  {/* STEP 0: NAME */}
+                  {currentStep === 0 && (
+                     <div className="space-y-6 sm:space-y-10">
+                        <div className="space-y-3">
+                           <p className="text-zinc-400 font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                              1 &rarr; Personal Info
+                           </p>
+                           <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 leading-[1.1]">
+                              What's your full name?
+                           </h2>
+                        </div>
+                        <div className="space-y-4 relative">
+                           <input
+                              ref={inputRef as React.RefObject<HTMLInputElement>}
+                              required
+                              type="text"
+                              placeholder="e.g. Rahul Sharma"
+                              value={formData.fullName}
+                              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                              onKeyDown={handleKeyDown}
+                              autoComplete="name"
+                              className="w-full text-2xl sm:text-4xl font-bold text-zinc-900 border-b-2 border-zinc-200 pb-4 outline-none placeholder:text-zinc-300 focus:border-zinc-900 bg-transparent transition-all"
+                           />
+                        </div>
+                     </div>
+                  )}
+
+                  {/* STEP 1: PHONE */}
+                  {currentStep === 1 && (
+                     <div className="space-y-6 sm:space-y-10">
+                        <div className="space-y-3">
+                           <p className="text-zinc-400 font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                              2 &rarr; Contact Details
+                           </p>
+                           <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 leading-[1.1]">
+                              What's the best number to reach you at?
+                           </h2>
+                        </div>
+                        <div className="space-y-8">
+                           <div>
+                              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 block">Primary Number</label>
+                              <input
+                                 ref={inputRef as React.RefObject<HTMLInputElement>}
+                                 required
+                                 type="tel"
+                                 placeholder="98765 43210"
+                                 value={formData.phoneNumber}
+                                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                 onKeyDown={handleKeyDown}
+                                 autoComplete="tel"
+                                 className="w-full text-2xl sm:text-4xl font-bold text-zinc-900 border-b-2 border-zinc-200 pb-4 outline-none placeholder:text-zinc-300 focus:border-zinc-900 bg-transparent transition-all"
+                              />
+                           </div>
+                           <div>
+                              <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 block">Alternate Number (Optional)</label>
+                              <input
+                                 type="tel"
+                                 placeholder="Optional"
+                                 value={formData.alternateNumber}
+                                 onChange={(e) => setFormData({ ...formData, alternateNumber: e.target.value })}
+                                 onKeyDown={handleKeyDown}
+                                 autoComplete="tel"
+                                 className="w-full text-xl sm:text-2xl font-bold text-zinc-700 border-b-2 border-zinc-100 pb-3 outline-none placeholder:text-zinc-300 focus:border-zinc-400 bg-transparent transition-all"
+                              />
+                           </div>
+                        </div>
+                     </div>
+                  )}
+
+                  {/* STEP 2: ADDRESS */}
+                  {currentStep === 2 && (
+                     <div className="space-y-6 sm:space-y-10">
+                        <div className="space-y-3">
+                           <p className="text-zinc-400 font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                              3 &rarr; Location
+                           </p>
+                           <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 leading-[1.1]">
+                              Where are you located?
+                           </h2>
+                        </div>
+                        <div className="space-y-4">
+                           <textarea
+                              ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                              required
+                              placeholder="e.g. Sector 12, Panipat"
+                              rows={2}
+                              value={formData.address}
+                              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                              onKeyDown={handleKeyDown}
+                              autoComplete="street-address"
+                              spellCheck={false}
+                              className="w-full text-2xl sm:text-4xl font-bold text-zinc-900 border-b-2 border-zinc-200 pb-4 outline-none placeholder:text-zinc-300 focus:border-zinc-900 bg-transparent transition-all resize-none"
+                           />
+                        </div>
+                     </div>
+                  )}
+
+                  {/* STEP 3: BUDGET */}
+                  {currentStep === 3 && (
+                     <div className="space-y-6 sm:space-y-10">
+                        <div className="space-y-3">
+                           <p className="text-zinc-400 font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                              4 &rarr; Preferences
+                           </p>
+                           <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 leading-[1.1]">
+                              What's your budget range?
+                           </h2>
+                        </div>
+                        <div className="flex flex-col gap-3 sm:gap-4">
+                           {BUDGET_CHIPS.map((chip, i) => {
+                             const isActive = formData.budget === chip;
+                             return (
+                               <button
+                                 key={chip}
+                                 type="button"
+                                 onClick={() => {
+                                    setFormData({ ...formData, budget: chip });
+                                    setTimeout(() => {
+                                       if (currentStep === 3) nextStep();
+                                    }, 200);
+                                 }}
+                                 className={cn(
+                                   "w-full px-6 py-4 sm:py-5 rounded-2xl text-left text-lg sm:text-xl font-bold transition-all border-2 flex items-center justify-between group",
+                                   isActive 
+                                     ? "bg-zinc-900 border-zinc-900 text-white shadow-lg shadow-zinc-200" 
+                                     : "bg-zinc-50 border-zinc-100/50 text-zinc-600 hover:border-zinc-200 hover:bg-zinc-100"
+                                 )}
+                               >
+                                 <div className="flex items-center gap-4">
+                                    <div className={cn(
+                                       "flex items-center justify-center w-8 h-8 rounded-lg font-black text-sm transition-all",
+                                       isActive ? "bg-white/20 text-white" : "bg-white border border-zinc-200 text-zinc-400 group-hover:text-zinc-600"
+                                    )}>
+                                       {String.fromCharCode(65 + i)}
+                                    </div>
+                                    {chip}
+                                 </div>
+                                 {isActive && <Check className="h-6 w-6" />}
+                               </button>
+                             );
+                           })}
+                        </div>
+                     </div>
+                  )}
+
+                  {/* STEP 4: REVIEW */}
+                  {currentStep === 4 && (
+                     <div className="space-y-6 sm:space-y-10">
+                        <div className="space-y-3">
+                           <p className="text-zinc-400 font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                              5 &rarr; Complete
+                           </p>
+                           <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 leading-[1.1]">
+                              Review your details
+                           </h2>
+                        </div>
+                        <div className="bg-zinc-50 p-6 sm:p-8 rounded-[32px] space-y-6 sm:space-y-8 border border-zinc-100">
+                           <div className="flex items-center gap-5">
+                              <div className="bg-white p-4 justify-center items-center flex rounded-2xl shadow-sm shrink-0 h-14 w-14"><User className="h-6 w-6 text-zinc-400" /></div>
+                              <div>
+                                 <p className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest">Name</p>
+                                 <p className="text-xl sm:text-2xl font-bold text-zinc-900 mt-0.5">{formData.fullName}</p>
+                              </div>
+                           </div>
+                           <div className="h-px bg-zinc-200/50 w-full" />
+                           <div className="flex flex-col sm:flex-row gap-6 sm:gap-12">
+                              <div className="flex items-center gap-5 flex-1">
+                                 <div className="bg-white p-4 justify-center items-center flex rounded-2xl shadow-sm shrink-0 h-14 w-14"><Phone className="h-6 w-6 text-zinc-400" /></div>
+                                 <div>
+                                    <p className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest">Phone</p>
+                                    <p className="text-lg sm:text-xl font-bold text-zinc-900 mt-0.5">{formData.phoneNumber}</p>
+                                    {formData.alternateNumber && (
+                                       <p className="text-xs sm:text-sm font-medium text-zinc-500 mt-0.5">Alt: {formData.alternateNumber}</p>
+                                    )}
+                                 </div>
+                              </div>
+                              <div className="h-px sm:h-auto sm:w-px bg-zinc-200/50 block" />
+                              <div className="flex items-center gap-5 flex-1">
+                                 <div className="bg-white p-4 justify-center items-center flex rounded-2xl shadow-sm shrink-0 h-14 w-14"><Wallet className="h-6 w-6 text-zinc-400" /></div>
+                                 <div>
+                                    <p className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest">Budget</p>
+                                    <p className="text-lg sm:text-xl font-bold text-zinc-900 mt-0.5">{formData.budget}</p>
+                                 </div>
+                              </div>
+                           </div>
+                           <div className="h-px bg-zinc-200/50 w-full" />
+                           <div className="flex items-center gap-5">
+                              <div className="bg-white p-4 justify-center items-center flex rounded-2xl shadow-sm shrink-0 h-14 w-14"><MapPin className="h-6 w-6 text-zinc-400" /></div>
+                              <div>
+                                 <p className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest">Location</p>
+                                 <p className="text-lg sm:text-xl font-bold text-zinc-900 mt-0.5">{formData.address}</p>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  )}
+
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Bottom Navigation */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-white/90 backdrop-blur-md border-t border-zinc-100 flex items-center justify-between z-20">
+               <div className="flex items-center gap-3">
+                  <button
+                     onClick={prevStep}
+                     disabled={currentStep === 0}
+                     className={cn(
+                        "flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border-2 transition-all",
+                        currentStep === 0 
+                           ? "border-zinc-100 bg-zinc-50 text-zinc-300 cursor-not-allowed" 
+                           : "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 active:scale-[0.98]"
+                     )}
+                     title="Go Back"
+                  >
+                     <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </button>
+               </div>
+
+               <div className="flex items-center gap-3">
+                  {currentStep < TOTAL_STEPS - 1 && (
+                     <div className="hidden sm:flex items-center gap-2 mr-4 opacity-50 text-xs sm:text-sm font-bold">
+                        <span>Press</span>
+                        <div className="bg-zinc-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded text-zinc-600 border-b-2 border-zinc-200 uppercase tracking-widest">Enter</div>
+                     </div>
+                  )}
+                  {currentStep < TOTAL_STEPS - 1 ? (
+                     <button
+                        onClick={nextStep}
+                        disabled={!isCurrentStepValid()}
+                        className={cn(
+                           "flex items-center justify-between gap-3 px-6 sm:px-8 h-12 sm:h-14 rounded-2xl font-bold text-base sm:text-lg transition-all min-w-[120px] sm:min-w-[140px]",
+                           isCurrentStepValid()
+                              ? "bg-zinc-900 text-white shadow-lg active:scale-[0.98] hover:bg-black"
+                              : "bg-zinc-100 text-zinc-400 cursor-not-allowed"
+                        )}
+                     >
+                        Next <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
+                     </button>
+                  ) : (
+                     <button
+                        onClick={() => handleSubmit()}
+                        className={cn(
+                           "flex items-center gap-2 px-6 sm:px-8 h-12 sm:h-14 rounded-2xl font-bold text-base sm:text-lg transition-all bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98] hover:bg-emerald-600"
+                        )}
+                     >
+                        Confirm Details <Check className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={3} />
+                     </button>
+                  )}
+               </div>
+            </div>
+
           </motion.div>
         </div>
       )}
