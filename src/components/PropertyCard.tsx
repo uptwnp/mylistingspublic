@@ -121,7 +121,11 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
             <span className="truncate">{property.area}, {property.city}</span>
           </div>
 
-          {property.description && (
+          {Array.isArray(property.highlights) && property.highlights.length > 0 ? (
+            <p className="mt-1 ty-micro font-black text-brand-primary truncate uppercase tracking-widest opacity-90">
+              {property.highlights.slice(0, 3).join(' • ')}
+            </p>
+          ) : property.description && (
             <p className="mt-1 ty-caption text-zinc-400 truncate w-full italic font-medium opacity-80">
               {property.description}
             </p>
@@ -164,9 +168,20 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
             className="mt-4 pt-4 border-t border-zinc-50"
           >
             <div className="space-y-4">
-              {/* Description */}
+              {/* Highlights as chips */}
+              {Array.isArray(property.highlights) && property.highlights.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {property.highlights.map((h, i) => (
+                    <span key={i} className="px-2.5 py-1 bg-brand-primary/8 ty-micro font-bold text-brand-primary rounded-lg border border-brand-primary/15">
+                      {h}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Full description - no clamp */}
               {property.description && (
-                <p className="ty-caption text-zinc-600 leading-relaxed line-clamp-3">
+                <p className="ty-caption text-zinc-500 leading-relaxed">
                   {property.description}
                 </p>
               )}

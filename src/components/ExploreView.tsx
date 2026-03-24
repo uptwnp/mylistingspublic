@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
-import { SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
@@ -248,17 +248,17 @@ export function ExploreView({
         {/* Main Content Area */}
         <div className={cn(
           "relative flex flex-1 gap-4 lg:gap-8",
-          viewMode === 'map' ? "flex-col-reverse lg:flex-row" : "flex-col lg:flex-row"
+          viewMode === 'map' ? "flex-row" : "flex-col lg:flex-row"
         )}>
           
-          {/* List Side */}
+          {/* List Side — hidden in map mode on ALL screens */}
           <div 
             id="property-list-container"
             className={cn(
               "flex flex-col",
               !isFirstMount && "transition-all duration-300",
               viewMode === 'split' ? 'w-full lg:w-[35%]' : 
-              viewMode === 'list' ? 'w-full' : (viewMode === 'map' ? 'w-full lg:hidden' : 'hidden')
+              viewMode === 'list' ? 'w-full' : 'hidden'
             )}>
             {/* Section Header */}
             <div className="pt-2 sm:pt-4 pb-2">
@@ -414,48 +414,81 @@ export function ExploreView({
             )}
           </div>
 
-          {/* Map Side */}
-          <div className={cn(
-            "sticky top-20 h-[60dvh] sm:h-[calc(100vh-80px)]",
-            !isFirstMount && "transition-all duration-300",
-            viewMode === 'split' ? 'hidden lg:flex lg:flex-1' : 
-            viewMode === 'map' ? 'w-full flex' : 'hidden',
-            "items-center justify-center pt-1 lg:pt-4 pb-3 lg:pb-5"
-          )}>
-            <div className="relative h-full w-full overflow-hidden sm:rounded-3xl border border-zinc-200 shadow-sm group">
-              <div className="absolute top-4 right-4 z-40 flex gap-2">
-                {viewMode === 'split' && (
-                  <button onClick={() => setViewMode('map')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900"><Maximize2 className="h-5 w-5" /></button>
-                )}
-                {viewMode === 'map' && (
-                  <button onClick={() => setViewMode('split')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900"><Minimize2 className="h-5 w-5" /></button>
-                )}
-                <button onClick={() => setViewMode('list')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900"><X className="h-5 w-5" /></button>
+          {/* Map Side — full screen overlay in 'map' mode, right panel in 'split' mode */}
+          {/* Split mode: desktop inline panel */}
+          {viewMode === 'split' && (
+            <div className={cn(
+              "hidden lg:flex lg:flex-1 sticky top-20 h-[calc(100vh-80px)] items-center justify-center pt-1 lg:pt-4 pb-3 lg:pb-5",
+              !isFirstMount && "transition-all duration-300"
+            )}>
+              <div className="relative h-full w-full overflow-hidden sm:rounded-3xl border border-zinc-200 shadow-sm">
+                <div className="absolute top-4 right-4 z-40 flex gap-2">
+                  <button onClick={() => setViewMode('map')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]">
+                    <Maximize2 className="h-5 w-5" />
+                  </button>
+                  <button onClick={() => setViewMode('list')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <MapComponent 
+                  properties={properties} 
+                  selectedProperty={selectedProperty}
+                  onSelectProperty={setSelectedProperty}
+                  userLocation={userLocation}
+                  showDistance={activeArea === 'Near Me' || sortField === 'distance'}
+                  onBoundsChange={setMapBounds}
+                />
               </div>
-              <MapComponent 
-                properties={properties} 
-                selectedProperty={selectedProperty}
-                onSelectProperty={setSelectedProperty}
-                userLocation={userLocation}
-                showDistance={activeArea === 'Near Me' || sortField === 'distance'}
-                onBoundsChange={setMapBounds}
-              />
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {(properties.length > 0 || viewMode === 'map') && (
-        <button 
-          onClick={() => setViewMode(viewMode === 'list' ? (window.innerWidth >= 1024 ? 'split' : 'map') : 'list')}
-          className={cn(
-            "fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105",
-            viewMode === 'split' && "lg:hidden"
-          )}
+      {/* Full-screen map overlay — mobile & desktop 'map' mode */}
+      {viewMode === 'map' && (
+        <div className="fixed inset-0 z-40 bg-white">
+          {/* Controls: X top-right */}
+          <div className="absolute top-4 right-4 z-[1001] flex gap-2">
+            <button
+              onClick={() => setViewMode('list')}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-600 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]"
+              title="Close map"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Show List pill — bottom center */}
+          <button
+            onClick={() => setViewMode('list')}
+            className="absolute bottom-8 left-1/2 z-[1001] -translate-x-1/2 flex items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl active:scale-[0.98]"
+          >
+            <LayoutGrid className="h-4 w-4" />
+            <span>Show List</span>
+          </button>
+
+          <MapComponent
+            properties={properties}
+            selectedProperty={selectedProperty}
+            onSelectProperty={setSelectedProperty}
+            userLocation={userLocation}
+            showDistance={activeArea === 'Near Me' || sortField === 'distance'}
+            onBoundsChange={setMapBounds}
+          />
+        </div>
+      )}
+
+      {/* Floating 'Show Map' pill — only shown in list mode on mobile */}
+      {properties.length > 0 && viewMode === 'list' && (
+        <button
+          onClick={() => setViewMode(window.innerWidth >= 1024 ? 'split' : 'map')}
+          className="fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl active:scale-[0.98] lg:hidden"
         >
-          {viewMode === 'map' ? <><LayoutGrid className="h-4 w-4" /><span>Show List</span></> : <><MapIcon className="h-4 w-4" /><span>Show Map</span></>}
+          <MapIcon className="h-4 w-4" />
+          <span>Show Map</span>
         </button>
       )}
     </div>
   );
 }
+
