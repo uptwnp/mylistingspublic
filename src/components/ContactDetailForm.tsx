@@ -31,18 +31,49 @@ export function ContactDetailForm() {
   ];
 
   useEffect(() => {
-    if (contactDetails && isContactFormOpen) {
-      setFormData({
-        fullName: contactDetails.fullName || '',
-        phoneNumber: contactDetails.phoneNumber || '',
-        alternateNumber: contactDetails.alternateNumber || '',
-        address: contactDetails.address || '',
-        budget: contactDetails.budget || ''
-      });
-      setCurrentStep(0);
-      setDirection(1);
+    if (isContactFormOpen) {
+      // If user holds confirmed details, load those
+      if (contactDetails && Object.values(contactDetails).some(v => v)) {
+        setFormData({
+          fullName: contactDetails.fullName || '',
+          phoneNumber: contactDetails.phoneNumber || '',
+          alternateNumber: contactDetails.alternateNumber || '',
+          address: contactDetails.address || '',
+          budget: contactDetails.budget || ''
+        });
+        setCurrentStep(0);
+        setDirection(1);
+      } else {
+        // Otherwise, restore from draft if available
+        try {
+          const draft = localStorage.getItem('contactFormDraft');
+          if (draft) {
+             const parsed = JSON.parse(draft);
+             if (parsed.formData) {
+               setFormData(prev => ({ ...prev, ...parsed.formData }));
+             }
+             if (parsed.currentStep !== undefined) {
+               setCurrentStep(parsed.currentStep);
+             }
+             setDirection(1);
+          }
+        } catch (e) {
+          console.error("Failed to restore draft", e);
+        }
+      }
     }
   }, [contactDetails, isContactFormOpen]);
+
+  // Persist draft on every change if the form is not yet submitted permanently
+  useEffect(() => {
+    if (isContactFormOpen && (!contactDetails || !Object.values(contactDetails).some(v => v))) {
+      try {
+        localStorage.setItem('contactFormDraft', JSON.stringify({ formData, currentStep }));
+      } catch (e) {
+        console.error("Failed to save draft", e);
+      }
+    }
+  }, [formData, currentStep, isContactFormOpen, contactDetails]);
 
   // Focus input on step change
   useEffect(() => {
@@ -61,6 +92,12 @@ export function ContactDetailForm() {
     e?.preventDefault();
     if (!formData.fullName || !formData.phoneNumber || !formData.address || !formData.budget) return;
     setContactDetails(formData);
+    
+    // Clear draft on successful completion
+    try {
+      localStorage.removeItem('contactFormDraft');
+    } catch (e) {}
+    
     setIsContactFormOpen(false);
   };
 

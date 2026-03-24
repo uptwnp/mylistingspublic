@@ -1,8 +1,5 @@
 'use client';
 
-
-export const runtime = 'edge';
-
 import { useShortlist } from '@/context/ShortlistContext';
 import { Property } from '@/types';
 import { getPropertiesByIds } from '@/lib/supabase';

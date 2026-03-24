@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, MapPin, IndianRupee, Maximize2, User, Phone, ArrowRight, CheckCircle2, 
   Landmark, Home, Trees, Search, Locate, MessageCircle, ArrowLeft, Store, ShieldCheck, 
-  Users, Globe, Zap, Clock, Briefcase, Trophy, X, ChevronRight
+  Users, Globe, Zap, Clock, Briefcase, Trophy, X, ChevronRight, Loader2, Trash2,
+  FileText, AlertCircle, Clock3, ClipboardCheck, Ban
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 import { useBrand } from '@/context/BrandContext';
 import { getAreas, getCities } from '@/lib/supabase';
-import { submitPropertyForSaleAction } from '@/app/actions/leads';
+import { submitPropertyForSaleAction, getUserListingsAction, deleteUserListingAction } from '@/app/actions/leads';
 import dynamic from 'next/dynamic';
 
 const MapPicker = dynamic<any>(() => import('@/components/MapPicker'), {
@@ -31,6 +32,29 @@ const PROPERTY_TYPES = [
   { id: 'commercial', label: 'Commercial', icon: Store },
   { id: 'other', label: 'Other', icon: Landmark },
 ];
+
+type Listing = {
+  id: string;
+  property_type: string;
+  city: string;
+  area: string;
+  price: number;
+  size: number;
+  status: string;
+  created_at: string;
+  description?: string;
+};
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
+  pending:    { label: 'Pending Review',  color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200', icon: Clock3 },
+  in_review:  { label: 'In Review',       color: 'text-blue-700',    bg: 'bg-blue-50',    border: 'border-blue-200',  icon: ClipboardCheck },
+  approved:   { label: 'Live',            color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: CheckCircle2 },
+  rejected:   { label: 'Not Approved',    color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-200',   icon: Ban },
+};
+
+function getStatusConfig(status: string) {
+  return STATUS_CONFIG[status] ?? STATUS_CONFIG['pending'];
+}
 
 export function SellClient() {
   const { contactDetails, requireContactDetails, selectedCity: globalCity } = useShortlist();
@@ -56,6 +80,28 @@ export function SellClient() {
   const [areaSearch, setAreaSearch] = useState('');
   const [showAreaSuggestions, setShowAreaSuggestions] = useState(false);
 
+  // --- Your Listings ---
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const fetchListings = useCallback(async () => {
+    if (!contactDetails?.phoneNumber) return;
+    setListingsLoading(true);
+    try {
+      const data = await getUserListingsAction(contactDetails.phoneNumber);
+      setListings(data as Listing[]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setListingsLoading(false);
+    }
+  }, [contactDetails?.phoneNumber]);
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
+
   useEffect(() => {
     async function loadData() {
       const cities = await getCities();
@@ -78,6 +124,8 @@ export function SellClient() {
       try {
         await submitPropertyForSaleAction(formData, contactDetails);
         setIsSubmitted(true);
+        // Refresh listings after submission
+        fetchListings();
       } catch (error) {
         alert('Something went wrong during submission. Please try again.');
       } finally {
@@ -89,6 +137,25 @@ export function SellClient() {
   const handlePrev = () => { if (activeStep > 0) setActiveStep(prev => prev - 1); };
   const updateFormData = (key: string, value: any) => { setFormData(prev => ({ ...prev, [key]: value })); };
   const filteredAreas = allAreas.filter(a => a.toLowerCase().includes(areaSearch.toLowerCase()));
+
+  const handleDeleteListing = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteUserListingAction(id);
+      setListings(prev => prev.filter(l => l.id !== id));
+    } catch (e) {
+      alert('Could not delete. Try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const openModal = () => {
+    setIsSubmitted(false);
+    setActiveStep(0);
+    setFormData({ type: '', city: globalCity || 'Panipat', area: '', price: '', size: '', description: '', location: null });
+    setIsModalOpen(true);
+  };
 
   const steps = [
     { title: 'Contact', description: 'Confirm your identity' },
@@ -103,7 +170,6 @@ export function SellClient() {
     <div className="bg-white">
       {/* ── ELITE HERO ── */}
       <section className="relative pt-32 pb-24 sm:pt-48 sm:pb-40 px-6 overflow-hidden min-h-[75vh] flex items-center bg-white">
-        {/* Colorful Background Accents */}
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-brand-primary/10 blur-[130px] rounded-full pointer-events-none -z-10" />
         <div className="absolute -bottom-10 -right-20 w-[600px] h-[600px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
@@ -120,7 +186,7 @@ export function SellClient() {
              </p>
              <div className="flex flex-col items-center gap-4">
                <button 
-                 onClick={() => setIsModalOpen(true)}
+                 onClick={openModal}
                  className="group relative inline-flex items-center gap-6 rounded-full bg-zinc-900 px-10 py-5 transition-all hover:bg-black hover:scale-[1.02] active:scale-[0.99] shadow-2xl shadow-zinc-200"
                >
                   <span className="ty-title font-bold text-white uppercase tracking-tight">Post your property</span>
@@ -136,6 +202,128 @@ export function SellClient() {
           </motion.div>
         </div>
       </section>
+
+      {/* ── YOUR LISTINGS ── */}
+      {contactDetails?.phoneNumber && (
+        <section className="py-16 sm:py-24 px-6 bg-zinc-50/50 border-y border-zinc-100">
+          <div className="mx-auto max-w-4xl">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="ty-title font-black text-zinc-900 uppercase tracking-tight">Your Listings</h2>
+                <p className="ty-caption text-zinc-500 mt-1">All properties you've submitted for sale</p>
+              </div>
+              <button
+                onClick={openModal}
+                className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 ty-micro font-black text-white shadow-lg hover:bg-black transition-colors active:scale-[0.98]"
+              >
+                <ArrowRight className="h-4 w-4" /> New Listing
+              </button>
+            </div>
+
+            {listingsLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <Loader2 className="h-7 w-7 animate-spin text-zinc-300" />
+                <p className="ty-caption text-zinc-400 font-bold">Loading your listings…</p>
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4 rounded-3xl border-2 border-dashed border-zinc-200 bg-white">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100">
+                  <FileText className="h-8 w-8 text-zinc-300" />
+                </div>
+                <p className="ty-body font-bold text-zinc-400">No listings yet</p>
+                <button onClick={openModal} className="rounded-xl bg-zinc-900 px-6 py-3 ty-micro font-black text-white">
+                  Post your first property
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {listings.map((listing) => {
+                  const sc = getStatusConfig(listing.status);
+                  const StatusIcon = sc.icon;
+                  const isPending = listing.status === 'pending';
+                  const isDeleting = deletingId === listing.id;
+
+                  return (
+                    <motion.div
+                      key={listing.id}
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      className="relative bg-white rounded-3xl border border-zinc-100 p-6 shadow-sm flex flex-col gap-4 overflow-hidden"
+                    >
+                      {/* Status Badge */}
+                      <div className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 ty-micro font-black border w-fit', sc.bg, sc.color, sc.border)}>
+                        <StatusIcon className="h-3.5 w-3.5" />
+                        {sc.label}
+                      </div>
+
+                      <div>
+                        <p className="ty-title font-black text-zinc-900 leading-tight">{listing.property_type}</p>
+                        <div className="flex items-center gap-1.5 mt-1 text-zinc-500">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span className="ty-caption font-medium">{listing.area}, {listing.city}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        {listing.price && (
+                          <div>
+                            <p className="ty-micro font-bold text-zinc-400 uppercase tracking-widest">Price</p>
+                            <p className="ty-caption font-black text-zinc-900">{listing.price} Cr</p>
+                          </div>
+                        )}
+                        {listing.size && (
+                          <div>
+                            <p className="ty-micro font-bold text-zinc-400 uppercase tracking-widest">Size</p>
+                            <p className="ty-caption font-black text-zinc-900">{listing.size} Sq.Yd</p>
+                          </div>
+                        )}
+                        <div className="ml-auto">
+                          <p className="ty-micro font-bold text-zinc-400 uppercase tracking-widest">Submitted</p>
+                          <p className="ty-caption font-bold text-zinc-500">
+                            {new Date(listing.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Status explanation */}
+                      {listing.status === 'in_review' && (
+                        <div className="flex items-start gap-2 rounded-2xl bg-blue-50 border border-blue-100 p-3">
+                          <AlertCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                          <p className="ty-micro font-medium text-blue-700 leading-relaxed">Our team is currently verifying the details. We'll contact you within 24 hours.</p>
+                        </div>
+                      )}
+                      {listing.status === 'rejected' && (
+                        <div className="flex items-start gap-2 rounded-2xl bg-red-50 border border-red-100 p-3">
+                          <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                          <p className="ty-micro font-medium text-red-700 leading-relaxed">This listing didn't meet our criteria. Please contact support for details.</p>
+                        </div>
+                      )}
+
+                      {/* Delete button only for pending listings */}
+                      {isPending && (
+                        <button
+                          onClick={() => handleDeleteListing(listing.id)}
+                          disabled={isDeleting}
+                          className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-red-100 bg-red-50 text-red-600 py-3 ty-micro font-black uppercase tracking-widest transition-all hover:bg-red-100 active:scale-[0.98] disabled:opacity-50"
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          {isDeleting ? 'Removing…' : 'Remove Listing'}
+                        </button>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── INCENTIVIZED BY SUCCESS ── */}
       <section className="py-24 sm:py-40 px-6 bg-zinc-50/50 border-y border-zinc-100 relative overflow-hidden">
@@ -210,12 +398,12 @@ export function SellClient() {
            <p className="ty-subtitle text-zinc-500 mb-14 max-w-sm mx-auto leading-relaxed">Join the homeowners who managed to sell their property faster with {brand.name}.</p>
            
            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <a href="tel:+919518091945" className="inline-flex w-full sm:w-auto items-center justify-center gap-4 rounded-full bg-white border-2 border-zinc-100 px-10 py-5 ty-title font-bold text-zinc-900 transition-all hover:border-zinc-900  shadow-xl shadow-zinc-100/50">
+              <a href="tel:+919518091945" className="inline-flex w-full sm:w-auto items-center justify-center gap-4 rounded-full bg-white border-2 border-zinc-100 px-10 py-5 ty-title font-bold text-zinc-900 transition-all hover:border-zinc-900 shadow-xl shadow-zinc-100/50">
                 <Phone className="h-5 w-5 text-brand-primary" /> Consult Our Advisors
               </a>
               <button 
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-4 rounded-full bg-brand-primary px-10 py-5 ty-title font-bold text-white shadow-2xl shadow-brand-primary/20 transition-all hover:bg-blue-700 "
+                onClick={openModal}
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-4 rounded-full bg-brand-primary px-10 py-5 ty-title font-bold text-white shadow-2xl shadow-brand-primary/20 transition-all hover:bg-blue-700"
               >
                  Post your property <ArrowRight className="h-5 w-5" />
               </button>
@@ -234,18 +422,54 @@ export function SellClient() {
             >
               <div className="flex-1 overflow-y-auto no-scrollbar p-8">
                  {isSubmitted ? (
-                   <div className="text-center py-12">
-                      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white">
-                        <CheckCircle2 className="h-8 w-8" strokeWidth={3} />
-                      </div>
-                      <h2 className="ty-title font-black text-zinc-900 uppercase tracking-tight mb-2">Listing Submitted</h2>
-                      <p className="ty-body text-zinc-500 mb-8 max-w-xs mx-auto">Our team will verify the details and contact you shortly.</p>
-                      <a href={`https://wa.me/919518091945?text=${encodeURIComponent(`Hi, I've listed my property on ${brand.name}.\nType: ${formData.type}\nLocation: ${formData.area}, ${formData.city}`)}`} 
-                        target="_blank" rel="noopener noreferrer" 
-                        className="inline-flex items-center gap-3 rounded-xl bg-[#25D366] py-4 px-8 ty-micro font-black text-white active:scale-[0.99]"
+                   /* ── SUCCESS STATE: No close btn, WhatsApp only ── */
+                   <div className="flex flex-col items-center text-center py-12 gap-6">
+                      <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+                        className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xl shadow-emerald-200"
                       >
-                        <MessageCircle className="h-4 w-4 fill-white" /> Continue on WhatsApp
+                        <CheckCircle2 className="h-10 w-10" strokeWidth={2.5} />
+                      </motion.div>
+
+                      <div className="space-y-2">
+                        <h2 className="ty-title font-black text-zinc-900 uppercase tracking-tight">Listing Submitted!</h2>
+                        <p className="ty-body text-zinc-500 max-w-xs mx-auto leading-relaxed">
+                          Our team will verify the details and contact you shortly on WhatsApp.
+                        </p>
+                      </div>
+
+                      {/* listing summary pill */}
+                      <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 border border-zinc-100 px-5 py-3 text-left w-full max-w-xs">
+                        <div className="h-9 w-9 rounded-xl bg-zinc-900 flex items-center justify-center shrink-0">
+                          <Building2 className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="ty-micro font-black text-zinc-900">{formData.type}</p>
+                          <p className="ty-micro text-zinc-500">{formData.area}, {formData.city}</p>
+                        </div>
+                        <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 ty-micro font-black px-2.5 py-1">
+                          <Clock3 className="h-3 w-3" /> Pending
+                        </span>
+                      </div>
+
+                      <a
+                        href={`https://wa.me/919518091945?text=${encodeURIComponent(`Hi, I've listed my property on ${brand.name}.\nType: ${formData.type}\nLocation: ${formData.area}, ${formData.city}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-[#25D366] py-4 px-6 ty-label font-black text-white active:scale-[0.99] shadow-lg shadow-green-200 hover:bg-[#1fbd59] transition-colors"
+                      >
+                        <MessageCircle className="h-5 w-5 fill-white" />
+                        Continue on WhatsApp
                       </a>
+
+                      <button
+                        onClick={() => setIsModalOpen(false)}
+                        className="ty-micro font-bold text-zinc-400 hover:text-zinc-700 transition-colors underline underline-offset-2"
+                      >
+                        Close and view listings
+                      </button>
                    </div>
                 ) : (
                   <>
@@ -330,10 +554,7 @@ export function SellClient() {
                                 <label className="ty-micro font-black text-zinc-400 mb-2 block">Search Area</label>
                                 <input type="text" value={formData.area} onFocus={() => setShowAreaSuggestions(true)}
                                   onChange={(e) => { updateFormData('area', e.target.value); setAreaSearch(e.target.value); }}
-                                  autoComplete="off"
-                                  autoCorrect="off"
-                                  autoCapitalize="none"
-                                  spellCheck={false}
+                                  autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false}
                                   className="w-full rounded-2xl border-2 border-zinc-100 py-4 px-6 font-bold text-zinc-900 focus:border-brand-primary outline-none bg-zinc-50/20 transition-all" 
                                   placeholder="e.g. Model Town" />
                                 {showAreaSuggestions && filteredAreas.length > 0 && (
@@ -356,19 +577,13 @@ export function SellClient() {
                                <div className="space-y-2">
                                  <label className="ty-micro font-black text-zinc-400">Asking Price (Cr)</label>
                                  <input type="number" step="0.01" value={formData.price} onChange={(e) => updateFormData('price', e.target.value)} 
-                                   autoComplete="off"
-                                   autoCorrect="off"
-                                   autoCapitalize="none"
-                                   spellCheck={false}
+                                   autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false}
                                    className="w-full rounded-2xl border-2 border-zinc-100 py-4 px-6 font-black text-zinc-900 focus:border-brand-primary outline-none" placeholder="0.00" />
                                </div>
                                <div className="space-y-2">
                                  <label className="ty-micro font-black text-zinc-400">Size (Sq. Yards)</label>
                                  <input type="number" value={formData.size} onChange={(e) => updateFormData('size', e.target.value)} 
-                                   autoComplete="off"
-                                   autoCorrect="off"
-                                   autoCapitalize="none"
-                                   spellCheck={false}
+                                   autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false}
                                    className="w-full rounded-2xl border-2 border-zinc-100 py-4 px-6 font-black text-zinc-900 focus:border-brand-primary outline-none" placeholder="0" />
                                </div>
                             </motion.div>
@@ -395,8 +610,8 @@ export function SellClient() {
                       <button onClick={handlePrev} className={cn("ty-micro font-black text-zinc-400 uppercase tracking-widest hover:text-zinc-900 transition-colors", activeStep === 0 && "opacity-0 invisible")}>Back</button>
                       <button onClick={handleNext} 
                         disabled={isSubmitting || (!contactDetails && activeStep === 0) || (activeStep === 1 && !formData.type) || (activeStep === 2 && !formData.area) || (activeStep === 3 && (!formData.price || !formData.size))}
-                        className="bg-zinc-900 text-white rounded-2xl px-10 py-4 ty-micro font-black shadow-xl transition-all hover:bg-black active:scale-[0.99] disabled:opacity-30">
-                        {isSubmitting ? 'Processing...' : activeStep === 5 ? 'Confirm Listing' : 'Continue'}
+                        className="bg-zinc-900 text-white rounded-2xl px-10 py-4 ty-micro font-black shadow-xl transition-all hover:bg-black active:scale-[0.99] disabled:opacity-30 flex items-center gap-2">
+                        {isSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</> : activeStep === 5 ? 'Confirm Listing' : 'Continue'}
                       </button>
                     </div>
                   </>
