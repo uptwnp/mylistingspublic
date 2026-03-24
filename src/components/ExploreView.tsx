@@ -446,8 +446,8 @@ export function ExploreView({
 
       {/* Full-screen map overlay — mobile & desktop 'map' mode */}
       {viewMode === 'map' && (
-        <div className="fixed inset-0 z-40 bg-white">
-          {/* X close button — top right */}
+        <div className="fixed inset-0 z-[60] bg-white">
+          {/* X close button — top right, above Leaflet */}
           <div className="absolute top-4 right-4 z-[1001] flex gap-2">
             <button
               onClick={() => setViewMode('list')}
