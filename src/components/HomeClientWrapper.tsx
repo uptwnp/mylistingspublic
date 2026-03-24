@@ -30,14 +30,14 @@ export function HomeClientWrapper({
       <div className="h-[72px] sm:h-[360px] lg:h-80" />
 
       {/* Mobile-only Hero Section — hidden on sm+ where navbar shows the full hero */}
-      <section className="sm:hidden px-4 pt-8 pb-4 text-center">
+      <section className="sm:hidden px-4 pt-8 pb-10 text-center">
         <h1 className="ty-hero font-bold tracking-tight text-zinc-900 leading-[1.05]">
           Find your dream property
         </h1>
         <p className="mt-3 ty-label text-zinc-400 opacity-80">
           Choose from biggest property pool
         </p>
-        <div className="mt-10 px-0">
+        <div className="mt-10 mb-8 px-0">
           <button
             onClick={() => setIsMobileSearchOpen(true)}
             className="flex w-full items-center gap-3 rounded-full border border-blue-100 bg-blue-50/30 p-1.5 pl-6 shadow-xl shadow-blue-900/5 transition-all active:scale-[0.98] text-left"

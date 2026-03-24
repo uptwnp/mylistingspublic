@@ -237,7 +237,7 @@ export function SelectionBottomSheet({
                       )}
                     </div>
 
-                    <div id="area-list" className="grid grid-cols-1 gap-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                    <div id="area-list" className="flex flex-col gap-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
                       {showNearby && (
                         /* Near Me Button logic remains same */
                         <button
@@ -260,24 +260,21 @@ export function SelectionBottomSheet({
                             onClose();
                           }}
                           className={cn(
-                            "flex items-center gap-3 w-full rounded-xl border-2 px-4 py-3 text-left transition-all mb-2",
+                            "flex items-center gap-3 w-full rounded-xl border-2 px-4 py-3 text-left transition-all",
                             selectedValue === 'Near Me' 
-                              ? "border-brand-primary bg-blue-50" 
-                              : "border-blue-100 bg-blue-50/30 active:border-blue-300"
+                              ? "border-zinc-900 bg-zinc-50" 
+                              : "border-zinc-100 active:border-zinc-300"
                           )}
                         >
                           <div className={cn(
                             "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
-                            selectedValue === 'Near Me' ? "bg-brand-primary text-white" : "bg-brand-primary text-white shadow-lg shadow-blue-200"
+                            selectedValue === 'Near Me' ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-400"
                           )}>
                             <Locate className="h-4 w-4" />
                           </div>
-                          <div className="flex flex-col">
-                            <span className={cn("text-sm font-bold", selectedValue === 'Near Me' ? "text-brand-primary" : "text-blue-700")}>
-                              Near Me
-                            </span>
-                            <span className="text-[10px] font-bold text-blue-600/70 uppercase tracking-wider">Use Current Location</span>
-                          </div>
+                          <span className={cn("text-sm font-bold", selectedValue === 'Near Me' ? "text-zinc-900" : "text-zinc-500")}>
+                            Near Me
+                          </span>
                         </button>
                       )}
 
@@ -288,24 +285,21 @@ export function SelectionBottomSheet({
                             onClose();
                           }}
                           className={cn(
-                            "flex items-center gap-3 w-full rounded-xl border-2 px-4 py-3 text-left transition-all mb-4 mt-1",
+                            "flex items-center gap-3 w-full rounded-xl border-2 px-4 py-3 text-left transition-all",
                             !selectedValue 
-                              ? "border-zinc-900 bg-zinc-100" 
-                              : "border-zinc-100 bg-zinc-50/50 active:border-zinc-300 shadow-sm"
+                              ? "border-zinc-900 bg-zinc-50" 
+                              : "border-zinc-100 active:border-zinc-300"
                           )}
                         >
                           <div className={cn(
                             "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
-                            !selectedValue ? "bg-zinc-900 text-white" : "bg-zinc-200 text-zinc-500"
+                            !selectedValue ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-400"
                           )}>
                             <Globe className="h-4 w-4" />
                           </div>
-                          <div className="flex flex-col">
-                            <span className={cn("text-sm font-bold", !selectedValue ? "text-zinc-900" : "text-zinc-700")}>
-                              {`Anywhere in ${selectedCity}`}
-                            </span>
-                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Explore entire city</span>
-                          </div>
+                          <span className={cn("text-sm font-bold", !selectedValue ? "text-zinc-900" : "text-zinc-500")}>
+                            {`Anywhere in ${selectedCity}`}
+                          </span>
                         </button>
                       )}
 
