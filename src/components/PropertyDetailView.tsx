@@ -502,8 +502,8 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
       </section>
 
       {/* Mobile Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 p-3 sm:p-4 shadow-xl md:hidden">
-        <div className="flex items-center justify-between gap-3 sm:gap-4">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 px-4 pt-4 pb-8 sm:p-6 shadow-[0_-20px_40px_rgba(0,0,0,0.08)] md:hidden">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="ty-label text-zinc-400">Price</span>
             <p className="ty-subtitle font-bold text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
@@ -513,7 +513,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               if (!inCart) addToShortlist(property);
               router.push('/shortlist');
             }}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-2.5 sm:py-3 ty-label text-white shadow-lg"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-4 ty-label text-white shadow-lg active:scale-[0.98] transition-all"
           >
             {inCart ? 'Go to Shortlist' : 'Proceed with it'}
           </button>
