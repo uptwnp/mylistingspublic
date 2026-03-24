@@ -12,7 +12,7 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { calculateDistance, getPropertyCoords } from '@/lib/utils';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import { parseSeoSlug } from '@/lib/seo-utils';
+import { parseSeoSlug, getSeoUrl } from '@/lib/seo-utils';
 import { FilterChips } from '@/components/FilterChips';
 
 
@@ -147,54 +147,65 @@ export function ExploreView({
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      
-      const city = overrideCity || searchParams.get('city') || selectedCity;
-      const area = overrideArea || searchParams.get('area');
-      const budget = overrideBudget || searchParams.get('budget');
-      const type = overrideType || searchParams.get('type');
-      const minSize = searchParams.get('minSize');
-      const maxSize = searchParams.get('maxSize');
-      const highlights = searchParams.get('highlights');
-      const keywords = searchParams.get('keywords');
+      try {
+        setLoading(true);
+        
+        const city = overrideCity || searchParams.get('city') || selectedCity;
+        const area = overrideArea || searchParams.get('area');
+        const budget = overrideBudget || searchParams.get('budget');
+        const type = overrideType || searchParams.get('type');
+        const minSize = searchParams.get('minSize');
+        const maxSize = searchParams.get('maxSize');
+        const highlights = searchParams.get('highlights');
+        const keywords = searchParams.get('keywords');
 
-      // Fetch data with all filters
-      const { data, count } = await getProperties(
-        page, 
-        itemsPerPage, 
-        false, 
-        city === 'All' ? undefined : city,
-        type || undefined,
-        sortField === 'distance' ? 'distance' : sortField,
-        sortOrder,
-        area || undefined,
-        budget || undefined,
-        minSize || undefined,
-        maxSize || undefined,
-        highlights || undefined,
-        keywords || undefined,
-        userLocation?.lat,
-        userLocation?.lng
-      );
-      
-      let finalData = [...data];
-      setTotalCount(count);
+        // Fetch data with all filters
+        const { data, count } = await getProperties(
+          page, 
+          itemsPerPage, 
+          false, 
+          city === 'All' ? undefined : city,
+          type || undefined,
+          sortField === 'distance' ? 'distance' : sortField,
+          sortOrder,
+          area || undefined,
+          budget || undefined,
+          minSize || undefined,
+          maxSize || undefined,
+          highlights || undefined,
+          keywords || undefined,
+          userLocation?.lat,
+          userLocation?.lng
+        );
+        
+        let finalData = data ? [...data] : [];
+        setTotalCount(count || 0);
 
-      // Calculate distances locally only for card labels ("1.2 km away")
-      if (userLocation) {
-        finalData = finalData.map(p => {
-          const [pLat, pLng] = getPropertyCoords(p, finalData, areaCenters);
-          return {
-            ...p,
-            landmark_location_distance: calculateDistance(userLocation.lat, userLocation.lng, pLat, pLng)
-          };
-        });
+        // Calculate distances locally only for card labels ("1.2 km away")
+        if (userLocation && !isNaN(userLocation.lat) && !isNaN(userLocation.lng)) {
+          finalData = finalData.map(p => {
+            const [pLat, pLng] = getPropertyCoords(p, finalData, areaCenters);
+            // Defensive distance check
+            if (!isNaN(pLat) && !isNaN(pLng)) {
+              return {
+                ...p,
+                landmark_location_distance: calculateDistance(userLocation.lat, userLocation.lng, pLat, pLng)
+              };
+            }
+            return p;
+          });
+        }
+
+        setProperties(finalData);
+        cacheProperties(finalData);
+        setLoading(false);
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      } catch (err) {
+        console.error('Explore fetch crash:', err);
+        setLoading(false);
+        // On critical failure, fallback to empty or cached
+        if (properties.length === 0) setProperties([]);
       }
-
-      setProperties(finalData);
-      cacheProperties(finalData);
-      setLoading(false);
-      window.scrollTo({ top: 0, behavior: 'instant' });
     };
     fetchData();
   }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
@@ -336,7 +347,13 @@ export function ExploreView({
                   <button 
                     onClick={() => {
                       clearFilters();
-                      router.push('/explore');
+                      // Redirect to standard explore (default city) with no filters
+                      const url = getSeoUrl(selectedCity, 'Any Type', 'anywhere', 'Any Budget');
+                      if (url) {
+                        router.push(url);
+                      } else {
+                        router.push('/explore');
+                      }
                     }} 
                     className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-[0.98]"
                   >
@@ -402,16 +419,17 @@ export function ExploreView({
         </div>
       </div>
 
-      {/* View Toggle */}
-      <button 
-        onClick={() => setViewMode(viewMode === 'list' ? (window.innerWidth >= 1024 ? 'split' : 'map') : 'list')}
-        className={cn(
-          "fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105",
-          viewMode === 'split' && "lg:hidden"
-        )}
-      >
-        {viewMode === 'map' ? <><LayoutGrid className="h-4 w-4" /><span>Show List</span></> : <><MapIcon className="h-4 w-4" /><span>Show Map</span></>}
-      </button>
+      {(properties.length > 0 || viewMode === 'map') && (
+        <button 
+          onClick={() => setViewMode(viewMode === 'list' ? (window.innerWidth >= 1024 ? 'split' : 'map') : 'list')}
+          className={cn(
+            "fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105",
+            viewMode === 'split' && "lg:hidden"
+          )}
+        >
+          {viewMode === 'map' ? <><LayoutGrid className="h-4 w-4" /><span>Show List</span></> : <><MapIcon className="h-4 w-4" /><span>Show Map</span></>}
+        </button>
+      )}
     </div>
   );
 }

@@ -71,7 +71,7 @@ export function ContinueExploringBanner() {
       >
         <div className="flex items-center gap-2 sm:gap-3 py-1">
              <span className="text-sm sm:text-base font-bold text-zinc-900 tracking-tight capitalize">
-                Continue exploring {baseType.toLowerCase()} {priceText} in {lastProperty.area}
+                {baseType.toLowerCase()} {priceText} in {lastProperty.area}
              </span>
              <span className="hidden sm:inline-block text-zinc-200 text-lg mx-1">•</span>
              <span className="hidden sm:inline-block text-sm font-semibold text-zinc-500 whitespace-nowrap">

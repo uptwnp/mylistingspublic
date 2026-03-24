@@ -148,7 +148,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
 
       {/* Main Grid Content */}
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
           
           {/* COLUMN 1: Main Content */}
           <div className="lg:col-span-8 space-y-8">
@@ -157,7 +157,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 Last Updated: {formatDate(property.approved_on)}
             </div>
             {/* Photo Gallery Area */}
-            <div className="relative overflow-hidden md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border-b md:border border-zinc-100 -mx-4 md:mx-0 bg-zinc-50">
+            <div className="relative overflow-hidden rounded-2xl md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border border-zinc-100 bg-zinc-50">
               {hasImage ? (
                 <div className="h-full relative group">
                   <div className="relative h-full w-full overflow-hidden">
@@ -224,17 +224,17 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                           />
                         ) : (
                           <div 
-                            className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-zinc-50"
+                            className="flex h-full w-full flex-col items-center justify-center p-6 sm:p-8 text-center bg-zinc-50"
                           >
-                            <ShieldCheck className="h-16 w-16 mb-6 text-zinc-300" />
-                            <p className="ty-title font-bold text-zinc-900 mb-2">Not enough to get idea?</p>
-                            <p className="ty-caption text-zinc-500 max-w-sm mb-6">Request more exclusive photos and videos for this property.</p>
+                            <ShieldCheck className="h-12 w-12 md:h-16 md:w-16 mb-4 md:mb-6 text-zinc-300" />
+                            <p className="ty-subtitle md:ty-title font-bold text-zinc-900 mb-1 md:mb-2">Not enough to get idea?</p>
+                            <p className="ty-caption text-zinc-500 max-w-[280px] sm:max-w-sm mb-4 md:mb-6">Request more exclusive photos and videos for this property.</p>
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setIsPhotoModalOpen(true);
                               }}
-                              className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-[0.98] transition-all cursor-pointer"
+                              className="rounded-full bg-black px-6 py-2 md:px-8 md:py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-[0.98] transition-all cursor-pointer"
                             >
                               Request more photos
                             </button>
@@ -300,14 +300,14 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               ) : (
                 <div 
                   onClick={() => setIsPhotoModalOpen(true)}
-                  className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
+                  className="flex h-full w-full flex-col items-center justify-center p-6 sm:p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  <div className="flex flex-col items-center">
-                    <Icon className={cn("h-32 w-32 opacity-20", config.color)} />
-                    <div className="text-center mt-4">
-                      <p className="ty-title font-bold text-zinc-900">No photos available</p>
-                      <p className="mt-2 ty-caption text-zinc-500 max-w-sm mb-6">Owner has restricted public photos. You can request exclusive access.</p>
-                      <button className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-[0.98]">
+                  <div className="flex flex-col items-center scale-90 sm:scale-100">
+                    <Icon className={cn("h-20 w-20 md:h-32 md:w-32 opacity-20", config.color)} />
+                    <div className="text-center mt-3 md:mt-4">
+                      <p className="ty-subtitle md:ty-title font-bold text-zinc-900">No photos available</p>
+                      <p className="mt-1 md:mt-2 ty-caption text-zinc-500 max-w-[280px] sm:max-w-sm mb-4 md:mb-6">Owner has restricted public photos. You can request exclusive access.</p>
+                      <button className="rounded-full bg-black px-6 py-2 md:px-8 md:py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-[0.98]">
                         Request photos
                       </button>
                     </div>
@@ -408,14 +408,19 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 </a>
               </div>
               <div className="h-[400px] w-full rounded-2xl border border-zinc-100 bg-zinc-50 overflow-hidden">
-                <MapComponent 
-                  properties={[property]} 
-                  selectedProperty={property} 
-                  onSelectProperty={() => {}}
-                  userLocation={userLocation} 
-                  showDistance={true} 
-                  disableCard={true} 
-                />
+                {(() => {
+                  const mapProperties = React.useMemo(() => [property], [property.property_id]);
+                  return (
+                    <MapComponent 
+                      properties={mapProperties} 
+                      selectedProperty={property} 
+                      onSelectProperty={() => {}}
+                      userLocation={userLocation} 
+                      showDistance={true} 
+                      disableCard={true} 
+                    />
+                  );
+                })()}
               </div>
               {userLocation && (
                 <div className="flex items-center gap-2 text-emerald-600">
@@ -497,8 +502,8 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
       </section>
 
       {/* Mobile Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 p-4 shadow-xl md:hidden">
-        <div className="flex items-center justify-between gap-4">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 p-3 sm:p-4 shadow-xl md:hidden">
+        <div className="flex items-center justify-between gap-3 sm:gap-4">
           <div className="flex flex-col">
             <span className="ty-label text-zinc-400">Price</span>
             <p className="ty-subtitle font-bold text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
@@ -508,7 +513,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               if (!inCart) addToShortlist(property);
               router.push('/shortlist');
             }}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-2.5 sm:py-3 ty-label text-white shadow-lg"
           >
             {inCart ? 'Go to Shortlist' : 'Proceed with it'}
           </button>

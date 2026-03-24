@@ -102,25 +102,46 @@ export default function Navbar() {
     };
   }, [isForceExpanded]);
 
-  const handleApplyFilters = useCallback((overrides?: { city?: string; area?: string; budget?: { label: string; value: number }; type?: string }) => {
+  const handleApplyFilters = useCallback((overrides?: { 
+    city?: string; 
+    area?: string; 
+    budget?: { label: string; value: number }; 
+    type?: string;
+    keywords?: string;
+    minSize?: string;
+    maxSize?: string;
+    highlights?: string[];
+  }) => {
     const finalCity = overrides?.city ?? selectedCity;
     const finalArea = overrides?.area ?? query;
     const finalBudget = overrides?.budget ?? budget;
     const finalType = overrides?.type ?? propertyType;
+    const finalKeywords = overrides?.keywords !== undefined ? overrides.keywords : keywords;
+    const finalMinSize = overrides?.minSize !== undefined ? overrides.minSize : minSize;
+    const finalMaxSize = overrides?.maxSize !== undefined ? overrides.maxSize : maxSize;
+    const finalHighlights = overrides?.highlights !== undefined ? overrides.highlights : selectedHighlights;
     
     // Create query params for extra filters
     const params = new URLSearchParams();
-    if (keywords) params.set('q', keywords);
-    if (minSize) params.set('minSize', minSize);
-    if (maxSize) params.set('maxSize', maxSize);
-    if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
+    if (finalKeywords) params.set('q', finalKeywords);
+    if (finalMinSize) params.set('minSize', finalMinSize);
+    if (finalMaxSize) params.set('maxSize', finalMaxSize);
+    if (finalHighlights.length > 0) params.set('highlights', finalHighlights.join(','));
+
+    // Check if the current URL is already what we're trying to push
+    const currentPath = pathname;
+    const currentParams = searchParams.toString();
+    const currentUrlString = currentParams ? `${currentPath}?${currentParams}` : currentPath;
 
     // Prioritize hierarchical SEO URL for primary search parameters
     const seoUrl = getSeoUrl(finalCity, finalType, finalArea, finalBudget.label);
     if (seoUrl) {
       const queryString = params.toString();
       const url = queryString ? `${seoUrl}${queryString ? `?${queryString}` : ''}` : seoUrl;
-      router.push(url);
+      
+      if (url !== currentUrlString) {
+        router.push(url);
+      }
       closeAllModals(true);
       return;
     }
@@ -132,13 +153,27 @@ export default function Navbar() {
     if (finalType !== "Any Type") params.set('type', finalType);
 
     const url = `/explore?${params.toString()}`;
-    router.push(url);
+    if (url !== currentUrlString) {
+      router.push(url);
+    }
     closeAllModals(true);
-  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, closeAllModals]);
+  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, closeAllModals, pathname, searchParams]);
+
+  // Tracking to prevent Sync vs Auto-apply fighting
+  const lastSyncedPathRef = useRef<string>('');
+  const [hasSyncedInitialUrl, setHasSyncedInitialUrl] = useState(false);
+  const { isInitialized } = useShortlist();
 
   // Sync search state from URL
   useEffect(() => {
     // Check if it's a dynamic SEO route
+    const currentPath = pathname;
+    const currentParams = searchParams.toString();
+    const currentUrl = currentParams ? `${currentPath}?${currentParams}` : currentPath;
+    
+    // Skip if we just synced this URL to prevent loops
+    if (lastSyncedPathRef.current === currentUrl) return;
+
     const seoData = parseSeoSlug(pathname.slice(1));
     const isStandardExplore = pathname === '/explore' || pathname === '/map';
     
@@ -147,21 +182,36 @@ export default function Navbar() {
     
     if (seoData) {
       // Priority: Hierarchical SEO segments
-      if (seoData.city && seoData.city !== selectedCity) setSelectedCity(seoData.city);
-      if (seoData.type && seoData.type !== propertyType) setPropertyType(seoData.type);
-      if (seoData.area && seoData.area !== query) setQuery(seoData.area);
-      else if (!seoData.area && query !== '') setQuery(''); // Clear if it's 'anywhere' in SEO path
+      if (seoData.city && seoData.city.toLowerCase() !== selectedCity.toLowerCase()) setSelectedCity(seoData.city);
+      
+      const normalizedType = (seoData.type || 'Any Type').trim();
+      if (normalizedType.toLowerCase() !== propertyType.toLowerCase()) {
+        const isActuallyAny = ['all-types', 'any type', 'any', 'everything', 'properties'].includes(normalizedType.toLowerCase());
+        setPropertyType(isActuallyAny ? 'Any Type' : normalizedType);
+      }
+      
+      const normalizedArea = (seoData.area || '').trim();
+      const currentQuery = query.toLowerCase();
+      const isCurrentAnywhere = !query || currentQuery === '' || currentQuery === 'anywhere';
+      const isNewAnywhere = !normalizedArea || normalizedArea.toLowerCase() === 'anywhere';
+
+      if (!isCurrentAnywhere || !isNewAnywhere) {
+        if (normalizedArea && normalizedArea.toLowerCase() !== currentQuery) {
+          setQuery(normalizedArea);
+        } else if (isNewAnywhere && query !== '') {
+          setQuery(''); 
+        }
+      }
 
       if (seoData.budget) {
-        const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === seoData.budget) || BUDGET_OPTIONS[0];
-        if (foundBudget.label !== budget.label) setBudget(foundBudget);
-      } else if (budget.label !== 'Any Budget') {
+        const foundBudget = BUDGET_OPTIONS.find(opt => opt.label.toLowerCase() === seoData.budget?.toLowerCase()) || BUDGET_OPTIONS[0];
+        if (foundBudget.label.toLowerCase() !== budget.label.toLowerCase()) setBudget(foundBudget);
+      } else if (budget.label.toLowerCase() !== 'any budget') {
         setBudget(BUDGET_OPTIONS[0]);
       }
     }
 
     // Secondary: Sync other filters from search params (supports combination)
-    // Only sync if they were EXPLICITLY provided to avoid resetting SEO route state
     const keywordsParam = searchParams.get('q') || searchParams.get('keywords');
     if (keywordsParam !== null && keywordsParam !== keywords) setKeywords(keywordsParam);
     
@@ -179,7 +229,6 @@ export default function Navbar() {
       }
     }
 
-    // Standard sync ONLY if not on SEO route or if params are present
     if (!seoData) {
       const area = searchParams.get('area');
       if (area !== null && area !== query) setQuery(area);
@@ -194,43 +243,13 @@ export default function Navbar() {
       if (type !== null && type !== propertyType) setPropertyType(type);
 
       const city = searchParams.get('city');
-      if (city && city !== selectedCity) {
-        setSelectedCity(city);
-      }
+      if (city && city !== selectedCity) setSelectedCity(city);
     }
-  }, [pathname, searchParams]);
 
-  // Auto-apply when on Explore or SEO property pages
-  useEffect(() => {
-    const isStandardExplore = pathname === '/explore' || pathname === '/map';
-    const isSeoPage = !!parseSeoSlug(pathname.slice(1));
+    lastSyncedPathRef.current = currentUrl;
+    setHasSyncedInitialUrl(true);
+  }, [pathname, searchParams, isInitialized]);
 
-    if (isStandardExplore || isSeoPage) {
-      // Avoid recursive updates: only push if state changed from URL
-      const seoData = parseSeoSlug(pathname.slice(1));
-      
-      const areaInUrl = (seoData?.area || searchParams.get('area') || '').trim();
-      const budgetInUrl = (seoData?.budget || searchParams.get('budget') || 'Any Budget').trim();
-      const typeInUrl = (seoData?.type || searchParams.get('type') || 'Any Type').trim();
-      const keywordsInUrl = (searchParams.get('q') || searchParams.get('keywords') || '').trim();
-      const minSizeInUrl = (searchParams.get('minSize') || '').trim();
-      const maxSizeInUrl = (searchParams.get('maxSize') || '').trim();
-      const highlightsInUrl = (searchParams.get('highlights') || '').trim();
-      
-      const isDifferent = 
-        query.trim() !== areaInUrl || 
-        budget.label.trim() !== budgetInUrl || 
-        propertyType.trim() !== typeInUrl ||
-        keywords.trim() !== keywordsInUrl ||
-        minSize.toString().trim() !== minSizeInUrl ||
-        maxSize.toString().trim() !== maxSizeInUrl ||
-        selectedHighlights.join(',') !== highlightsInUrl;
-        
-      if (isDifferent) {
-        handleApplyFilters();
-      }
-    }
-  }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname, searchParams]);
 
 
   const additionalFiltersCount = [
@@ -730,11 +749,19 @@ export default function Navbar() {
               <button 
                 onClick={() => {
                   clearFilters();
-                  handleApplyFilters();
+                  handleApplyFilters({
+                    area: '',
+                    budget: BUDGET_OPTIONS[0],
+                    type: 'Any Type',
+                    keywords: '',
+                    minSize: '',
+                    maxSize: '',
+                    highlights: []
+                  });
                 }}
-                className="ty-caption font-black text-zinc-900 underline underline-offset-4"
+                className="flex items-center gap-2 rounded-xl bg-zinc-900 px-6 py-2.5 ty-caption font-bold text-white transition-all hover:bg-black active:scale-[0.98]"
               >
-                Clear all
+                Clear all filters
               </button>
               <button 
                 onClick={() => handleApplyFilters()}
@@ -774,6 +801,7 @@ export default function Navbar() {
             setTimeout(() => setActiveSelectionSheet('type'), 100);
           } else {
             setActiveSelectionSheet(null);
+            handleApplyFilters({ budget: val });
           }
         }}
       />
@@ -786,9 +814,14 @@ export default function Navbar() {
         selectedValue={propertyType}
         onSelect={(val) => {
           setPropertyType(val);
-          setTimeout(() => {
+          if (!isMobileSearchOpen) {
             setActiveSelectionSheet(null);
-          }, 100);
+            handleApplyFilters({ type: val });
+          } else {
+            setTimeout(() => {
+              setActiveSelectionSheet(null);
+            }, 100);
+          }
         }}
       />
 
@@ -806,6 +839,7 @@ export default function Navbar() {
             setTimeout(() => setActiveSelectionSheet('budget'), 100);
           } else {
             setActiveSelectionSheet(null);
+            handleApplyFilters({ area: val });
           }
         }}
       />

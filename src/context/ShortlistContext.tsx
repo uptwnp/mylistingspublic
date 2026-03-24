@@ -394,6 +394,8 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     setMinSize('');
     setMaxSize('');
     setSelectedHighlights([]);
+    setSortField('approved_on');
+    setSortOrder('desc');
   };
 
   const addToShortlist = (property: any) => {

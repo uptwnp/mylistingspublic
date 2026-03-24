@@ -85,7 +85,7 @@ export default function AgentPage() {
               onClick={() => document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth' })}
               className="w-full sm:w-auto px-10 py-5 rounded-full bg-zinc-900 text-white ty-title font-bold hover:bg-black transition-all shadow-xl uppercase active:scale-[0.97]"
             >
-              Start Free Today — Grow Your Property Business
+              Start Free Today
             </button>
           </motion.div>
         </div>

@@ -183,6 +183,14 @@ interface MapComponentProps {
   disableCard?: boolean;
 }
 
+const isValidLatLng = (coords: any): coords is [number, number] => 
+  Array.isArray(coords) && 
+  coords.length === 2 && 
+  typeof coords[0] === 'number' && 
+  typeof coords[1] === 'number' &&
+  !isNaN(coords[0]) && 
+  !isNaN(coords[1]);
+
 // Component to handle map center and zoom changes only when selected property changes
 function MapController({ selectedProperty, zoomLevel, properties, areaCenters }: { selectedProperty: Property | null; zoomLevel: number; properties: Property[]; areaCenters: any[] }) {
   const map = useMap();
@@ -551,6 +559,18 @@ function CollisionAwareMarkers({
 }
 
 
+function MapEvents({ onSelectProperty, setZoom }: { onSelectProperty: (p: Property | null) => void, setZoom: (z: number) => void }) {
+  const map = useMapEvents({
+    zoomend: () => {
+      setZoom(map.getZoom());
+    },
+    click: () => {
+      onSelectProperty(null);
+    }
+  });
+  return null;
+}
+
 export default function MapComponent({ 
   properties, 
   selectedProperty, 
@@ -564,27 +584,20 @@ export default function MapComponent({
   const [isSatellite, setIsSatellite] = useState(false);
   const [zoom, setZoom] = useState(13);
 
-  // Helper component to track map events (zoom, clicks outside)
-  function MapEvents() {
-    const map = useMapEvents({
-      zoomend: () => {
-        setZoom(map.getZoom());
-      },
-      click: (e) => {
-        // If click is on the map (not a marker), unselect
-        // Leaflet handles marker clicks first, and propagation can be stopped there
-        onSelectProperty(null);
-      }
-    });
-    return null;
-  }
-  const center: [number, number] = selectedProperty 
+  const rawCenter = selectedProperty 
     ? getCoords(selectedProperty, properties, areaCenters)
-    : [29.3909, 76.9635]; // Panipat center
+    : [29.3909, 76.9635];
+  
+  const center: [number, number] = isValidLatLng(rawCenter) ? rawCenter : [29.3909, 76.9635];
 
   const propertyCoords = selectedProperty ? getCoords(selectedProperty, properties, areaCenters) : null;
-  const userCoords: [number, number] | null = userLocation ? [userLocation.lat, userLocation.lng] : null;
-  const curvedPath = (userCoords && propertyCoords) ? getCurvedPath(userCoords, propertyCoords) : null;
+  const userCoords: [number, number] | null = (userLocation && !isNaN(userLocation.lat) && !isNaN(userLocation.lng)) 
+    ? [userLocation.lat, userLocation.lng] 
+    : null;
+    
+  const curvedPath = (isValidLatLng(userCoords) && isValidLatLng(propertyCoords)) 
+    ? getCurvedPath(userCoords, propertyCoords) 
+    : null;
 
   return (
     <div className="relative h-full w-full">
@@ -594,7 +607,7 @@ export default function MapComponent({
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
-        <MapEvents />
+        <MapEvents onSelectProperty={onSelectProperty} setZoom={setZoom} />
         <InvalidateSize trigger={properties} />
         <MapController selectedProperty={selectedProperty} zoomLevel={15} properties={properties} areaCenters={areaCenters} />
         <TileLayer
@@ -625,7 +638,7 @@ export default function MapComponent({
                 opacity: 0.6
               }}
             />
-            {userCoords && (
+            {isValidLatLng(userCoords) && (
               <Marker 
                 position={userCoords}
                 icon={L.divIcon({
@@ -642,7 +655,7 @@ export default function MapComponent({
             )}
           </>
         )}
-        {selectedProperty && selectedProperty.landmark_location_distance && selectedProperty.landmark_location_distance > 0 && (
+        {selectedProperty && selectedProperty.landmark_location_distance && selectedProperty.landmark_location_distance > 0 && isValidLatLng(getCoords(selectedProperty, properties, areaCenters)) && (
           <Circle
             center={getCoords(selectedProperty, properties, areaCenters)}
             radius={selectedProperty.landmark_location_distance}

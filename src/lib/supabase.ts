@@ -93,10 +93,16 @@ export async function getProperties(
     }
   }
 
-  // 2. Map Budget string to numeric values (consistent with SQL function)
+  // 2. Normalize and check budget string to numeric values (consistent with SQL function)
   let p_min_price = null;
   let p_max_price = null;
-  if (budget && budget !== 'Any Budget') {
+  
+  // Normalize params for SQL search
+  const normalizedCity = (!city || city === 'All' || city === 'any') ? 'All' : city;
+  const normalizedType = (!type || ['All', 'Any Type', 'all-types', 'anything', 'any'].includes(type)) ? 'All' : type;
+  const normalizedArea = (!area || ['All', 'anywhere', 'any', 'Anywhere'].includes(area)) ? 'All' : area;
+
+  if (budget && !['All', 'Any Budget', 'any-budget', 'Any'].includes(budget)) {
     const b = budget.toLowerCase();
     if (b.includes('under 40')) p_max_price = 40;
     else if (b.includes('40 to 80')) { p_min_price = 40; p_max_price = 80; }
@@ -113,17 +119,17 @@ export async function getProperties(
   // 3. Unified RPC Call (The "Vercel Optimized" Way)
   try {
     const { data, error } = await supabase.rpc('get_public_properties_v2', {
-      p_city: city || 'All',
-      p_type: type || 'All',
-      p_area: area || 'All',
+      p_city: normalizedCity,
+      p_type: normalizedType,
+      p_area: normalizedArea,
       p_min_price,
       p_max_price,
       p_min_size: minSize ? parseFloat(minSize) : null,
       p_max_size: maxSize ? parseFloat(maxSize) : null,
-      p_highlights: highlights,
-      p_keywords: keywords,
-      p_user_lat: userLat,
-      p_user_lng: userLng,
+      p_highlights: highlights || null,
+      p_keywords: keywords || null,
+      p_user_lat: userLat || null,
+      p_user_lng: userLng || null,
       p_sort_field: sortField,
       p_sort_order: sortOrder,
       p_page: page,
