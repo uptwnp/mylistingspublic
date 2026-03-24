@@ -54,7 +54,7 @@ export default function ShortlistPage() {
              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-900 shadow-xl shadow-zinc-200">
                 <Zap className="h-5 w-5 text-yellow-400 fill-yellow-400" />
              </div>
-             <h2 className="text-xl font-black tracking-tight text-zinc-900 leading-none">Consultation Desk</h2>
+             <h2 className="text-xl font-black tracking-tight text-zinc-900 leading-none">Proceed to Next</h2>
            </div>
            <button 
              onClick={onClose}
@@ -556,31 +556,35 @@ export default function ShortlistPage() {
                   );
                  })}
 
-                 {showPricingCard && (
+                 <AnimatePresence>
+                  {showPricingCard && (
                     <motion.div 
+                      key="pricing-card"
+                      layout
                       initial={{ opacity: 0, scale: 0.98, y: 15 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 1, y: 15 }}
                       whileHover={{ scale: 1.002 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 120 }}
-                      className="relative overflow-hidden rounded-[2.2rem] bg-[#09090b] p-5 sm:p-7 text-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] my-8 group border border-white/5"
+                      className="relative overflow-hidden rounded-[2.2rem] sm:rounded-[2.8rem] bg-[#09090b] p-6 sm:p-9 text-white shadow-[0_35px_75px_rgba(0,0,0,0.45)] my-8 group border border-white/5"
                     >
-                      {/* Spotlight Glow */}
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.1),transparent_70%)] pointer-events-none" />
+                      {/* Premium Accent Glow */}
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.14),transparent_75%)] pointer-events-none" />
                       
                       <div className="relative z-10">
-                        <div className="flex items-start justify-between gap-4 sm:gap-6">
-                          <div className="space-y-2 min-w-0">
-                             <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 backdrop-blur-xl mb-1">
+                        <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
+                          <div className="space-y-3 min-w-0 flex-1">
+                             <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/18 border border-indigo-500/25 px-3.5 py-1.5 backdrop-blur-3xl mb-1">
                                 <Zap className="h-3 w-3 text-indigo-400 fill-indigo-400/20" />
-                                <span className="text-[9px] font-black uppercase tracking-wider text-indigo-300">
-                                   Dealer Fee
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300">
+                                   Pricing Structure
                                 </span>
                              </div>
-                             <h2 className="text-xl sm:text-2xl font-black leading-none text-white tracking-tight flex items-center gap-3">
+                             <h2 className="text-2xl sm:text-3xl font-black leading-tight text-white tracking-tight">
                                 Zero Upfront Fees ⚡
                              </h2>
-                             <p className="text-xs sm:text-sm font-medium text-zinc-400 leading-relaxed max-w-lg">
-                                Pay just <span className="text-white">1% brokerage</span> — only when you finalize the deal at the agreement stage. 🤝
+                             <p className="text-sm sm:text-base font-medium text-zinc-400 leading-relaxed max-w-lg">
+                                Pay only <span className="text-white font-black underline underline-offset-4 decoration-indigo-500">1% brokerage</span> — payable only at deal completion. No upfront costs. 🤝
                              </p>
                           </div>
                           <button 
@@ -588,42 +592,43 @@ export default function ShortlistPage() {
                               setShowPricingCard(false);
                               localStorage.setItem('hide_pricing_card_shortlist', 'true');
                             }}
-                            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 active:scale-90"
+                            className="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 active:scale-95 shrink-0 self-end sm:self-start group/close"
                           >
-                            <X className="h-4 w-4 text-zinc-500" strokeWidth={2.5} />
+                            <X className="h-5 w-5 text-zinc-500 group-hover:text-white transition-colors" strokeWidth={2.5} />
                           </button>
                         </div>
 
-                        <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-hide py-1 mt-7 -mx-1 px-1">
-                           <div className="flex items-center gap-2 text-zinc-400 transition-colors shrink-0">
-                              <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-emerald-500/10 border border-emerald-500/20 shrink-0">
-                                 <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400" />
+                        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-5 pt-8 mt-8 border-t border-white/5">
+                           <div className="flex items-center gap-3.5 group/item">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 shrink-0 group-hover/item:bg-emerald-500/20 transition-all">
+                                 <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                               </div>
-                              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest leading-none whitespace-nowrap">Free visits</p>
+                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-300">Free Site Visits</p>
                            </div>
-                           <div className="flex items-center gap-2 text-zinc-400 transition-colors shrink-0">
-                              <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-white/5 border border-white/5 shrink-0">
-                                 <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-indigo-400" />
+                           <div className="flex items-center gap-3.5 group/item">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 shrink-0 group-hover/item:bg-indigo-500/20 transition-all">
+                                 <CheckCircle2 className="h-4 w-4 text-indigo-400" />
                               </div>
-                              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest leading-none whitespace-nowrap">Agreement Support</p>
+                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-300">Legal Support</p>
                            </div>
-                           <div className="flex items-center gap-2 text-zinc-400 transition-colors shrink-0">
-                              <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-white/5 border border-white/5 shrink-0">
-                                 <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-indigo-400" />
+                           <div className="flex items-center gap-3.5 group/item">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 shrink-0 group-hover/item:bg-indigo-500/20 transition-all">
+                                 <CheckCircle2 className="h-4 w-4 text-indigo-400" />
                               </div>
-                              <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest leading-none whitespace-nowrap">Loan assistance</p>
+                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-300">Loan Support</p>
                            </div>
                         </div>
                       </div>
 
-                      {/* Elite Accents */}
-                      <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-[80px]" />
-                      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
-                      <div className="absolute right-0 bottom-4 opacity-[0.02] rotate-[15deg] pointer-events-none">
-                         <Zap className="h-48 w-48 fill-white" />
+                      {/* Premium Accent */}
+                      <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-indigo-500/10 blur-[110px] pointer-events-none" />
+                      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/25 to-transparent pointer-events-none" />
+                      <div className="absolute right-6 bottom-6 opacity-[0.03] rotate-[15deg] pointer-events-none group-hover:opacity-[0.05] transition-all">
+                         <Zap className="h-56 w-56 fill-white" />
                       </div>
                     </motion.div>
-                 )}
+                  )}
+                </AnimatePresence>
 
                  {properties.length > 10 && (
                    <motion.div 
@@ -671,7 +676,7 @@ export default function ShortlistPage() {
                       <Zap className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                     </div>
                     <div className="text-left">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500 leading-none mb-1.5">Action Center</p>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500 leading-none mb-1.5">Call/Whatsapp/Meeting</p>
                       <p className="text-sm font-bold leading-none">Proceed Next Step</p>
                     </div>
                   </div>
@@ -680,7 +685,7 @@ export default function ShortlistPage() {
                   </div>
                 </button>
               </div>
-      </div>
+            </div>
 
         {/* Mobile Consultation Desk Overlay */}
         <AnimatePresence>
