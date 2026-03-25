@@ -54,19 +54,3 @@
   transform: scale(1.1) rotate(90deg);
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
-
-/* ─────────────────────────────────────────────
-   CRITICAL: Custom Marker Icon Reset
-   Leaflet's DivIcon adds a white background + border to all markers by default.
-   This invisible box shifts the visual center of the icon away from iconAnchor.
-   We MUST reset these to zero or the markers will visually drift from their
-   geographical coordinate, especially at different zoom levels.
-─────────────────────────────────────────────── */
-.custom-property-marker,
-.custom-cluster-marker,
-.user-location-marker {
-  background: none !important;
-  border: none !important;
-  /* Overflow hidden prevents the price label from extending the hit area */
-  overflow: visible !important;
-}
