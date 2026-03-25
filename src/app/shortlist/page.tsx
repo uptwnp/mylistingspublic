@@ -84,7 +84,7 @@ export default function ShortlistPage() {
         </div>
       )}
 
-      <div className="space-y-2 flex-1 overflow-y-auto overscroll-contain pr-1 py-1 min-h-0 scrollbar-hide">
+      <div className="space-y-2 flex-1 overflow-y-auto overscroll-contain pr-1 py-1 min-h-0 no-scrollbar">
         {/* ── Quick Next Action ── */}
         <div className="flex items-center gap-3 pb-2 pt-1 border-t border-zinc-50 mt-1">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 shrink-0 flex items-center gap-2 mt-4">
@@ -714,7 +714,7 @@ export default function ShortlistPage() {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed bottom-0 left-0 right-0 z-[101] flex flex-col h-[70vh] max-h-[70vh] rounded-t-[2.5rem] bg-white shadow-2xl overflow-hidden shadow-black/50 scrollbar-hide"
+                className="fixed bottom-0 left-0 right-0 z-[101] flex flex-col h-[70vh] max-h-[70vh] rounded-t-[2.5rem] bg-white shadow-2xl overflow-hidden shadow-black/50 no-scrollbar"
               >
                 <ConsultationDesk isOverlay onClose={() => setIsMobileDeskOpen(false)} />
               </motion.div>
