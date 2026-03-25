@@ -35,169 +35,141 @@ const clusterIconCache = new Map<string, L.DivIcon>();
 
 
 const createCustomIcon = (property: Property, isSelected: boolean, zoom: number, hideLabel?: boolean) => {
-  // Zoom is bucketed so we don't make a unique icon per integer zoom level
-  const zoomBucket = zoom >= 16 ? 'hi' : zoom >= 14 ? 'mid' : 'lo';
-  const cacheKey = `${property.property_id}-${isSelected}-${zoomBucket}-${hideLabel}`;
+  // KEY: Do NOT vary icon dimensions by zoom level.
+  // Changing iconSize causes Leaflet to destroy and re-insert the marker DOM element,
+  // producing a visible 'pop in' flash.
+  // Scale is ONLY two states: selected (slightly larger) or normal.
+  const scale = isSelected ? 1.15 : 1;
+  const showFullLabel = isSelected || (zoom >= 15 && !hideLabel);
+
+  const cacheKey = `${property.property_id}-${isSelected}-${showFullLabel}`;
   if (customIconCache.has(cacheKey)) return customIconCache.get(cacheKey)!;
 
   const price = formatPrice(property.price_min);
   const config = getPropertyConfig(property.type);
   const IconComponent = config.icon;
 
-  // Google Maps style scaling logic
-  const scale = isSelected ? 1.15 : (zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85));
-  const showFullLabel = isSelected || (zoom >= 15 && !hideLabel);
-  const pinSize = 36 * scale;
-  const fontSize = (isSelected ? 14 : 11) * scale;
-  const tailSize = 14 * scale;
-  const totalWidth = 160 * scale;
-  const totalHeight = 80 * scale;
+  // Fixed pixel sizes — must NOT use CSS filter anywhere in icon HTML.
+  // CSS `filter` creates a new GPU compositing layer which breaks Leaflet's
+  // zoom animation (markers float on screen instead of tracking the map).
+  const PIN   = Math.round(36 * scale);
+  const TAIL  = Math.round(14 * scale);
+  const OVER  = Math.round(10 * scale); // tail overlaps pin by this many px
+  const INNER = Math.round(24 * scale);
+  const ICON_W = Math.round(160 * scale);
+  const ICON_H = Math.round(80 * scale);
+  const FS    = Math.round((isSelected ? 13 : 11) * scale);
 
-  const html = ReactDOMServer.renderToStaticMarkup(
-    <div style={{ 
-      position: 'relative', 
-      width: '100%',
-      height: '100%',
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center',
-      filter: isSelected ? 'drop-shadow(0 12px 24px rgba(0,0,0,0.15))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
-      transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-      transform: isSelected ? 'translateY(-6px)' : 'none',
-    }}>
-      {/* External Price Text (Dynamic visibility and size) */}
-      {(showFullLabel || isSelected) && (
-        <div style={{
-          position: 'absolute',
-          left: `${(totalWidth / 2) + (pinSize / 2) + (6 * scale)}px`,
-          top: `${(pinSize / 2) - 8}px`,
-          fontSize: `${fontSize}px`,
-          fontWeight: '500',
-          color: config.color.match(/\[(.*?)\]/)?.[1] || (isSelected ? '#000' : '#18181b'),
-          textShadow: '0 1px 2px rgba(255,255,255,1), -1px -1px 0 rgba(255,255,255,1), 1px -1px 0 rgba(255,255,255,1), -1px 1px 0 rgba(255,255,255,1), 1px 1px 0 rgba(255,255,255,1)',
-          whiteSpace: 'nowrap',
-          letterSpacing: '-0.025em',
-          fontFamily: 'Inter, sans-serif',
-          textAlign: 'left',
-          pointerEvents: 'none',
-          opacity: 1,
-          zIndex: isSelected ? 1001 : 1,
-          transition: 'all 0.3s ease-in-out'
-        }}>
-          {price}
-        </div>
-      )}
+  // Tail tip Y from top of icon box:
+  // tailCenter = (PIN - OVER) + TAIL/2
+  // tipY = tailCenter + TAIL*sqrt(2)/2 (halfDiagonal of rotated square)
+  const tailCenterY = (PIN - OVER) + TAIL / 2;
+  const TIP_Y = Math.round(tailCenterY + (TAIL / 2) * Math.SQRT2);
 
-      {/* Pin Body */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: `${pinSize}px`,
-        height: `${pinSize}px`,
-        backgroundColor: isSelected ? '#09090b' : 'white',
-        borderRadius: '50%',
-        border: `${2 * scale}px solid ${isSelected ? '#09090b' : 'white'}`,
-        color: isSelected ? 'white' : '#09090b',
-        cursor: 'pointer',
-        zIndex: 2,
-        position: 'relative',
-        boxShadow: isSelected ? 'none' : 'inset 0 0 0 1px rgba(0,0,0,0.05)'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: isSelected ? 'rgba(255,255,255,0.15)' : (config.bgColor.match(/\[(.*?)\]/)?.[1] || '#f4f4f5'),
-          borderRadius: '50%',
-          width: `${24 * scale}px`,
-          height: `${24 * scale}px`,
-        }}>
-          <IconComponent size={14 * scale} strokeWidth={3} className={isSelected ? 'text-white' : config.color} />
-        </div>
-      </div>
+  const pinBg = isSelected ? '#09090b' : 'white';
+  const pinShadow = isSelected
+    ? 'box-shadow:0 8px 24px rgba(0,0,0,0.25)'
+    : 'box-shadow:0 2px 8px rgba(0,0,0,0.15),inset 0 0 0 1px rgba(0,0,0,0.08)';
 
-      {/* Integrated Tail */}
-      <div style={{
-        width: `${tailSize}px`,
-        height: `${tailSize}px`,
-        backgroundColor: isSelected ? '#09090b' : 'white',
-        borderRight: `${2 * scale}px solid ${isSelected ? '#09090b' : 'white'}`,
-        borderBottom: `${2 * scale}px solid ${isSelected ? '#09090b' : 'white'}`,
-        transform: 'rotate(45deg)',
-        marginTop: `${-10 * scale}px`,
-        zIndex: 1,
-        borderRadius: `0 0 ${3 * scale}px 0`
-      }} />
-    </div>
+  const innerBg = isSelected
+    ? 'rgba(255,255,255,0.15)'
+    : (config.bgColor.match(/\[(.*?)\]/)?.[1] || '#f4f4f5');
+
+  const iconColor = config.color.match(/\[(.*?)\]/)?.[1] || (isSelected ? '#fff' : '#18181b');
+  const labelColor = config.color.match(/\[(.*?)\]/)?.[1] || (isSelected ? '#000' : '#18181b');
+  const tailBorder = `${Math.round(2 * scale)}px solid ${pinBg}`;
+
+  const iconMarkup = ReactDOMServer.renderToStaticMarkup(
+    <IconComponent size={Math.round(14 * scale)} strokeWidth={2.5} color={isSelected ? 'white' : iconColor} />
   );
 
-  // Locked Anchor Point Logic
-  // Using a deterministic box where the bottom center is the anchor
+  // IMPORTANT: No `filter` CSS anywhere — it breaks Leaflet zoom animation.
+  // Use `box-shadow` only (on the pin div), which does NOT create a new compositing layer.
+  const html = [
+    `<div style="position:relative;width:${ICON_W}px;height:${ICON_H}px;display:flex;flex-direction:column;align-items:center">`,
+      showFullLabel ? [
+        `<div style="`,
+        `position:absolute;`,
+        `left:${Math.round(ICON_W / 2 + PIN / 2 + 5)}px;`,
+        `top:${Math.round(PIN / 2 - 8)}px;`,
+        `font-size:${FS}px;`,
+        `font-weight:600;`,
+        `color:${labelColor};`,
+        `text-shadow:0 1px 0 #fff,-1px 0 0 #fff,0 -1px 0 #fff,1px 0 0 #fff;`,
+        `white-space:nowrap;`,
+        `letter-spacing:-0.02em;`,
+        `font-family:Inter,sans-serif;`,
+        `pointer-events:none`,
+        `">${price}</div>`,
+      ].join('') : '',
+      `<div style="`,
+      `display:flex;align-items:center;justify-content:center;`,
+      `width:${PIN}px;height:${PIN}px;`,
+      `background-color:${pinBg};`,
+      `border-radius:50%;`,
+      `border:${Math.round(2 * scale)}px solid ${pinBg};`,
+      `cursor:pointer;z-index:2;position:relative;flex-shrink:0;`,
+      `${pinShadow}`,
+      `">`,
+        `<div style="display:flex;align-items:center;justify-content:center;background-color:${innerBg};border-radius:50%;width:${INNER}px;height:${INNER}px">`,
+          iconMarkup,
+        `</div>`,
+      `</div>`,
+      `<div style="`,
+      `width:${TAIL}px;height:${TAIL}px;`,
+      `background-color:${pinBg};`,
+      `border-right:${tailBorder};border-bottom:${tailBorder};`,
+      `transform:rotate(45deg);`,
+      `margin-top:-${OVER}px;`,
+      `z-index:1;flex-shrink:0;`,
+      `border-radius:0 0 ${Math.round(3 * scale)}px 0`,
+      `"></div>`,
+    `</div>`,
+  ].join('');
+
   const icon = L.divIcon({
     html,
     className: 'custom-property-marker',
-    iconSize: [totalWidth, totalHeight],
-    // Anchor to the bottom-center of the icons layout box
-    // Total height of Pin (36) + Tail (~10 visible) = ~46
-    iconAnchor: [totalWidth / 2, (46 * scale)],
+    iconSize:   [ICON_W, ICON_H],
+    iconAnchor: [Math.round(ICON_W / 2), TIP_Y],
+    popupAnchor: [0, -TIP_Y],
   });
   customIconCache.set(cacheKey, icon);
   return icon;
 };
 
-const createClusterIcon = (count: number, zoom: number) => {
-  const zoomBucket = zoom >= 16 ? 'hi' : zoom >= 14 ? 'mid' : 'lo';
-  const cacheKey = `cluster-${count}-${zoomBucket}`;
+
+const createClusterIcon = (count: number) => {
+  const cacheKey = `cluster-${count}`;
   if (clusterIconCache.has(cacheKey)) return clusterIconCache.get(cacheKey)!;
 
-  const scale = zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85);
-  const size = 52 * scale; // Increased for better visibility
-  
-  const html = ReactDOMServer.renderToStaticMarkup(
-    <div style={{
-      width: size,
-      height: size,
-      backgroundColor: '#09090b', // Sleek dark theme
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      border: `${2 * scale}px solid white`,
-      boxShadow: '0 12px 32px -4px rgba(0,0,0,0.3)',
-      position: 'relative',
-      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
-      transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-    }}>
-       {/* Inner subtle decorative ring */}
-       <div style={{
-         position: 'absolute',
-         inset: 4,
-         border: '1px solid rgba(255,255,255,0.1)',
-         borderRadius: '50%',
-       }} />
-       <span style={{
-         color: 'white',
-         fontSize: 18 * scale,
-         fontWeight: '700',
-         fontFamily: 'Inter, sans-serif',
-         letterSpacing: '-0.02em',
-         textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-       }}>
-         {count}
-       </span>
-    </div>
-  );
+  // Fixed size — no zoom-based scaling to prevent DOM re-creation during zoom
+  // No CSS `filter` — it breaks Leaflet's zoom animation compositing
+  const SIZE = 44;
+  const html = [
+    `<div style="`,
+    `width:${SIZE}px;height:${SIZE}px;`,
+    `background-color:#09090b;`,
+    `border-radius:50%;`,
+    `display:flex;align-items:center;justify-content:center;`,
+    `border:2px solid white;`,
+    `box-shadow:0 4px 16px rgba(0,0,0,0.25);`,
+    `position:relative`,
+    `">`,
+      `<span style="color:white;font-size:15px;font-weight:700;font-family:Inter,sans-serif;letter-spacing:-0.02em">${count}</span>`,
+    `</div>`,
+  ].join('');
 
   const icon = L.divIcon({
     html,
     className: 'custom-cluster-marker',
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [SIZE, SIZE],
+    iconAnchor: [SIZE / 2, SIZE / 2],
   });
   clusterIconCache.set(cacheKey, icon);
   return icon;
 };
+
 
 
 
@@ -308,6 +280,7 @@ function MapControls({
   hasSelectedProperty: boolean;
 }) {
   const map = useMap();
+  const { setUserLocation } = useShortlist();
 
   const handleZoomIn = () => map.zoomIn();
   const handleZoomOut = () => map.zoomOut();
@@ -316,7 +289,15 @@ function MapControls({
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          map.flyTo([position.coords.latitude, position.coords.longitude], 16, {
+          const newLoc = { 
+            lat: position.coords.latitude, 
+            lng: position.coords.longitude,
+            isFallback: false 
+          };
+          
+          setUserLocation(newLoc);
+          
+          map.flyTo([newLoc.lat, newLoc.lng], 16, {
             animate: true,
             duration: 1.5
           });
@@ -481,8 +462,16 @@ function CollisionAwareMarkers({
       if (nearIdx === -1) {
         groups.push({ type: 'marker', props: [prop], center: coords });
       } else {
-        groups[nearIdx].type = 'cluster';
-        groups[nearIdx].props.push(prop);
+        const group = groups[nearIdx];
+        group.type = 'cluster';
+        group.props.push(prop);
+        
+        // Update cluster center incrementally (Efficient O(1) per point)
+        const n = group.props.length;
+        group.center = [
+          (group.center[0] * (n - 1) + coords[0]) / n,
+          (group.center[1] * (n - 1) + coords[1]) / n
+        ];
       }
     });
 
@@ -498,7 +487,7 @@ function CollisionAwareMarkers({
       
       occupiedRects.push({
         x1: point.x - size - 4,
-        y1: point.y - (g.type === 'cluster' ? size + 4 : 46 * scale) - 4,
+        y1: point.y - (g.type === 'cluster' ? size + 4 : 43.5 * scale) - 4,
         x2: point.x + size + 4,
         y2: point.y + size + 4
       });
@@ -515,9 +504,10 @@ function CollisionAwareMarkers({
 
       const point = map.project(L.latLng(g.center[0], g.center[1]), zoom);
       const scale = isSelected ? 1.15 : (zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85));
+      const fontSize = (isSelected ? 14 : 11) * scale;
       const labelWidth = 90 * scale;
       const pinHalfWidth = 18 * scale;
-      const pinHeight = 46 * scale;
+      const pinHeight = 43.5 * scale;
 
       const labelRect = {
         x1: point.x + pinHalfWidth,
@@ -572,7 +562,7 @@ function CollisionAwareMarkers({
             <Marker 
               key={`cluster-${idx}-${data.props[0].property_id}`}
               position={data.center}
-              icon={createClusterIcon(data.props.length, zoom)}
+              icon={createClusterIcon(data.props.length)}
               zIndexOffset={100}
               eventHandlers={{
                 click: () => onClusterClick(data.props),
@@ -663,7 +653,26 @@ export default function MapComponent({
   const [zoom, setZoom] = useState(13);
   const [showSearchArea, setShowSearchArea] = useState(false);
   const [lastSearchBounds, setLastSearchBounds] = useState<string>('');
+  const { setUserLocation } = useShortlist();
 
+  // Try to get user location on mount if not already present
+  useEffect(() => {
+    if (!userLocation && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            isFallback: false
+          });
+        },
+        (error) => {
+          console.log("Initial geolocation suppressed:", error.message);
+        },
+        { timeout: 5000 }
+      );
+    }
+  }, []); // Only once on mount
   const rawCenter = selectedProperty 
     ? getCoords(selectedProperty, properties, areaCenters)
     : [29.3909, 76.9635];
@@ -738,34 +747,39 @@ export default function MapComponent({
           hasSelectedProperty={!!selectedProperty && !disableCard}
         />
         
+        {/* User Location Marker - Always show if available */}
+        {isValidLatLng(userCoords) && (
+          <Marker 
+            position={userCoords}
+            zIndexOffset={500}
+            icon={L.divIcon({
+              html: ReactDOMServer.renderToStaticMarkup(
+                <div className="relative flex items-center justify-center">
+                  {/* Pulsing effect */}
+                  <div className="absolute h-8 w-8 animate-ping rounded-full bg-blue-400 opacity-20" />
+                  <div className="flex items-center justify-center h-8 w-8 bg-white border-2 border-blue-500 rounded-full shadow-lg ring-4 ring-blue-500/20">
+                    <Locate className="h-4 w-4 text-blue-600" />
+                  </div>
+                </div>
+              ),
+              className: 'user-location-marker',
+              iconSize: [32, 32],
+              iconAnchor: [16, 16]
+            })}
+          />
+        )}
+
         {curvedPath && (
-          <>
-            <Polyline 
-              positions={curvedPath}
-              pathOptions={{
-                color: '#e11d48', // rose-600
-                weight: 2,
-                dashArray: '8, 12',
-                lineCap: 'round',
-                opacity: 0.6
-              }}
-            />
-            {isValidLatLng(userCoords) && (
-              <Marker 
-                position={userCoords}
-                icon={L.divIcon({
-                  html: ReactDOMServer.renderToStaticMarkup(
-                    <div className="flex items-center justify-center h-8 w-8 bg-black rounded-full border-2 border-white shadow-lg">
-                      <Locate className="h-4 w-4 text-white" />
-                    </div>
-                  ),
-                  className: '',
-                  iconSize: [32, 32],
-                  iconAnchor: [16, 16]
-                })}
-              />
-            )}
-          </>
+          <Polyline 
+            positions={curvedPath}
+            pathOptions={{
+              color: '#3b82f6', // Match blue theme or original rose
+              weight: 2,
+              dashArray: '8, 12',
+              lineCap: 'round',
+              opacity: 0.6
+            }}
+          />
         )}
         {selectedProperty && selectedProperty.landmark_location_distance && selectedProperty.landmark_location_distance > 0 && isValidLatLng(getCoords(selectedProperty, properties, areaCenters)) && (
           <Circle
