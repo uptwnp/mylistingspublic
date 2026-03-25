@@ -664,8 +664,9 @@ export default function ShortlistPage() {
                </div>
              </aside>
            </div>
+         )}
 
-            {/* Mobile Sticky CTA */}
+         {/* Mobile Sticky CTA */}
             <div className="fixed bottom-0 left-0 right-0 z-[60] block p-4 lg:hidden">
               <div className="mx-auto max-w-lg">
                 <button
