@@ -17,7 +17,15 @@ import { AskQuestionModal } from '@/components/AskQuestionModal';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { 
   ssr: false,
-  loading: () => <div className="h-full w-full animate-pulse bg-zinc-100 flex items-center justify-center font-bold text-zinc-400">Loading Map...</div>
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-zinc-50 animate-pulse">
+      <div className="text-center">
+        <MapIcon className="mx-auto h-8 w-8 text-zinc-200 mb-3" />
+        <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest">Locating properties for you...</span>
+      </div>
+    </div>
+  )
+
 });
 
 interface PropertyDetailViewProps {
@@ -121,12 +129,12 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
     <div className="min-h-screen bg-white pb-32">
       {/* Top Section: Only for Heading on Desktop, everything for Mobile */}
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 pt-28 sm:pt-32 pb-4 sm:pb-6 lg:px-12">
-        <div className="flex items-center gap-2 ty-label text-zinc-400 mb-3 sm:mb-4">
-          <Link href={`/explore?city=${property.city}`} className="hover:text-zinc-900 transition-colors">
+        <div className="flex items-center gap-2 ty-micro font-bold tracking-widest text-zinc-500 mb-3 sm:mb-4 uppercase">
+          <Link href={`/explore?city=${property.city}`} className="hover:text-brand-primary transition-colors">
             {property.city}
           </Link>
-          <span className="text-zinc-300 font-normal scale-125 px-1">&gt;</span>
-          <Link href={`/explore?city=${property.city}&area=${property.area}`} className="hover:text-zinc-900 transition-colors">
+          <span className="text-zinc-300 font-normal scale-125 px-1 opacity-50">&gt;</span>
+          <Link href={`/explore?city=${property.city}&area=${property.area}`} className="hover:text-brand-primary transition-colors">
             {property.area}
           </Link>
         </div>
@@ -141,14 +149,16 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
           
           {/* COLUMN 1: Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            <div className="flex items-center gap-2 text-zinc-400 ty-micro font-bold uppercase tracking-widest bg-zinc-50/50 w-fit px-3 py-1.5 rounded-lg border border-zinc-100">
-                <Calendar className="h-4 w-4" />
-                Last Updated: {formatDate(property.approved_on)}
+            <div className="flex items-center gap-2 text-zinc-600 ty-micro font-black uppercase tracking-widest bg-zinc-50/80 w-fit px-4 py-2 rounded-xl border border-zinc-200/50 shadow-sm">
+                <Calendar className="h-4 w-4 text-zinc-400" />
+                <span className="text-zinc-400">Last Updated:</span>
+                <span className="text-zinc-900">{formatDate(property.approved_on)}</span>
             </div>
             {/* Photo Gallery Area */}
-            <div className="relative overflow-hidden rounded-2xl md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border border-zinc-100 bg-zinc-50">
+            <div className="relative overflow-hidden rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border border-zinc-200 bg-zinc-50 shadow-inner-sm">
               {hasImage ? (
                 <div className="h-full relative group">
+                  {/* ... rest unchanged ... */}
                   <div className="relative h-full w-full overflow-hidden">
                     <AnimatePresence initial={false} custom={direction} mode="popLayout">
                       <motion.div
@@ -303,7 +313,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3 py-4 border-b border-zinc-100 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0">
+            <div className="flex items-center gap-4 py-6 border-b border-zinc-100 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0">
               <button 
                 onClick={async () => {
                   if (navigator.share) {
@@ -315,30 +325,30 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                     } catch (err) {}
                   }
                 }}
-                className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm"
               >
-                <Share2 className="h-4 w-4" />
+                <Share2 className="h-4 w-4 text-zinc-400" />
                 Share
               </button>
               <button 
                 onClick={() => toggleSave(property.property_id)}
                 className={cn(
-                    "flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap",
+                    "flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm",
                     saved && "bg-rose-50 border-rose-100 text-rose-600"
                 )}
               >
                 <Heart className={cn("h-4 w-4", saved && "fill-rose-500 text-rose-500")} />
                 {saved ? 'Saved' : 'Save'}
               </button>
-              <button onClick={scrollToMap} className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap">
-                <MapIcon className="h-4 w-4" />
+              <button onClick={scrollToMap} className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm">
+                <MapIcon className="h-4 w-4 text-zinc-400" />
                 Map
               </button>
               <button
                 onClick={() => setIsAskModalOpen(true)}
-                className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm"
               >
-                <MessageCircleQuestion className="h-4 w-4" />
+                <MessageCircleQuestion className="h-4 w-4 text-zinc-400" />
                 Ask Question
               </button>
             </div>
@@ -456,12 +466,12 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Price Range</span>
                 <p className="text-2xl font-bold">{formatPriceRange(property.price_min, property.price_max)}</p>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <button 
                   onClick={() => inCart ? removeFromShortlist(property.property_id) : addToShortlist(property)}
-                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-3 ty-label transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-black' : 'bg-black text-white'}`}
+                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 ty-body font-black transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-zinc-900 text-white shadow-xl shadow-zinc-900/10'}`}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className="h-5 w-5" />
                   {inCart ? 'Remove from Shortlist' : 'Add to Shortlist'}
                 </button>
                 <button 
@@ -469,15 +479,15 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                     if (!inCart) addToShortlist(property);
                     router.push('/shortlist');
                   }}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 py-3 ty-label text-white shadow-lg active:scale-[0.98] hover:bg-blue-700"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand-primary py-4 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all shimmer-premium"
                 >
                   {inCart ? 'Go to Shortlist' : 'Proceed with it'}
                 </button>
                 <button
                   onClick={() => setIsAskModalOpen(true)}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-zinc-200 py-3 ty-label text-zinc-700 hover:bg-zinc-50 transition-all active:scale-[0.98]"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-zinc-100 bg-zinc-50 py-4 ty-body font-bold text-zinc-700 hover:bg-zinc-100 transition-all active:scale-[0.98]"
                 >
-                  <MessageCircleQuestion className="h-4 w-4" />
+                  <MessageCircleQuestion className="h-5 w-5 text-zinc-400" />
                   Ask a Question
                 </button>
               </div>
@@ -497,25 +507,19 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
       </section>
 
       {/* Mobile Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 px-4 pt-4 pb-8 sm:p-6 shadow-[0_-20px_40px_rgba(0,0,0,0.08)] md:hidden">
-        <div className="flex items-center justify-between gap-3">
+      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 px-6 pt-5 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col shrink-0">
-            <span className="ty-label text-zinc-400">Price</span>
-            <p className="ty-subtitle font-bold text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
+            <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-0.5">Price</span>
+            <p className="ty-subtitle font-black text-zinc-900 leading-none">{formatPriceRange(property.price_min, property.price_max)}</p>
           </div>
-          <button
-            onClick={() => setIsAskModalOpen(true)}
-            className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-zinc-200 px-3 py-3.5 ty-caption font-bold text-zinc-700 whitespace-nowrap shrink-0 active:scale-[0.98] transition-all"
-          >
-            <MessageCircleQuestion className="h-4 w-4" />
-            Ask
-          </button>
+          
           <button 
              onClick={() => {
               if (!inCart) addToShortlist(property);
               router.push('/shortlist');
             }}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-blue-600 py-4 ty-label text-white shadow-lg active:scale-[0.98] transition-all"
+            className="flex-1 flex items-center justify-center gap-3 rounded-[20px] bg-brand-primary py-4.5 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all shimmer-premium"
           >
             {inCart ? 'Go to Shortlist' : 'Proceed with it'}
           </button>

@@ -97,7 +97,7 @@ export function HomeSearch() {
             activeSegment === 'location' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
-          <span className="ty-label text-zinc-900 mb-0.5">Location</span>
+          <span className="ty-micro font-black tracking-widest text-zinc-400 mb-1 uppercase">Location</span>
           <div className="flex items-center w-full min-w-0">
             <input 
               type="text"
@@ -109,7 +109,7 @@ export function HomeSearch() {
               autoCorrect="off"
               autoCapitalize="none"
               spellCheck={false}
-              className="w-full bg-transparent ty-caption font-semibold text-zinc-500 outline-none placeholder:text-zinc-400 min-w-0"
+              className="w-full bg-transparent ty-body font-bold text-zinc-900 outline-none placeholder:text-zinc-400 min-w-0"
             />
             {activeSegment === 'location' && query && (
               <button 
@@ -215,11 +215,12 @@ export function HomeSearch() {
             activeSegment === 'budget' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
-          <span className="ty-label text-zinc-900 mb-0.5">Budget</span>
+          <span className="ty-micro font-black tracking-widest text-zinc-400 mb-1 uppercase">Budget</span>
           <div className="flex items-center w-full min-w-0">
-            <span className="ty-caption font-semibold text-zinc-400 truncate w-full">
+            <span className="ty-body font-bold text-zinc-900 truncate w-full">
               {budget.value === 0 ? "Any Budget" : budget.label}
             </span>
+
             {activeSegment === 'budget' && budget.value > 0 && (
               <button 
                 onClick={(e) => { e.stopPropagation(); setBudget(BUDGET_OPTIONS[0]); }}
@@ -272,9 +273,9 @@ export function HomeSearch() {
             onClick={(e) => { e.stopPropagation(); setActiveSegment('type'); }}
             className="flex flex-col items-start px-8 py-4 text-left w-full h-full cursor-pointer group"
           >
-            <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Property Type</span>
+            <span className="ty-micro font-black tracking-widest text-zinc-400 mb-1 uppercase whitespace-nowrap">Property Type</span>
             <div className="flex items-center w-full min-w-0">
-              <span className="ty-caption font-semibold text-zinc-400 truncate w-full">{propertyType === "Any Type" ? "Add guests" : propertyType}</span>
+              <span className="ty-body font-bold text-zinc-900 truncate w-full">{propertyType === "Any Type" ? "Add guests" : propertyType}</span>
               {activeSegment === 'type' && propertyType !== "Any Type" && (
                 <button 
                   onClick={(e) => { e.stopPropagation(); setPropertyType("Any Type"); }}
@@ -322,10 +323,11 @@ export function HomeSearch() {
           <button 
             onClick={(e) => { e.stopPropagation(); handleSearch(); }}
             className={cn(
-              "mr-2 flex h-12 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition-all shadow-lg shadow-blue-500/20",
-              activeSegment ? "px-6 w-auto gap-3 hover:bg-blue-700" : "w-12 px-0 hover:bg-blue-700"
+              "mr-2 flex h-14 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition-all shadow-xl shadow-blue-500/20 shimmer-premium",
+              activeSegment ? "px-8 w-auto gap-3 hover:bg-blue-700 active:scale-95" : "w-14 px-0 hover:bg-blue-700 active:scale-90"
             )}
           >
+
             <Search className="h-5 w-5" strokeWidth={3} />
             <AnimatePresence mode="wait">
               {activeSegment && (

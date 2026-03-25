@@ -25,7 +25,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
     <div className="flex h-full w-full items-center justify-center bg-zinc-50 animate-pulse">
       <div className="text-center">
         <MapIcon className="mx-auto h-8 w-8 text-zinc-200 mb-3" />
-        <span className="ty-micro font-bold text-zinc-400 uppercase tracking-widest">Initialising Map...</span>
+        <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest">Locating properties for you...</span>
       </div>
     </div>
   ),
@@ -284,23 +284,24 @@ export function ExploreView({
                       
                       return (
                         <>
-                          <span className="font-bold">{countText}</span>
-                          <span className="font-bold capitalize">{displayType}</span>
-                          <span className="font-normal text-zinc-400 lowercase"> for sale </span>
+                          <span className="font-extrabold text-brand-primary">{countText}</span>
+                          <span className="font-extrabold capitalize text-zinc-900">{displayType}</span>
+                          <span className="font-medium text-zinc-500 lowercase px-1.5"> for sale </span>
                           {displayArea && (
                             <>
-                              <span className="font-normal text-zinc-400 lowercase">in </span>
-                              <span className="font-bold capitalize">
+                              <span className="font-medium text-zinc-500 lowercase pr-1.5">in </span>
+                              <span className="font-extrabold capitalize text-zinc-900">
                                 {displayArea.toLowerCase() === 'near me' || displayArea.toLowerCase() === 'near-me' ? 'Near Me' : `${displayArea}, ${city}`}
                               </span>
                             </>
                           )}
                           {!displayArea && city && city !== 'All' && (
                             <>
-                              <span className="font-normal text-zinc-400 lowercase">in </span>
-                              <span className="font-bold capitalize">{city}</span>
+                              <span className="font-medium text-zinc-500 lowercase pr-1.5">in </span>
+                              <span className="font-extrabold capitalize text-zinc-900">{city}</span>
                             </>
                           )}
+
                           {displayBudget && displayBudget !== 'Any Budget' && (
                             <>
                               <span className="font-normal text-zinc-400 lowercase"> in </span>

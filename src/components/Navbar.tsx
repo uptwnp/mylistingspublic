@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, Home, Menu, ShoppingCart, User, LogOut, ChevronDown, MapPin, Building2, Trees, Globe, SlidersHorizontal, Search, Store, X, Wallet } from 'lucide-react';
 import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
@@ -14,6 +13,8 @@ import { useCallback } from 'react';
 import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
 import { useBrand } from '@/context/BrandContext';
 import { getAreas } from '@/lib/supabase';
+import { Icons } from '@/components/ui/Icons';
+
 
 
 export default function Navbar() {
@@ -280,7 +281,7 @@ export default function Navbar() {
             <div className="flex flex-1 items-center gap-0 sm:gap-6 min-w-0">
               <div className="flex items-center gap-2 group shrink-0">
                 <Link href="/" className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-all hover:scale-105 ">
-                  <Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <Icons.Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </Link>
 
                 <AnimatePresence mode="wait" initial={false}>
@@ -303,7 +304,7 @@ export default function Navbar() {
                           }}
                           className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-[0.98] transition-transform cursor-pointer"
                         >
-                          <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
+                          <Icons.Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
                         </div>
                         <button 
                           onClick={() => {
@@ -381,7 +382,7 @@ export default function Navbar() {
                         )}
                         suppressHydrationWarning={true}
                       >
-                        <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 ", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
+                        <Icons.Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 ", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
                         <span className="ty-micro font-bold">{tabCity}</span>
                         {selectedCity === tabCity && (
                           <div 
@@ -398,12 +399,12 @@ export default function Navbar() {
                         )}
                         suppressHydrationWarning={true}
                       >
-                        <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 active:scale-[0.98]", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
+                        <Icons.Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 active:scale-[0.98]", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
                         <div className="relative flex items-center justify-center">
                           <span className="ty-micro font-bold leading-none">
                             {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
                           </span>
-                          <ChevronDown className={cn(
+                          <Icons.ChevronDown className={cn(
                             "absolute left-full ml-1 mb-0.5 h-3 w-3 transition-transform text-zinc-400 group-hover:text-zinc-600", 
                             isOtherCityDropdownOpen && "rotate-180"
                           )} />
@@ -474,7 +475,7 @@ export default function Navbar() {
                             "relative flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                             shortlistItems.length > 0 ? "bg-zinc-900 text-white hover:bg-zinc-700" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                           )}>
-                            <ShoppingCart className={cn("h-5 w-5", shortlistItems.length > 0 ? "text-zinc-300" : "text-zinc-600")} />
+                            <Icons.ShoppingCart className={cn("h-5 w-5", shortlistItems.length > 0 ? "text-zinc-300" : "text-zinc-600")} />
                             {shortlistItems.length > 0 && (
                               <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
                                 {shortlistItems.length}
@@ -502,11 +503,11 @@ export default function Navbar() {
                         }}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors"
                       >
-                        <Search className="h-4 w-4" strokeWidth={3} />
+                        <Icons.Search className="h-4 w-4" strokeWidth={3} />
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <Menu className="h-4 w-4 text-zinc-600" />
+                  <Icons.Menu className="h-4 w-4 text-zinc-600" />
                 </div>
 
                 <AnimatePresence>
@@ -523,7 +524,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Home className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
+                          <Icons.Home className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
                           Sale Property
                         </Link>
                         <Link 
@@ -531,7 +532,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Building2 className="h-4 w-4 text-zinc-400" />
+                          <Icons.Building2 className="h-4 w-4 text-zinc-400" />
                           Agent
                         </Link>
                         <Link 
@@ -539,7 +540,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-blue-600 transition-colors hover:bg-blue-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Wallet className="h-4 w-4 text-blue-400" />
+                          <Icons.Wallet className="h-4 w-4 text-blue-400" />
                           Refer and Earn
                         </Link>
                         <Link 
@@ -547,7 +548,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Heart className="h-4 w-4 text-zinc-400" />
+                          <Icons.Heart className="h-4 w-4 text-zinc-400" />
                           Saved properties
                         </Link>
                         <Link 
@@ -555,7 +556,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <ShoppingCart className="h-4 w-4 text-zinc-400" />
+                          <Icons.ShoppingCart className="h-4 w-4 text-zinc-400" />
                           Shortlist
                         </Link>
                       </div>
@@ -611,7 +612,7 @@ export default function Navbar() {
                 onClick={() => setIsMobileSearchOpen(false)}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-100 text-zinc-900 shadow-sm transition-all active:scale-[0.98]"
               >
-                <X className="h-5 w-5" />
+                <Icons.X className="h-5 w-5" />
               </button>
               <div className="flex gap-4">
                 {["Panipat", "Karnal", "Other"].map((city) => {
@@ -683,14 +684,14 @@ export default function Navbar() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="ty-subtitle font-bold text-zinc-900">Where in {selectedCity}?</h2>
-                    <MapPin className="h-5 w-5 text-zinc-400" />
+                    <Icons.MapPin className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-sm font-bold", !query ? "text-zinc-400" : "text-zinc-900")}>
                       {query || "Search areas..."}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-3 w-3 text-zinc-400" />
+                    <Icons.ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
 
@@ -701,14 +702,14 @@ export default function Navbar() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="ty-subtitle font-bold text-zinc-900">What's your budget?</h2>
-                    <Wallet className="h-5 w-5 text-zinc-400" />
+                    <Icons.Wallet className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-sm font-bold", budget.label === "Any Budget" ? "text-zinc-400" : "text-zinc-900")}>
                       {budget.label === "Any Budget" ? "Select your price range" : budget.label}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-3 w-3 text-zinc-400" />
+                    <Icons.ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
 
@@ -719,14 +720,14 @@ export default function Navbar() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="ty-subtitle font-bold text-zinc-900">Property type?</h2>
-                    <Home className="h-5 w-5 text-zinc-400" />
+                    <Icons.Home className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-sm font-bold", propertyType === "Any Type" ? "text-zinc-400" : "text-zinc-900")}>
                       {propertyType === "Any Type" ? "What are you looking for?" : propertyType}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-3 w-3 text-zinc-400" />
+                    <Icons.ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
               </div>
@@ -755,7 +756,7 @@ export default function Navbar() {
                 onClick={() => handleApplyFilters()}
                 className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all "
               >
-                <Search className="h-4 w-4" strokeWidth={3} />
+                <Icons.Search className="h-4 w-4" strokeWidth={3} />
                 <span>Search</span>
               </button>
             </div>

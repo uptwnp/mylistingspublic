@@ -31,27 +31,28 @@ export function HomeClientWrapper({
 
       {/* Mobile-only Hero Section — hidden on sm+ where navbar shows the full hero */}
       <section className="sm:hidden px-4 pt-8 pb-10 text-center">
-        <h1 className="ty-hero font-bold tracking-tight text-zinc-900 leading-[1.05]">
+        <h1 className="ty-hero font-extrabold tracking-tight text-zinc-900 leading-[1.1] mb-3">
           Find your dream property
         </h1>
-        <p className="mt-3 ty-label text-zinc-400 opacity-80">
+        <p className="ty-subtitle text-zinc-600 font-medium max-w-[280px] mx-auto opacity-90">
           Choose from biggest property pool
         </p>
         <div className="mt-10 mb-8 px-0">
           <button
             onClick={() => setIsMobileSearchOpen(true)}
-            className="flex w-full items-center gap-3 rounded-full border border-blue-100 bg-blue-50/30 p-1.5 pl-6 shadow-xl shadow-blue-900/5 transition-all active:scale-[0.98] text-left"
+            className="flex w-full items-center gap-3 rounded-[24px] border border-blue-100 bg-white p-2 pl-6 shadow-2xl shadow-blue-900/10 transition-all active:scale-[0.98] text-left group"
           >
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[13px] font-black text-brand-primary leading-none tracking-tight uppercase mb-1">Start your search</span>
-              <span className="text-[12px] font-bold text-zinc-400 truncate leading-none tracking-tight">
+              <span className="ty-micro font-black text-brand-primary leading-none tracking-widest uppercase mb-1.5 opacity-80">Start your search</span>
+              <span className="ty-body font-bold text-zinc-900 truncate leading-tight">
                 {`Search plots, villas & more in ${selectedCity}`}
               </span>
             </div>
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-blue-200">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-primary text-white shadow-xl shadow-blue-500/20 group-hover:bg-blue-700 transition-colors">
               <Search className="h-5 w-5" strokeWidth={3} />
             </div>
           </button>
+
         </div>
       </section>
 
