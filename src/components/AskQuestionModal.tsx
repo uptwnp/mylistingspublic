@@ -245,8 +245,8 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
                   className={cn(
                     'flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all active:scale-[0.98] shadow-lg',
                     canSubmit || submitted
-                      ? 'bg-blue-50 text-blue-700 border-2 border-blue-200 shadow-[0_12px_30px_rgba(0,0,0,0.1)] shimmer-premium-loop hover:bg-blue-100/50 transition-all'
-                      : 'bg-zinc-100 text-zinc-400 shadow-none cursor-not-allowed border-2 border-zinc-200/50'
+                      ? 'bg-blue-50 text-blue-700 border border-[#88aaff] shadow-[0_8px_30px_rgba(37,99,235,0.06)] shimmer-premium-loop hover:bg-blue-100/50 transition-all'
+                      : 'bg-zinc-100 text-zinc-400 shadow-none cursor-not-allowed border border-zinc-200/50'
                   )}
                 >
                   <ArrowRight className="h-4 w-4" />

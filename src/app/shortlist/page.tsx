@@ -126,7 +126,7 @@ export default function ShortlistPage() {
 
         <button
           onClick={() => { setShortlistType('phone'); requireContactDetails(() => { setShowFinalStep(true); onClose(); }); }}
-          className="group relative flex w-full items-center gap-3 sm:gap-4 rounded-2xl border-2 border-blue-200 bg-blue-50/40 px-4 sm:px-5 py-4.5 text-zinc-900 transition-all active:scale-[0.99] shadow-md overflow-hidden shimmer-premium-loop"
+          className="group relative flex w-full items-center gap-3 sm:gap-4 rounded-2xl border border-[#88aaff] bg-blue-50/40 px-4 sm:px-5 py-4.5 text-zinc-900 transition-all active:scale-[0.99] shadow-lg shadow-blue-500/10 overflow-hidden shimmer-premium-loop"
         >
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
             <Phone className="h-5 w-5 text-blue-600" />
@@ -680,7 +680,7 @@ export default function ShortlistPage() {
               <div className="mx-auto max-w-lg">
                 <button
                   onClick={() => setIsMobileDeskOpen(true)}
-                  className="flex w-full items-center justify-between rounded-3xl border-2 border-blue-200 bg-white px-6 py-5 text-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98] shimmer-premium-loop relative"
+                  className="flex w-full items-center justify-between rounded-3xl border border-[#88aaff] bg-white px-6 py-5 text-zinc-900 shadow-[0_15px_45px_rgba(37,99,235,0.08)] transition-all active:scale-[0.98] shimmer-premium-loop relative"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50">
