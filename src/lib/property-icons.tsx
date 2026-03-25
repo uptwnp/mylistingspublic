@@ -45,14 +45,14 @@ export const PROPERTY_TYPE_CONFIG: Record<string, PropertyTypeConfig> = {
   'Plot': {
     icon: Map,
     label: 'Plot',
-    color: 'text-[#4CAF50]',
-    bgColor: 'bg-[#E8F5E9]'
+    color: 'text-[#1976D2]',
+    bgColor: 'bg-[#E3F2FD]'
   },
   'Land': {
     icon: Map,
     label: 'Land',
-    color: 'text-[#4CAF50]',
-    bgColor: 'bg-[#E8F5E9]'
+    color: 'text-[#1976D2]',
+    bgColor: 'bg-[#E3F2FD]'
   },
   'Commercial': {
     icon: Store,

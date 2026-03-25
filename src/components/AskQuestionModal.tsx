@@ -33,6 +33,16 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
   // Must be mounted on client before we can portal to document.body
   useEffect(() => { setMounted(true); }, []);
 
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
+
   const inCart = isInShortlist(property.property_id);
 
   const handleClose = () => {
@@ -102,7 +112,7 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 60 }}
               transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="relative w-full sm:max-w-md overflow-hidden rounded-t-[32px] sm:rounded-[28px] bg-white shadow-2xl pointer-events-auto"
+              className="relative w-full sm:max-w-md flex flex-col h-[70vh] max-h-[70vh] sm:h-auto sm:max-h-[85vh] overflow-hidden rounded-t-[24px] sm:rounded-[20px] bg-white shadow-2xl pointer-events-auto"
             >
               {/* Handle (mobile) */}
               <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -131,14 +141,15 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
               </div>
 
               {/* Body */}
-              <AnimatePresence mode="wait">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-2 min-h-0 scrollbar-hide">
+                <AnimatePresence mode="wait">
                 {!submitted ? (
                   <motion.div
                     key="form"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="px-5 pb-2 space-y-2"
+                    className="space-y-2 pb-2"
                   >
                     <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 mb-3">
                       What would you like to ask?
@@ -207,20 +218,21 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
-                    className="mx-5 mb-4 rounded-2xl bg-emerald-50 border border-emerald-100 p-4 flex items-start gap-3"
+                    className="mb-4 rounded-2xl bg-blue-50 border border-blue-100 p-4 flex items-start gap-3"
                   >
-                    <div className="h-8 w-8 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
+                    <div className="h-8 w-8 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
                       <Check className="h-4 w-4 text-white" strokeWidth={3} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-emerald-800">Question noted!</p>
-                      <p className="text-xs font-medium text-emerald-600 mt-0.5">
+                      <p className="text-sm font-bold text-blue-800">Question noted!</p>
+                      <p className="text-xs font-medium text-blue-600 mt-0.5">
                         Your question has been saved with this property. Our team will follow up.
                       </p>
                     </div>
                   </motion.div>
                 )}
-              </AnimatePresence>
+                </AnimatePresence>
+              </div>
 
               {/* Divider */}
               <div className="mx-5 my-1 h-px bg-zinc-100" />
@@ -233,8 +245,8 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
                   className={cn(
                     'flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all active:scale-[0.98] shadow-lg',
                     canSubmit || submitted
-                      ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-500/20'
-                      : 'bg-zinc-100 text-zinc-400 shadow-none cursor-not-allowed'
+                      ? 'bg-blue-50 text-blue-700 border-2 border-blue-200 shadow-[0_12px_30px_rgba(0,0,0,0.1)] shimmer-premium-loop hover:bg-blue-100/50 transition-all'
+                      : 'bg-zinc-100 text-zinc-400 shadow-none cursor-not-allowed border-2 border-zinc-200/50'
                   )}
                 >
                   <ArrowRight className="h-4 w-4" />
@@ -252,7 +264,7 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
                   )}
                 >
                   <LayoutGrid className="h-4 w-4" />
-                  Explore More &amp; Shortlist this
+                  Save this &amp; Explore More
                 </button>
               </div>
             </motion.div>

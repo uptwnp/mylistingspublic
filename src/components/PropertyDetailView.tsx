@@ -351,7 +351,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                   {property.highlights.map((h, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-xl bg-zinc-50 p-4">
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />
                       </div>
                       <span className="ty-caption font-semibold">{h}</span>
                     </div>
@@ -411,8 +411,8 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 />
               </div>
               {userLocation && (
-                <div className="flex items-center gap-2 text-emerald-600">
-                  <Locate className="h-4 w-4 text-emerald-500" />
+                <div className="flex items-center gap-2 text-blue-600">
+                  <Locate className="h-4 w-4 text-blue-500" />
                   <span className="ty-caption font-bold">{calculateDistance(userLocation.lat, userLocation.lng, lat, lng).toFixed(1)} km from you</span>
                 </div>
               )}
@@ -469,7 +469,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                     if (!inCart) addToShortlist(property);
                     router.push('/shortlist');
                   }}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg active:scale-[0.98] hover:bg-emerald-600"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 py-3 ty-label text-white shadow-lg active:scale-[0.98] hover:bg-blue-700"
                 >
                   {inCart ? 'Go to Shortlist' : 'Proceed with it'}
                 </button>
@@ -515,7 +515,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               if (!inCart) addToShortlist(property);
               router.push('/shortlist');
             }}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-4 ty-label text-white shadow-lg active:scale-[0.98] transition-all"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-blue-600 py-4 ty-label text-white shadow-lg active:scale-[0.98] transition-all"
           >
             {inCart ? 'Go to Shortlist' : 'Proceed with it'}
           </button>

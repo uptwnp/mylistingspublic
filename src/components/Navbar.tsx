@@ -536,10 +536,10 @@ export default function Navbar() {
                         </Link>
                         <Link 
                           href="/refer" 
-                          className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-emerald-600 transition-colors hover:bg-emerald-50"
+                          className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-blue-600 transition-colors hover:bg-blue-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Wallet className="h-4 w-4 text-emerald-400" />
+                          <Wallet className="h-4 w-4 text-blue-400" />
                           Refer and Earn
                         </Link>
                         <Link 

@@ -27,7 +27,7 @@ export function ReferClient() {
       <section className="relative pt-32 pb-24 sm:pt-48 sm:pb-40 px-6 overflow-hidden min-h-[75vh] flex items-center bg-white">
         {/* Subtle Background Accents */}
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-brand-primary/10 blur-[130px] rounded-full pointer-events-none -z-10" />
-        <div className="absolute -bottom-10 -right-20 w-[600px] h-[600px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute -bottom-10 -right-20 w-[600px] h-[600px] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
         <div className="mx-auto max-w-4xl text-center">
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -54,7 +54,7 @@ export function ReferClient() {
                  </div>
                </a>
                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                   <p className="ty-caption font-bold uppercase tracking-widest text-zinc-500">Free to Join & Refer</p>
                </div>
              </div>
@@ -79,7 +79,7 @@ export function ReferClient() {
                  <p className="ty-body text-zinc-500 leading-relaxed font-medium">Connect us with serious investors or home buyers with budgets above ₹1 Cr. You earn 25% of our profit from that transaction as soon as the deal closes.</p>
               </div>
               <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-zinc-100 shadow-sm text-left group transition-all hover:border-brand-primary hover:shadow-xl hover:shadow-brand-primary/5">
-                 <div className="h-14 w-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mb-10 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
+                 <div className="h-14 w-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center mb-10 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
                     <Building2 className="h-7 w-7" />
                  </div>
                  <h3 className="ty-title font-black text-zinc-900 uppercase mb-4 tracking-tight">Seller referrals</h3>
@@ -97,7 +97,7 @@ export function ReferClient() {
            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-blue-50 text-brand-primary ty-micro font-bold mb-10 uppercase tracking-[0.2em] border border-blue-100 shadow-sm">True Partnership</div>
            <h2 className="ty-hero font-black text-zinc-900 uppercase mb-10 leading-[1.05] tracking-tighter">
              Directly Earn 25% <br />
-             <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent italic">Of That Lead's Revenue.</span>
+             <span className="bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent italic">Of That Lead's Revenue.</span>
            </h2>
            <p className="ty-subtitle font-medium text-zinc-500 max-w-2xl mx-auto leading-relaxed">
              No complicated payouts. When we complete a deal from your referral, you get a flat 25% share of the platform's total earnings from that specific transaction. Clear, transparent, and immediate.

@@ -48,7 +48,7 @@ type Listing = {
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
   pending:    { label: 'Pending Review',  color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200', icon: Clock3 },
   in_review:  { label: 'In Review',       color: 'text-blue-700',    bg: 'bg-blue-50',    border: 'border-blue-200',  icon: ClipboardCheck },
-  approved:   { label: 'Live',            color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: CheckCircle2 },
+  approved:   { label: 'Live',            color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200', icon: CheckCircle2 },
   rejected:   { label: 'Not Approved',    color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-200',   icon: Ban },
 };
 
@@ -171,7 +171,7 @@ export function SellClient() {
       {/* ── ELITE HERO ── */}
       <section className="relative pt-32 pb-24 sm:pt-48 sm:pb-40 px-6 overflow-hidden min-h-[75vh] flex items-center bg-white">
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-brand-primary/10 blur-[130px] rounded-full pointer-events-none -z-10" />
-        <div className="absolute -bottom-10 -right-20 w-[600px] h-[600px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute -bottom-10 -right-20 w-[600px] h-[600px] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
         <div className="mx-auto max-w-4xl text-center">
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -195,7 +195,7 @@ export function SellClient() {
                  </div>
                </button>
                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                   <p className="ty-caption font-bold uppercase tracking-widest text-zinc-500">Investor Pool Live</p>
                </div>
              </div>
@@ -335,7 +335,7 @@ export function SellClient() {
            
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
               <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-zinc-100 shadow-sm text-left group transition-all hover:border-brand-primary hover:shadow-xl hover:shadow-brand-primary/5">
-                 <div className="h-14 w-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mb-10 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
+                 <div className="h-14 w-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center mb-10 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
                     <CheckCircle2 className="h-7 w-7" />
                  </div>
                  <h3 className="ty-title font-black text-zinc-900 uppercase mb-4 tracking-tight">Verified Listing</h3>
@@ -428,7 +428,7 @@ export function SellClient() {
                         initial={{ scale: 0.5, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ type: 'spring', stiffness: 250, damping: 20 }}
-                        className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xl shadow-emerald-200"
+                        className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-500 text-white shadow-2xl shadow-blue-200"
                       >
                         <CheckCircle2 className="h-10 w-10" strokeWidth={2.5} />
                       </motion.div>

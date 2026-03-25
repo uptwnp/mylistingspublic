@@ -462,7 +462,7 @@ export function ContactDetailForm() {
                      <button
                         onClick={() => handleSubmit()}
                         className={cn(
-                           "flex items-center gap-2 px-6 sm:px-8 h-12 sm:h-14 rounded-2xl font-bold text-base sm:text-lg transition-all bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98] hover:bg-emerald-600"
+                           "flex items-center gap-2 px-6 sm:px-8 h-12 sm:h-14 rounded-2xl font-bold text-base sm:text-lg transition-all bg-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-600"
                         )}
                      >
                         Confirm Details <Check className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={3} />
