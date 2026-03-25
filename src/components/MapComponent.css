@@ -54,3 +54,35 @@
   transform: scale(1.1) rotate(90deg);
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CRITICAL: Leaflet DivIcon wrapper reset
+   By default Leaflet applies `background: #fff; border: 1px solid #666` to every
+   .leaflet-div-icon element. This invisible box shifts the icon's rendered content
+   away from the iconAnchor coordinate, causing markers to visually drift from their
+   correct map position — especially noticeable when zooming.
+   These MUST be reset to none for custom markers to anchor correctly.
+──────────────────────────────────────────────────────────────────────────── */
+.custom-property-marker,
+.custom-cluster-marker,
+.user-location-marker {
+  background: none !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+/* Kill ALL Leaflet marker animations/transitions.
+   Markers must snap instantly to their geographic coordinates —
+   no fade, no slide, no scale, no zoom animation. */
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  transition: none !important;
+  animation: none !important;
+}
+.leaflet-marker-pane {
+  transition: none !important;
+}
+/* Prevent Leaflet from adding zoom-animation transforms to markers */
+.leaflet-marker-icon.leaflet-zoom-animated {
+  transition: none !important;
+}
