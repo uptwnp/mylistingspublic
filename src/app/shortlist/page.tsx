@@ -555,9 +555,10 @@ export default function ShortlistPage() {
                     </motion.div>
                   );
                  })}
+               </AnimatePresence>
 
-                 <AnimatePresence>
-                  {showPricingCard && (
+               <AnimatePresence>
+                 {showPricingCard && (
                     <motion.div 
                       key="pricing-card"
                       layout
@@ -566,25 +567,25 @@ export default function ShortlistPage() {
                       exit={{ opacity: 0, scale: 1, y: 15 }}
                       whileHover={{ scale: 1.002 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 120 }}
-                      className="relative overflow-hidden rounded-[2.2rem] sm:rounded-[2.8rem] bg-[#09090b] p-6 sm:p-9 text-white shadow-[0_35px_75px_rgba(0,0,0,0.45)] my-8 group border border-white/5"
+                      className="relative overflow-hidden rounded-[2.2rem] sm:rounded-[2.8rem] bg-white p-6 sm:p-9 text-zinc-900 shadow-[0_35px_80px_rgba(0,0,0,0.07)] my-8 group border border-zinc-100"
                     >
-                      {/* Premium Accent Glow */}
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.14),transparent_75%)] pointer-events-none" />
+                      {/* Premium Accent Glow (Light) */}
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.05),transparent_75%)] pointer-events-none" />
                       
                       <div className="relative z-10">
-                        <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
+                        <div className="flex flex-col sm:flex-row items-start justify-between gap-6 pr-8 sm:pr-0">
                           <div className="space-y-3 min-w-0 flex-1">
-                             <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/18 border border-indigo-500/25 px-3.5 py-1.5 backdrop-blur-3xl mb-1">
-                                <Zap className="h-3 w-3 text-indigo-400 fill-indigo-400/20" />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300">
+                             <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 border border-indigo-100 px-3.5 py-1.5 backdrop-blur-3xl mb-1">
+                                <Zap className="h-3 w-3 text-indigo-500 fill-indigo-500/10" />
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600">
                                    Pricing Structure
                                 </span>
                              </div>
-                             <h2 className="text-2xl sm:text-3xl font-black leading-tight text-white tracking-tight">
+                             <h2 className="text-2xl sm:text-3xl font-black leading-tight text-zinc-900 tracking-tight">
                                 Zero Upfront Fees ⚡
                              </h2>
-                             <p className="text-sm sm:text-base font-medium text-zinc-400 leading-relaxed max-w-lg">
-                                Pay only <span className="text-white font-black underline underline-offset-4 decoration-indigo-500">1% brokerage</span> — payable only at deal completion. No upfront costs. 🤝
+                             <p className="text-sm sm:text-base font-medium text-zinc-500 leading-relaxed max-w-lg">
+                                Pay only <span className="text-zinc-900 font-black underline underline-offset-4 decoration-indigo-200">1% brokerage</span> — payable only at deal completion. No upfront costs. 🤝
                              </p>
                           </div>
                           <button 
@@ -592,44 +593,45 @@ export default function ShortlistPage() {
                               setShowPricingCard(false);
                               localStorage.setItem('hide_pricing_card_shortlist', 'true');
                             }}
-                            className="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 active:scale-95 shrink-0 self-end sm:self-start group/close"
+                            className="absolute top-5 right-5 sm:top-8 sm:right-8 z-[20] p-2.5 sm:p-3.5 rounded-2xl bg-zinc-100/50 hover:bg-zinc-100 transition-all border border-zinc-200/50 active:scale-95 group/close"
                           >
-                            <X className="h-5 w-5 text-zinc-500 group-hover:text-white transition-colors" strokeWidth={2.5} />
+                            <X className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-400 group-hover:text-zinc-900 transition-colors" strokeWidth={2.5} />
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-5 pt-8 mt-8 border-t border-white/5">
+                        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-5 pt-8 mt-8 border-t border-zinc-100">
                            <div className="flex items-center gap-3.5 group/item">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 shrink-0 group-hover/item:bg-emerald-500/20 transition-all">
-                                 <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100 shrink-0 group-hover/item:bg-emerald-100 transition-all">
+                                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                               </div>
-                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-300">Free Site Visits</p>
+                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors">Free Site Visits</p>
                            </div>
                            <div className="flex items-center gap-3.5 group/item">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 shrink-0 group-hover/item:bg-indigo-500/20 transition-all">
-                                 <CheckCircle2 className="h-4 w-4 text-indigo-400" />
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 shrink-0 group-hover/item:bg-indigo-100 transition-all">
+                                 <CheckCircle2 className="h-4 w-4 text-indigo-600" />
                               </div>
-                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-300">Legal Support</p>
+                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors">Legal Support</p>
                            </div>
                            <div className="flex items-center gap-3.5 group/item">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 shrink-0 group-hover/item:bg-indigo-500/20 transition-all">
-                                 <CheckCircle2 className="h-4 w-4 text-indigo-400" />
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 shrink-0 group-hover/item:bg-indigo-100 transition-all">
+                                 <CheckCircle2 className="h-4 w-4 text-indigo-600" />
                               </div>
-                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-300">Loan Support</p>
+                              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors">Loan Support</p>
                            </div>
                         </div>
                       </div>
 
                       {/* Premium Accent */}
-                      <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-indigo-500/10 blur-[110px] pointer-events-none" />
-                      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/25 to-transparent pointer-events-none" />
-                      <div className="absolute right-6 bottom-6 opacity-[0.03] rotate-[15deg] pointer-events-none group-hover:opacity-[0.05] transition-all">
-                         <Zap className="h-56 w-56 fill-white" />
+                      <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-indigo-500/5 blur-[110px] pointer-events-none" />
+                      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/10 to-transparent pointer-events-none" />
+                      <div className="absolute right-6 bottom-6 opacity-[0.04] rotate-[15deg] pointer-events-none group-hover:opacity-[0.06] transition-all">
+                         <Zap className="h-56 w-56 fill-zinc-900" />
                       </div>
                     </motion.div>
                   )}
-                </AnimatePresence>
+               </AnimatePresence>
 
+               <AnimatePresence>
                  {properties.length > 10 && (
                    <motion.div 
                      key="clear-all"
@@ -652,18 +654,17 @@ export default function ShortlistPage() {
                      </button>
                    </motion.div>
                  )}
-                </AnimatePresence>
-              </div>
+               </AnimatePresence>
+             </div>
 
-              {/* Consultation Desk (Desktop Sidebar) */}
-              <aside className="hidden lg:block lg:col-span-1">
-                <div className="sticky top-32 rounded-3xl bg-white p-8 border border-zinc-100 shadow-xl shadow-zinc-200/40">
-                   <ConsultationDesk />
-                </div>
-              </aside>
-            </div>
-          )}
-            
+             {/* Consultation Desk (Desktop Sidebar) */}
+             <aside className="hidden lg:block lg:col-span-1">
+               <div className="sticky top-32 rounded-3xl bg-white p-8 border border-zinc-100 shadow-xl shadow-zinc-200/40">
+                  <ConsultationDesk />
+               </div>
+             </aside>
+           </div>
+
             {/* Mobile Sticky CTA */}
             <div className="fixed bottom-0 left-0 right-0 z-[60] block p-4 lg:hidden">
               <div className="mx-auto max-w-lg">
