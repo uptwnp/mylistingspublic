@@ -85,7 +85,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-20 pointer-events-none"
+                className="absolute inset-0 z-40 pointer-events-none"
               >
                 <motion.div
                   initial={{ scale: 0, x: 10, y: -10 }}

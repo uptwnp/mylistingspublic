@@ -38,7 +38,7 @@ export function NoPhotosPlaceholder({
         className={cn("flex h-full w-full items-center justify-center transition-all duration-300 relative overflow-hidden", className)}
         style={{ backgroundColor: secondaryColor }}
       >
-         <div className="relative z-10">
+         <div className="relative z-40">
              <Icon 
                className="h-10 w-10 sm:h-12 sm:w-12" 
              />

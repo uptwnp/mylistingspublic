@@ -437,7 +437,7 @@ export default function ShortlistPage() {
                                     onClick={() => router.push(`/property/${property.property_id}`)}
                                     className={cn("flex h-full w-full items-center justify-center transition-colors cursor-pointer", config.bgColor)}
                                   >
-                                    <Icon className={cn("h-8 w-8 sm:h-10 sm:w-10 opacity-30", config.color)} />
+                                    <Icon className={cn("h-8 w-8 sm:h-10 sm:w-10 opacity-100", config.color)} />
                                   </div>
                                 )}
                               </div>
@@ -1010,7 +1010,7 @@ export default function ShortlistPage() {
                                     <Image src={p.image_urls[0]} alt="" width={12} height={12} className="object-cover" />
                                   ) : (
                                     <div className={cn("flex h-full w-full items-center justify-center", pConfig.bgColor)}>
-                                      <PIcon className={cn("h-full w-full p-[1px] opacity-40", pConfig.color)} />
+                                      <PIcon className={cn("h-full w-full p-[1px] opacity-100", pConfig.color)} />
                                     </div>
                                   )}
                                 </div>
