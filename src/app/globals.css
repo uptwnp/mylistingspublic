@@ -218,10 +218,16 @@ button:active, a:active, .interactive:active {
   transform: scale(0.96);
 }
 
-/* Focus styles for accessibility */
-:focus-visible {
+/* Focus styles for accessibility - excluding inputs that have custom focus or shouldn't have default outline */
+:focus-visible:not(input):not(textarea):not(select) {
   outline: 2px solid var(--color-brand-primary);
   outline-offset: 2px;
+}
+
+/* Force-remove browser default outlines from inputs */
+input:focus, textarea:focus, select:focus, input:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ─────────────────────────────────────────────

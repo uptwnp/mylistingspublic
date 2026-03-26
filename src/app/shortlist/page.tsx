@@ -105,7 +105,7 @@ export default function ShortlistPage() {
           )}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex w-full items-center gap-3 sm:gap-4 rounded-2xl bg-[#128C7E] px-4 sm:px-5 py-4 text-white hover:bg-[#0e7268] active:scale-[0.99] transition-all shadow-xl shadow-[#128C7E]/20"
+          className="group flex w-full items-center gap-3 sm:gap-4 rounded-xl bg-[#128C7E] px-4 sm:px-5 py-4 text-white hover:bg-[#0e7268] active:scale-[0.99] transition-all shadow-xl shadow-[#128C7E]/20"
         >
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-2xl bg-white/20">
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -126,7 +126,7 @@ export default function ShortlistPage() {
 
         <button
           onClick={() => { setShortlistType('phone'); requireContactDetails(() => { setShowFinalStep(true); onClose(); }); }}
-          className="group relative flex w-full items-center gap-3 sm:gap-4 rounded-2xl border border-[#88aaff] bg-blue-50/40 px-4 sm:px-5 py-4.5 text-zinc-900 transition-all active:scale-[0.99] shadow-lg shadow-blue-500/10 overflow-hidden shimmer-premium-loop"
+          className="group relative flex w-full items-center gap-3 sm:gap-4 rounded-xl border border-[#88aaff] bg-blue-50/40 px-4 sm:px-5 py-4.5 text-zinc-900 transition-all active:scale-[0.99] shadow-lg shadow-blue-500/10 overflow-hidden shimmer-premium-loop"
         >
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
             <Phone className="h-5 w-5 text-blue-600" />
@@ -147,7 +147,7 @@ export default function ShortlistPage() {
         {/* Site Visit */}
         <button
           onClick={() => { setShortlistType('site'); requireContactDetails(() => { setShowFinalStep(true); onClose(); }); }}
-          className="group flex w-full items-center gap-3 sm:gap-4 rounded-2xl border-2 border-zinc-100 bg-white px-4 sm:px-5 py-4.5 text-zinc-900 hover:border-zinc-200 hover:bg-zinc-50 active:scale-[0.99] transition-all"
+          className="group flex w-full items-center gap-3 sm:gap-4 rounded-xl border-2 border-zinc-100 bg-white px-4 sm:px-5 py-4.5 text-zinc-900 hover:border-zinc-200 hover:bg-zinc-50 active:scale-[0.99] transition-all"
         >
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50">
             <MapPin className="h-5 w-5 text-blue-600" />
@@ -162,7 +162,7 @@ export default function ShortlistPage() {
         {/* Office Visit */}
         <button
           onClick={() => { setShortlistType('office'); requireContactDetails(() => { setShowFinalStep(true); onClose(); }); }}
-          className="group flex w-full items-center gap-3 sm:gap-4 rounded-2xl border-2 border-zinc-100 bg-white px-4 sm:px-5 py-4.5 text-zinc-900 hover:border-zinc-200 hover:bg-zinc-50 active:scale-[0.99] transition-all"
+          className="group flex w-full items-center gap-3 sm:gap-4 rounded-xl border-2 border-zinc-100 bg-white px-4 sm:px-5 py-4.5 text-zinc-900 hover:border-zinc-200 hover:bg-zinc-50 active:scale-[0.99] transition-all"
         >
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50">
             <Building2 className="h-5 w-5 text-blue-600" />
@@ -177,7 +177,7 @@ export default function ShortlistPage() {
         {/* Direct Call */}
         <button
           onClick={() => { setShowCallNowSheet(true); if(isOverlay) onClose(); }}
-          className="group flex w-full items-center gap-3 sm:gap-4 rounded-2xl border-2 border-zinc-100 bg-white px-4 sm:px-5 py-4.5 text-zinc-900 hover:border-zinc-200 hover:bg-zinc-50 active:scale-[0.99] transition-all"
+          className="group flex w-full items-center gap-3 sm:gap-4 rounded-xl border-2 border-zinc-100 bg-white px-4 sm:px-5 py-4.5 text-zinc-900 hover:border-zinc-200 hover:bg-zinc-50 active:scale-[0.99] transition-all"
         >
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-50">
             <Phone className="h-5 w-5 text-zinc-600" />
@@ -287,7 +287,7 @@ export default function ShortlistPage() {
         ) : (
           <div className="grid gap-8 lg:gap-12 lg:grid-cols-3">
             {/* List of Properties */}
-            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+            <div className="lg:col-span-2 space-y-6 sm:space-y-8 min-w-0">
               <div className="mb-4 sm:mb-8 px-2 sm:px-0">
                 <Link href="/explore" className="mb-3 sm:mb-4 flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-500 hover:text-black">
                   <ArrowLeft className="h-3.5 w-3.5" /> Back to Discover
@@ -576,7 +576,7 @@ export default function ShortlistPage() {
                       exit={{ opacity: 0, scale: 1, y: 15 }}
                       whileHover={{ scale: 1.002 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 120 }}
-                      className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] bg-white p-5 sm:p-7 text-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.05)] my-6 group border border-zinc-100"
+                      className="relative w-full overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] bg-white p-5 sm:p-7 text-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.05)] my-6 group border border-zinc-100"
                     >
                       {/* Premium Accent Glow (Light) */}
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.04),transparent_75%)] pointer-events-none" />
@@ -608,24 +608,24 @@ export default function ShortlistPage() {
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 pt-6 mt-6 border-t border-zinc-100">
-                           <div className="flex items-center gap-3 group/item">
+                        <div className="flex items-center gap-6 pt-6 mt-6 border-t border-zinc-100 overflow-x-auto no-scrollbar pb-2 w-full">
+                           <div className="flex items-center gap-3 group/item shrink-0">
                               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-100 shrink-0 group-hover/item:bg-blue-100 transition-all">
                                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
                               </div>
-                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors">Free Site Visits</p>
+                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors whitespace-nowrap">Free Site Visits</p>
                            </div>
-                           <div className="flex items-center gap-3 group/item">
+                           <div className="flex items-center gap-3 group/item shrink-0">
                               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-100 shrink-0 group-hover/item:bg-blue-100 transition-all">
                                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
                               </div>
-                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors">Legal Support</p>
+                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors whitespace-nowrap">Legal Support</p>
                            </div>
-                           <div className="flex items-center gap-3 group/item">
+                           <div className="flex items-center gap-3 group/item shrink-0">
                               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-100 shrink-0 group-hover/item:bg-blue-100 transition-all">
                                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
                               </div>
-                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors">Loan Support</p>
+                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors whitespace-nowrap">Loan Support</p>
                            </div>
                         </div>
                       </div>
