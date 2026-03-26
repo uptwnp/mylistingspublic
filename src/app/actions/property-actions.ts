@@ -40,7 +40,7 @@ export async function getLocationSuggestionsAction(
           return [];
         }
       },
-      [`location-hub-${type}-${city}-${limit}`],
+      [`location-hub-v2-${type}-${city}-${limit}`],
       {
         revalidate: 3600, // 1 hour cache TTL on Vercel
         tags: ['locations', `locations-${type}`]

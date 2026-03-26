@@ -1,16 +1,35 @@
 @import "tailwindcss";
 
 @theme inline {
+  /* Fonts */
   --font-heading: var(--font-plus-jakarta), sans-serif;
   --font-body: var(--font-inter), sans-serif;
 
-  --color-brand-primary: #1d4ed8; /* Industrial Blue */
-  --color-brand-secondary: #1e293b;
-  --color-brand-accent: #3b82f6;
+  /* Global Category Overrides to keep things managed */
+  --color-brand-primary: #1d4ed8;
+  --color-brand-secondary: #0f172a;
+  
+  /* Map Tailwind's default blue to our brand color */
+  --color-blue-600: var(--color-brand-primary);
+  --color-blue-700: #1e40af;
 
-  --color-glass-border: rgba(255, 255, 255, 0.1);
-  --color-glass-bg: rgba(255, 255, 255, 0.05);
+  /* Spacing Scale - Mapping specific semantic names */
+  --spacing-page: var(--spacing-page-x);
+  --spacing-section: var(--spacing-section);
+  
+  /* Font Sizes - Mapping semantic names to Tailwind keys */
+  --text-hero: var(--text-hero);
+  --text-display: var(--text-display);
+  --text-title: var(--text-title);
+  --text-subtitle: var(--text-subtitle);
+  --text-body: var(--text-body);
+  --text-caption: var(--text-caption);
 
+  /* Borders & Radii */
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+
+  /* Animations */
   --animate-fade-in: fade-in 0.5s ease-out;
   --animate-slide-up: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-float: float 3s ease-in-out infinite;
@@ -27,87 +46,76 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
   }
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
 }
 
-.shimmer-bg {
-  position: relative;
-  overflow: hidden;
-  background-color: #f3f4f6;
-}
-
-.shimmer-bg::after {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0,
-    rgba(255, 255, 255, 0.4) 20%,
-    rgba(255, 255, 255, 0.7) 60%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  animation: shimmer 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
-  content: '';
-}
 
 /* ─────────────────────────────────────────────
-   TYPOGRAPHY TOKEN SYSTEM
-   Central source of truth for font sizes.
-   All components reference these variables.
-   Mobile-first: sm breakpoint (640px) overrides.
+   DESIGN TOKENS (CSS VARIABLES)
+   Central source of truth for distances and sizes.
 ───────────────────────────────────────────── */
 :root {
-  /* ── Text Sizes ── */
-  --text-hero:     28px;  /* h1 on hero/sell pages         */
-  --text-display:  22px;  /* section titles, page headings */
-  --text-title:    18px;  /* card/section sub-headers      */
-  --text-subtitle: 15px;  /* supporting headings           */
-  --text-body:     14px;  /* general body copy             */
-  --text-caption:  12px;  /* secondary info, meta text     */
-  --text-label:    11px;  /* uppercase tracking labels     */
-  --text-micro:     9px;  /* tiny badges, counters         */
+  /* ── Spacing Tokens ── */
+  --spacing-page-x: 16px;
+  --spacing-page-y: 24px;
+  --spacing-section: 64px;
+  --spacing-gallery: 16px;
+  --spacing-card-p: 16px;
+  --spacing-inner-gap: 12px;
 
-  /* ── Font Colors ── */
-  --color-text-primary:   #0f172a;  /* slate-900 – main content      */
-  --color-text-secondary: #475569;  /* slate-600 – supporting copy   */
-  --color-text-tertiary:  #94a3b8;  /* slate-400 – captions, muted   */
-  --color-text-accent:    #1d4ed8;  /* Industrial Blue – brand CTAs */
-  --color-text-danger:    #f43f5e;  /* rose-500 – emphasis          */
-  --color-text-inverse:   #ffffff;  /* white – on dark bg           */
+  /* ── Text Sizes (Mobile-First) ── */
+  --text-hero:     32px;
+  --text-display:  24px;
+  --text-title:    18px;
+  --text-subtitle: 15px;
+  --text-body:     14px;
+  --text-caption:  13px;
+  --text-label:    11px;
+  --text-micro:     10px;
 
-  /* Other */
+  /* ── Text Colors (Darker for Contrast) ── */
+  --color-text-primary:   #0f172a;  /* Slate 900 */
+  --color-text-secondary: #334155;  /* Slate 700 - Better contrast than 600 */
+  --color-text-tertiary:  #64748b;  /* Slate 500 - Better contrast than 400 */
+  --color-text-accent:    #1d4ed8;  /* Brand Blue */
+  --color-text-inverse:   #ffffff;
+
+  /* ── System ── */
   --background: #ffffff;
-  --foreground: #09090b;
-  --card: #ffffff;
-  --card-foreground: #09090b;
-  --border: #e4e4e7;
+  --foreground: #020617; /* Even darker for body text */
+  --border: #e2e8f0;
+  
   color-scheme: light;
 }
 
-/* Desktop overrides — sm breakpoint (≥ 640px) */
+/* Tablet overrides — sm breakpoint (≥ 640px) */
 @media (min-width: 640px) {
   :root {
-    --text-hero:     42px;
-    --text-display:  30px;
+    --spacing-page-x: 32px;
+    --spacing-page-y: 48px;
+    --spacing-section: 80px;
+    --spacing-gallery: 20px;
+    --spacing-card-p: 20px;
+
+    --text-hero:     48px;
+    --text-display:  32px;
     --text-title:    22px;
     --text-subtitle: 16px;
     --text-body:     15px;
-    --text-caption:  13px;
-    --text-label:    11px;
-    --text-micro:     10px;
+    --text-caption:  14px;
   }
 }
 
-/* Large desktop — lg breakpoint (≥ 1024px) */
+/* Desktop — lg breakpoint (≥ 1024px) */
 @media (min-width: 1024px) {
   :root {
-    --text-hero:     52px;
-    --text-display:  38px;
+    --spacing-page-x: 80px;
+    --spacing-page-y: 96px;
+    --spacing-section: 112px;
+    --spacing-gallery: 24px;
+    --spacing-card-p: 24px;
+
+    --text-hero:     60px;
+    --text-display:  40px;
     --text-title:    24px;
     --text-subtitle: 17px;
     --text-body:     16px;
@@ -115,22 +123,77 @@
 }
 
 /* ─────────────────────────────────────────────
-   TYPOGRAPHY UTILITY CLASSES
-   Use these classes across the codebase instead
-   of arbitrary Tailwind text-[Xpx] values.
+   UTILITY CLASSES
 ───────────────────────────────────────────── */
-.ty-hero    { font-size: var(--text-hero);     line-height: 1.1;  font-family: var(--font-heading); letter-spacing: -0.03em; }
-.ty-display { font-size: var(--text-display);  line-height: 1.2;  font-family: var(--font-heading); letter-spacing: -0.02em; }
-.ty-title   { font-size: var(--text-title);    line-height: 1.25; font-family: var(--font-heading); letter-spacing: -0.01em; }
-.ty-subtitle{ font-size: var(--text-subtitle); line-height: 1.3;  }
-.ty-body    { font-size: var(--text-body);     line-height: 1.6;  }
-.ty-caption { font-size: var(--text-caption);  line-height: 1.5;  }
-.ty-label   { font-size: var(--text-label);    line-height: 1;    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
-.ty-micro   { font-size: var(--text-micro);    line-height: 1;    letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+
+/* Typography Utils */
+.ty-hero    { font-size: var(--text-hero); line-height: 1.15; font-family: var(--font-heading); font-weight: 800; letter-spacing: -0.04em; }
+.ty-display { font-size: var(--text-display); line-height: 1.25; font-family: var(--font-heading); font-weight: 700; letter-spacing: -0.03em; }
+.ty-title   { font-size: var(--text-title); line-height: 1.3; font-family: var(--font-heading); font-weight: 700; letter-spacing: -0.02em; }
+.ty-subtitle{ font-size: var(--text-subtitle); line-height: 1.5; font-weight: 600; }
+.ty-body    { font-size: var(--text-body); line-height: 1.6; font-weight: 400; }
+.ty-caption { font-size: var(--text-caption); line-height: 1.5; font-weight: 500; }
+.ty-label   { font-size: var(--text-label); line-height: 1; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; }
+.ty-micro   { font-size: var(--text-micro); line-height: 1; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 800; }
+
+
+
+/* Spacing Utils */
+.page-padding-x { padding-left: var(--spacing-page-x); padding-right: var(--spacing-page-x); }
+.page-padding-y { padding-top: var(--spacing-page-y); padding-bottom: var(--spacing-page-y); }
+.section-gap    { margin-bottom: var(--spacing-section); }
+.card-padding   { padding: var(--spacing-card-p); }
+.inner-gap      { gap: var(--spacing-inner-gap); }
+
+/* Premium Effects */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.shimmer-premium {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-premium::after {
+  content: "";
+  position: absolute;
+  top: -110%;
+  left: -210%;
+  width: 200%;
+  height: 200%;
+  opacity: 0;
+  transform: rotate(30deg);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 77%,
+    rgba(255, 255, 255, 0.4) 92%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: all 0.7s ease;
+}
+
+.shimmer-premium:hover::after {
+  opacity: 1;
+  left: -30%;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ─────────────────────────────────────────────
    BASE
-   (Global transitions removed to allow component-specific control)
 ───────────────────────────────────────────── */
 body {
   background: var(--background);
@@ -143,56 +206,31 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  letter-spacing: -0.02em;
 }
 
-a,
-button,
-label,
-select,
-summary,
-[role="button"],
-[type="button"],
-[type="submit"],
-[type="reset"],
-input[type="checkbox"],
-input[type="radio"],
-.cursor-pointer,
-.property-card-interactive {
+a, button, [role="button"], .interactive {
   cursor: pointer !important;
   touch-action: manipulation;
-  transition: transform 0.1s ease-out;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-button:active, 
-a:active, 
-.cursor-pointer:active {
+button:active, a:active, .interactive:active {
   transform: scale(0.96);
-  transition: transform 0.05s ease-out;
 }
 
-.glass {
-  background: var(--color-glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--color-glass-border);
+/* Focus styles for accessibility - excluding inputs that have custom focus or shouldn't have default outline */
+:focus-visible:not(input):not(textarea):not(select) {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Force-remove browser default outlines from inputs */
+input:focus, textarea:focus, select:focus, input:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
 
 /* ─────────────────────────────────────────────
-   BASE
+   END OF THEME
 ───────────────────────────────────────────── */
+

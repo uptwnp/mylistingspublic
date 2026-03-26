@@ -99,6 +99,16 @@ interface ShortlistContextType {
   // Property Cache for instant navigation
   cachedProperties: Record<string, any>;
   cacheProperties: (properties: any[]) => void;
+  syncFilters: (filters: { 
+    city?: string, 
+    type?: string, 
+    area?: string, 
+    budget?: { label: string, value: number },
+    keywords?: string,
+    minSize?: string,
+    maxSize?: string,
+    highlights?: string[]
+  }) => void;
 }
 
 const ShortlistContext = createContext<ShortlistContextType | undefined>(undefined);
@@ -156,7 +166,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     const savedRequests = localStorage.getItem(REQUESTS_KEY);
     
     if (savedCart) {
-      try { setShortlistItems(JSON.parse(savedCart)); } catch (e) { console.error(e); }
+      try { setShortlistItems([...new Set(JSON.parse(savedCart) as string[])]); } catch (e) { console.error(e); }
     }
     if (savedProps) {
       try { setSavedIds(JSON.parse(savedProps)); } catch (e) { console.error(e); }
@@ -386,6 +396,18 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     }
   }, [contactDetails, shortlistItems, inquiries]);
 
+  // Auto-sync consultation requests if sync is enabled
+  useEffect(() => {
+    if (consultationRequests.length > 0) {
+      const needsSync = consultationRequests.some(r => r.isSyncEnabled);
+      if (needsSync) {
+        setConsultationRequests(prev => prev.map(r => 
+          r.isSyncEnabled ? { ...r, propertyIds: shortlistItems } : r
+        ));
+      }
+    }
+  }, [shortlistItems]);
+
   const clearFilters = () => {
     setQuery('');
     setKeywords('');
@@ -394,6 +416,8 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     setMinSize('');
     setMaxSize('');
     setSelectedHighlights([]);
+    setSortField('approved_on');
+    setSortOrder('desc');
   };
 
   const addToShortlist = (property: any) => {
@@ -485,6 +509,19 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const syncFilters = React.useCallback((filters: Parameters<ShortlistContextType['syncFilters']>[0]) => {
+    if (filters.city !== undefined && filters.city !== selectedCity) setSelectedCity(filters.city);
+    if (filters.type !== undefined && filters.type !== propertyType) setPropertyType(filters.type);
+    if (filters.area !== undefined && filters.area !== query) setQuery(filters.area);
+    if (filters.budget !== undefined && filters.budget.label !== budget.label) setBudget(filters.budget);
+    if (filters.keywords !== undefined && filters.keywords !== keywords) setKeywords(filters.keywords);
+    if (filters.minSize !== undefined && filters.minSize !== minSize) setMinSize(filters.minSize);
+    if (filters.maxSize !== undefined && filters.maxSize !== maxSize) setMaxSize(filters.maxSize);
+    if (filters.highlights !== undefined && JSON.stringify(filters.highlights) !== JSON.stringify(selectedHighlights)) {
+      setSelectedHighlights(filters.highlights);
+    }
+  }, [selectedCity, propertyType, query, budget, keywords, minSize, maxSize, selectedHighlights]);
+
   const addConsultationRequest = (request: Omit<ConsultationRequest, 'id' | 'timestamp'>) => {
     const newRequest: ConsultationRequest = {
       ...request,
@@ -495,7 +532,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     setConsultationRequests([newRequest]);
 
     // Also sync to Supabase (Lead generation) via Server Action
-    submitConsultationRequestAction(newRequest).catch(e => console.error('Supabase lead sync failed', e));
+    submitConsultationRequestAction({ ...newRequest, inquiries }).catch(e => console.error('Supabase lead sync failed', e));
   };
 
   const updateConsultationRequest = (id: string, updates: Partial<ConsultationRequest>) => {
@@ -578,6 +615,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       isInitialized: mounted,
       cachedProperties,
       cacheProperties,
+      syncFilters,
     }}>
       {children}
     </ShortlistContext.Provider>

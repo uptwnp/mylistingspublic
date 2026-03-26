@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
-import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink, MessageCircleQuestion } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,10 +13,19 @@ import { getPropertyConfig } from '@/lib/property-icons';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard } from '@/components/PropertyCard';
 import dynamic from 'next/dynamic';
+import { AskQuestionModal } from '@/components/AskQuestionModal';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { 
   ssr: false,
-  loading: () => <div className="h-full w-full animate-pulse bg-zinc-100 flex items-center justify-center font-bold text-zinc-400">Loading Map...</div>
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-zinc-50 animate-pulse">
+      <div className="text-center">
+        <MapIcon className="mx-auto h-8 w-8 text-zinc-200 mb-3" />
+        <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest">Locating properties for you...</span>
+      </div>
+    </div>
+  )
+
 });
 
 interface PropertyDetailViewProps {
@@ -44,27 +53,13 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
   const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isAskModalOpen, setIsAskModalOpen] = useState(false);
 
   const paginate = (newDirection: number) => {
     const totalSlides = property.image_urls.length + 1;
     setDirection(newDirection);
     setHeroImageIndex((prev) => (prev + newDirection + totalSlides) % totalSlides);
   };
-
-  useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        null,
-        { timeout: 5000 }
-      );
-    }
-  }, []);
 
   useEffect(() => {
     addRecentlyVisited(property.property_id);
@@ -127,17 +122,19 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
   const Icon = config.icon;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
   const [lat, lng] = getPropertyCoords(property, similarProperties);
+  // Stable array ref so MapComponent doesn't re-render on every keystroke
+  const mapProperties = React.useMemo(() => [property], [property.property_id]);
 
   return (
     <div className="min-h-screen bg-white pb-32">
       {/* Top Section: Only for Heading on Desktop, everything for Mobile */}
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 pt-28 sm:pt-32 pb-4 sm:pb-6 lg:px-12">
-        <div className="flex items-center gap-2 ty-label text-zinc-400 mb-3 sm:mb-4">
-          <Link href={`/explore?city=${property.city}`} className="hover:text-zinc-900 transition-colors">
+        <div className="flex items-center gap-2 ty-micro font-bold tracking-widest text-zinc-500 mb-3 sm:mb-4 uppercase">
+          <Link href={`/explore?city=${property.city}`} className="hover:text-brand-primary transition-colors">
             {property.city}
           </Link>
-          <span className="text-zinc-300 font-normal scale-125 px-1">&gt;</span>
-          <Link href={`/explore?city=${property.city}&area=${property.area}`} className="hover:text-zinc-900 transition-colors">
+          <span className="text-zinc-300 font-normal scale-125 px-1 opacity-50">&gt;</span>
+          <Link href={`/explore?city=${property.city}&area=${property.area}`} className="hover:text-brand-primary transition-colors">
             {property.area}
           </Link>
         </div>
@@ -148,18 +145,20 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
 
       {/* Main Grid Content */}
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
           
           {/* COLUMN 1: Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            <div className="flex items-center gap-2 text-zinc-400 ty-micro font-bold uppercase tracking-widest bg-zinc-50/50 w-fit px-3 py-1.5 rounded-lg border border-zinc-100">
-                <Calendar className="h-4 w-4" />
-                Last Updated: {formatDate(property.approved_on)}
+            <div className="flex items-center gap-2 text-zinc-600 ty-micro font-black uppercase tracking-widest bg-zinc-50/80 w-fit px-4 py-2 rounded-xl border border-zinc-200/50 shadow-sm">
+                <Calendar className="h-4 w-4 text-zinc-400" />
+                <span className="text-zinc-400">Last Updated:</span>
+                <span className="text-zinc-900">{formatDate(property.approved_on)}</span>
             </div>
             {/* Photo Gallery Area */}
-            <div className="relative overflow-hidden md:rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border-b md:border border-zinc-100 -mx-4 md:mx-0 bg-zinc-50">
+            <div className="relative overflow-hidden rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border border-zinc-200 bg-zinc-50 shadow-inner-sm">
               {hasImage ? (
                 <div className="h-full relative group">
+                  {/* ... rest unchanged ... */}
                   <div className="relative h-full w-full overflow-hidden">
                     <AnimatePresence initial={false} custom={direction} mode="popLayout">
                       <motion.div
@@ -217,24 +216,23 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                             src={property.image_urls[heroImageIndex]}
                             alt={property.description || 'Property Image'}
                             fill
-                            unoptimized
                             className="object-cover"
                             draggable={false}
                             priority
                           />
                         ) : (
                           <div 
-                            className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-zinc-50"
+                            className="flex h-full w-full flex-col items-center justify-center p-6 sm:p-8 text-center bg-zinc-50"
                           >
-                            <ShieldCheck className="h-16 w-16 mb-6 text-zinc-300" />
-                            <p className="ty-title font-bold text-zinc-900 mb-2">Not enough to get idea?</p>
-                            <p className="ty-caption text-zinc-500 max-w-sm mb-6">Request more exclusive photos and videos for this property.</p>
+                            <ShieldCheck className="h-12 w-12 md:h-16 md:w-16 mb-4 md:mb-6 text-zinc-300" />
+                            <p className="ty-subtitle md:ty-title font-bold text-zinc-900 mb-1 md:mb-2">Not enough to get idea?</p>
+                            <p className="ty-caption text-zinc-500 max-w-[280px] sm:max-w-sm mb-4 md:mb-6">Request more exclusive photos and videos for this property.</p>
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setIsPhotoModalOpen(true);
                               }}
-                              className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-[0.98] transition-all cursor-pointer"
+                              className="rounded-full bg-black px-6 py-2 md:px-8 md:py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 active:scale-[0.98] transition-all cursor-pointer"
                             >
                               Request more photos
                             </button>
@@ -290,7 +288,6 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                           src={url}
                           alt={`Thumb ${i + 1}`}
                           fill
-                          unoptimized
                           className="object-cover"
                         />
                       </button>
@@ -300,14 +297,13 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               ) : (
                 <div 
                   onClick={() => setIsPhotoModalOpen(true)}
-                  className="flex h-full w-full flex-col items-center justify-center p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
+                  className="flex h-full w-full flex-col items-center justify-center p-6 sm:p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  <div className="flex flex-col items-center">
-                    <Icon className={cn("h-32 w-32 opacity-20", config.color)} />
-                    <div className="text-center mt-4">
-                      <p className="ty-title font-bold text-zinc-900">No photos available</p>
-                      <p className="mt-2 ty-caption text-zinc-500 max-w-sm mb-6">Owner has restricted public photos. You can request exclusive access.</p>
-                      <button className="rounded-full bg-black px-8 py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-[0.98]">
+                  <div className="flex flex-col items-center scale-90 sm:scale-100">
+                    <Icon className={cn("h-20 w-20 md:h-32 md:w-32", config.color)} />
+                    <div className="text-center mt-3 md:mt-4">
+                      <p className="ty-subtitle md:ty-title font-normal text-zinc-400 mb-4">No photos available</p>
+                      <button className="rounded-full bg-black px-6 py-2 md:px-8 md:py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-[0.98]">
                         Request photos
                       </button>
                     </div>
@@ -317,7 +313,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3 py-4 border-b border-zinc-100 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0">
+            <div className="flex items-center gap-4 py-6 border-b border-zinc-100 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0">
               <button 
                 onClick={async () => {
                   if (navigator.share) {
@@ -329,24 +325,31 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                     } catch (err) {}
                   }
                 }}
-                className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm"
               >
-                <Share2 className="h-4 w-4" />
+                <Share2 className="h-4 w-4 text-zinc-400" />
                 Share
               </button>
               <button 
                 onClick={() => toggleSave(property.property_id)}
                 className={cn(
-                    "flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap",
+                    "flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm",
                     saved && "bg-rose-50 border-rose-100 text-rose-600"
                 )}
               >
                 <Heart className={cn("h-4 w-4", saved && "fill-rose-500 text-rose-500")} />
                 {saved ? 'Saved' : 'Save'}
               </button>
-              <button onClick={scrollToMap} className="flex items-center gap-2 rounded-xl px-4 py-2.5 ty-caption font-bold border border-zinc-200 hover:bg-zinc-50 transition-colors whitespace-nowrap">
-                <MapIcon className="h-4 w-4" />
+              <button onClick={scrollToMap} className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm">
+                <MapIcon className="h-4 w-4 text-zinc-400" />
                 Map
+              </button>
+              <button
+                onClick={() => setIsAskModalOpen(true)}
+                className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm"
+              >
+                <MessageCircleQuestion className="h-4 w-4 text-zinc-400" />
+                Ask Question
               </button>
             </div>
 
@@ -358,7 +361,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                   {property.highlights.map((h, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-xl bg-zinc-50 p-4">
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />
                       </div>
                       <span className="ty-caption font-semibold">{h}</span>
                     </div>
@@ -409,7 +412,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               </div>
               <div className="h-[400px] w-full rounded-2xl border border-zinc-100 bg-zinc-50 overflow-hidden">
                 <MapComponent 
-                  properties={[property]} 
+                  properties={mapProperties} 
                   selectedProperty={property} 
                   onSelectProperty={() => {}}
                   userLocation={userLocation} 
@@ -418,8 +421,8 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 />
               </div>
               {userLocation && (
-                <div className="flex items-center gap-2 text-emerald-600">
-                  <Locate className="h-4 w-4 text-emerald-500" />
+                <div className="flex items-center gap-2 text-blue-600">
+                  <Locate className="h-4 w-4 text-blue-500" />
                   <span className="ty-caption font-bold">{calculateDistance(userLocation.lat, userLocation.lng, lat, lng).toFixed(1)} km from you</span>
                 </div>
               )}
@@ -463,12 +466,12 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Price Range</span>
                 <p className="text-2xl font-bold">{formatPriceRange(property.price_min, property.price_max)}</p>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <button 
                   onClick={() => inCart ? removeFromShortlist(property.property_id) : addToShortlist(property)}
-                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-3 ty-label transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-black' : 'bg-black text-white'}`}
+                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 ty-body font-black transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-zinc-900 text-white shadow-xl shadow-zinc-900/10'}`}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className="h-5 w-5" />
                   {inCart ? 'Remove from Shortlist' : 'Add to Shortlist'}
                 </button>
                 <button 
@@ -476,9 +479,16 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                     if (!inCart) addToShortlist(property);
                     router.push('/shortlist');
                   }}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg active:scale-[0.98] hover:bg-emerald-600"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand-primary py-4 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all shimmer-premium"
                 >
                   {inCart ? 'Go to Shortlist' : 'Proceed with it'}
+                </button>
+                <button
+                  onClick={() => setIsAskModalOpen(true)}
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-zinc-100 bg-zinc-50 py-4 ty-body font-bold text-zinc-700 hover:bg-zinc-100 transition-all active:scale-[0.98]"
+                >
+                  <MessageCircleQuestion className="h-5 w-5 text-zinc-400" />
+                  Ask a Question
                 </button>
               </div>
               <div className="h-px bg-zinc-100" />
@@ -497,23 +507,31 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
       </section>
 
       {/* Mobile Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 p-4 shadow-xl md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 px-6 pt-5 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-col">
-            <span className="ty-label text-zinc-400">Price</span>
-            <p className="ty-subtitle font-bold text-zinc-900">{formatPriceRange(property.price_min, property.price_max)}</p>
+          <div className="flex flex-col shrink-0">
+            <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-0.5">Price</span>
+            <p className="ty-subtitle font-black text-zinc-900 leading-none">{formatPriceRange(property.price_min, property.price_max)}</p>
           </div>
+          
           <button 
              onClick={() => {
               if (!inCart) addToShortlist(property);
               router.push('/shortlist');
             }}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3 ty-label text-white shadow-lg"
+            className="flex-1 flex items-center justify-center gap-3 rounded-[20px] bg-brand-primary py-4.5 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all shimmer-premium"
           >
             {inCart ? 'Go to Shortlist' : 'Proceed with it'}
           </button>
         </div>
       </div>
+
+      {/* Ask Question Modal */}
+      <AskQuestionModal
+        property={property}
+        isOpen={isAskModalOpen}
+        onClose={() => setIsAskModalOpen(false)}
+      />
 
       {/* Photo Request Modal */}
       <AnimatePresence>
@@ -556,7 +574,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
             <div className="relative flex-1 flex items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.div key={activePhotoIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative h-full w-full max-w-5xl">
-                  <Image src={property.image_urls[activePhotoIndex]} alt="Gallery" fill unoptimized className="object-contain" />
+                  <Image src={property.image_urls[activePhotoIndex]} alt="Gallery" fill className="object-contain" />
                 </motion.div>
               </AnimatePresence>
               <button onClick={prevPhoto} className="absolute left-6 h-14 w-14 rounded-full bg-white/10 text-white flex items-center justify-center"><ChevronLeft className="h-6 w-6" /></button>
@@ -565,7 +583,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
             <div className="flex justify-center gap-2 p-8 overflow-x-auto">
               {property.image_urls.map((url, i) => (
                 <button key={i} onClick={() => setActivePhotoIndex(i)} className={cn("relative h-16 w-16 rounded-xl border-2 transition-all", activePhotoIndex === i ? "border-white" : "border-transparent opacity-40")}>
-                  <Image src={url} alt="Thumb" fill unoptimized className="object-cover" />
+                  <Image src={url} alt="Thumb" fill className="object-cover" />
                 </button>
               ))}
             </div>

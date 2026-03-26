@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Ruler, Sparkles } from 'lucide-react';
+import { X, Search, Ruler, Sparkles, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
@@ -65,6 +65,19 @@ export function FilterModal({
     onClose();
   };
 
+  const handleClear = () => {
+    setLocalKeywords('');
+    setLocalMinSize('');
+    setLocalMaxSize('');
+    setLocalHighlights([]);
+    setKeywords('');
+    setMinSize('');
+    setMaxSize('');
+    setSelectedHighlights([]);
+    onApply();
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -112,6 +125,10 @@ export function FilterModal({
                       type="text"
                       value={localKeywords}
                       onChange={(e) => setLocalKeywords(e.target.value)}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
                       placeholder="e.g. Near Market, Corner, 3BHK"
                       className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-12 pr-4 ty-body font-bold text-zinc-900 outline-none ring-zinc-900 transition-all focus:border-zinc-900 focus:bg-white focus:ring-1"
                     />
@@ -128,6 +145,10 @@ export function FilterModal({
                         type="number"
                         value={localMinSize}
                         onChange={(e) => setLocalMinSize(e.target.value)}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         placeholder="Min Size"
                         className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-10 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white"
                       />
@@ -138,6 +159,10 @@ export function FilterModal({
                         type="number"
                         value={localMaxSize}
                         onChange={(e) => setLocalMaxSize(e.target.value)}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         placeholder="Max Size"
                         className="w-full rounded-2xl border border-zinc-100 bg-zinc-50 py-3 pl-10 pr-4 ty-body font-bold text-zinc-900 outline-none focus:border-zinc-900 focus:bg-white"
                       />
@@ -169,10 +194,17 @@ export function FilterModal({
               </div>
 
               {/* Footer */}
-              <div className="border-t border-zinc-100 p-6 bg-zinc-50/50">
+              <div className="border-t border-zinc-100 p-4 sm:p-6 bg-zinc-50/50 flex gap-3">
+                <button
+                  onClick={handleClear}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-3.5 ty-label text-zinc-500 transition-all hover:border-zinc-300 hover:text-zinc-700 active:scale-[0.98] shrink-0"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Clear
+                </button>
                 <button
                   onClick={handleApply}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-900 py-3.5 ty-label text-white shadow-xl shadow-black/10 transition-all hover:bg-black active:scale-[0.98]"
+                  className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-zinc-900 py-3.5 ty-label text-white shadow-xl shadow-black/10 transition-all hover:bg-black active:scale-[0.98]"
                 >
                   <Search className="h-5 w-5" />
                   Show Results

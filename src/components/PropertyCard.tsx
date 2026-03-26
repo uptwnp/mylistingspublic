@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
-import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Locate } from 'lucide-react';
+import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Locate, MessageCircleQuestion } from 'lucide-react';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +8,7 @@ import { cn, formatPrice, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import { useRouter } from 'next/navigation';
 import { NoPhotosPlaceholder } from './NoPhotosPlaceholder';
+import { AskQuestionModal } from './AskQuestionModal';
 
 interface PropertyCardProps {
   property: Property;
@@ -20,6 +21,7 @@ interface PropertyCardProps {
 export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeFallback, showDistance }: PropertyCardProps) {
   const router = useRouter();
   const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave } = useShortlist();
+  const [isAskModalOpen, setIsAskModalOpen] = useState(false);
 
   const inCart = isInShortlist(property.property_id);
   const saved = isSaved(property.property_id);
@@ -52,25 +54,25 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
       whileTap={{ scale: 0.98 }}
       onClick={handleCardToggle}
       className={cn(
-        "group relative flex flex-col border bg-white p-3 rounded-[24px] shadow-sm cursor-pointer overflow-hidden",
-        isExpanded ? "border-zinc-300 shadow-xl ring-1 ring-zinc-100" : "border-zinc-100 hover:shadow-md hover:border-zinc-200"
+        "group relative flex flex-col border p-3 rounded-[28px] transition-all duration-300 cursor-pointer overflow-hidden",
+        isExpanded 
+          ? "border-zinc-300 bg-white shadow-2xl ring-1 ring-zinc-100" 
+          : "border-zinc-100 bg-white hover:shadow-xl hover:border-zinc-200"
       )}
     >
       {/* Top Section - Always Visible */}
-      <div className="flex items-center gap-4">
-        {/* Left Image/Icon Box */}
+      <div className="flex gap-4">
+        {/* Left Image/Icon Box - Larger and more defined */}
         <motion.div 
-          layout
-          className="group/image relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-[14px] sm:rounded-[18px]"
+          className="group/image relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-[18px] sm:rounded-[22px] shadow-sm ring-1 ring-black/5"
         >
           {hasImage ? (
             <Image
               src={property.image_urls[0]}
               alt={property.description || 'Property Image'}
               fill
-              unoptimized
               className="object-cover"
-              sizes="(max-width: 640px) 64px, 80px"
+              sizes="(max-width: 640px) 80px, 96px"
             />
           ) : (
             <NoPhotosPlaceholder isMini propertyType={property.type} />
@@ -83,12 +85,12 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-20 pointer-events-none"
+                className="absolute inset-0 z-40 pointer-events-none"
               >
                 <motion.div
                   initial={{ scale: 0, x: 10, y: -10 }}
                   animate={{ scale: 1, x: 0, y: 0 }}
-                  className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white shadow-xl ring-2 ring-white"
+                  className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-brand-primary text-white shadow-xl ring-2 ring-white"
                 >
                   <Check className="h-3.5 w-3.5" strokeWidth={5} />
                 </motion.div>
@@ -96,7 +98,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
             )}
           </AnimatePresence>
 
-          {/* Open in New Tab Overlay (Visible on Hover, Above Cart State) */}
+          {/* Open in New Tab Overlay */}
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 opacity-0 group-hover/image:opacity-100 transition-all duration-300 backdrop-blur-[1px]">
             <a 
               href={`/property/${property.property_id}`}
@@ -112,49 +114,57 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
         </motion.div>
 
         {/* Main Content Area */}
-        <div className="flex flex-1 flex-col min-w-0 py-0.5">
-          <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight truncate">
-            {formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min)} {property.type}
-          </h3>
-
-          <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-medium text-zinc-500">
-            <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-            <span className="truncate">{property.area}, {property.city}</span>
-          </div>
-
-          {Array.isArray(property.tags) && property.tags.length > 0 ? (
-            <p className="mt-1 ty-micro font-black text-brand-primary truncate uppercase tracking-widest opacity-90">
-              {property.tags.join(' • ')}
-            </p>
-          ) : property.description && (
-            <p className="mt-1 ty-caption text-zinc-400 truncate w-full italic font-medium opacity-80">
-              {property.description}
-            </p>
-          )}
-
-          {showDistance && property.landmark_location_distance !== undefined && property.landmark_location_distance > 0 && (
-            <div className="mt-0.5 sm:mt-1 flex items-center gap-1.5 ty-caption font-bold text-rose-500">
-              <Locate className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
-              <span>
-                {property.landmark_location_distance.toFixed(1)} km 
-                {property.loc_fallback ? ' from area center' : ' away'}
+        <div className="flex flex-1 flex-col justify-center min-w-0 py-0.5">
+          {/* Header Row: Title & Price */}
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="ty-subtitle font-bold text-zinc-900 leading-tight">
+              {formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min)} {property.type}
+            </h3>
+            <div className="shrink-0">
+               <span className="ty-subtitle font-black text-brand-primary whitespace-nowrap">
+                {property.formatted_price || formatPrice(property.price_min)}
               </span>
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="flex h-16 sm:h-20 flex-col items-end justify-between py-0.5 shrink-0">
-          <span className="px-2 sm:px-3 py-1 bg-zinc-100 rounded-full ty-micro font-black text-zinc-900 shadow-sm border border-zinc-200">
-            {property.formatted_price || formatPrice(property.price_min)}
-          </span>
+          {/* Location & Distance Row */}
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 ty-caption font-semibold text-zinc-600">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+              <span className="truncate">{property.area}, {property.city}</span>
+            </div>
+            
+            {showDistance && property.landmark_location_distance !== undefined && property.landmark_location_distance > 0 && (
+              <div className="flex items-center gap-1 shrink-0 px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md font-bold text-[10px] border border-rose-100">
+                <Locate className="h-2.5 w-2.5" />
+                <span>{property.landmark_location_distance.toFixed(1)} km</span>
+              </div>
+            )}
+          </div>
 
-          <motion.div
-            animate={{ rotate: isExpanded ? 90 : 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-1 items-center"
-          >
-            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-400" />
-          </motion.div>
+          {/* Highlights or Description - Now always visible and cleaner */}
+          <div className="mt-3 flex items-center justify-between gap-4">
+            <div className="flex-1 flex gap-1.5 overflow-hidden">
+              {Array.isArray(property.highlights) && property.highlights.length > 0 ? (
+                property.highlights.slice(0, 2).map((h, i) => (
+                <span key={i} className="px-2 py-1 bg-zinc-50 border border-zinc-100 rounded-lg ty-micro text-zinc-600 font-bold whitespace-nowrap shadow-sm">
+                  {h}
+                </span>
+                ))
+              ) : property.description && (
+                <p className="ty-caption text-zinc-400 truncate italic opacity-80">
+                  {property.description}
+                </p>
+              )}
+            </div>
+
+            <motion.div
+              animate={{ rotate: isExpanded ? 90 : 0, scale: isExpanded ? 1.1 : 1 }}
+              className="bg-zinc-100 p-1 rounded-full shadow-inner-sm shrink-0"
+            >
+              <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-zinc-500" />
+            </motion.div>
+          </div>
         </div>
       </div>
 
@@ -166,73 +176,37 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="mt-4 pt-4 border-t border-zinc-50"
+            className="mt-4 pt-4 border-t border-zinc-100"
           >
             <div className="space-y-4">
-              {/* Description */}
-              {property.description && (
-                <p className="ty-caption text-zinc-600 leading-relaxed line-clamp-3">
-                  {property.description}
-                </p>
-              )}
-
-              {/* Tags */}
-              {Array.isArray(property.tags) && property.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {property.tags.map((tag, i) => (
-                    <span 
-                      key={i} 
-                      className="px-2 py-0.5 bg-zinc-50 ty-caption font-medium text-zinc-500 rounded-lg border border-zinc-100"
-                    >
-                      {tag}
+              {/* Additional Highlights */}
+              {Array.isArray(property.highlights) && property.highlights.length > 2 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {property.highlights.map((h, i) => (
+                    <span key={i} className="px-2.5 py-1 bg-blue-50/50 ty-micro font-bold text-blue-700 rounded-lg border border-blue-100">
+                      {h}
                     </span>
                   ))}
                 </div>
               )}
 
-              <div className="flex flex-col gap-2 pt-2">
-                <div className="flex gap-2">
-                  <a
-                    href={`/property/${property.property_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-2.5 ty-caption font-bold text-zinc-900 transition-all hover:bg-zinc-50 active:scale-[0.98]"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Full Property Page
-                  </a>
-                  
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (navigator.share) {
-                        try {
-                          await navigator.share({
-                            title: `${property.type} in ${property.area}`,
-                            url: window.location.origin + `/property/${property.property_id}`
-                          });
-                        } catch (err) {
-                          // Only log errors that aren't user-cancellations
-                          if (err instanceof Error && err.name !== 'AbortError') {
-                            console.error('Error sharing:', err);
-                          }
-                        }
-                      }
-                    }}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-200 text-zinc-600 transition-all hover:bg-zinc-50 active:scale-[0.98]"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                </div>
+              {/* Full description */}
+              {property.description && (
+                <p className="ty-caption text-zinc-600 leading-relaxed bg-zinc-50/50 p-3 rounded-2xl border border-zinc-100/50">
+                  {property.description}
+                </p>
+              )}
 
-                <div className="flex gap-2">
+              {/* Action Grid */}
+              <div className="flex flex-col gap-3 pt-2">
+                {/* Primary Conversion Section */}
+                <div className="flex gap-2.5">
                   <button
                     onClick={(e) => handleActionClick(e, () => inCart ? removeFromShortlist(property.property_id) : addToShortlist(property))}
                     className={cn(
-                      "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 ty-caption font-bold shadow-lg transition-all active:scale-[0.98]",
+                      "flex-[2] flex items-center justify-center gap-2 rounded-xl py-3 ty-caption font-bold shadow-lg transition-all active:scale-[0.98]",
                       inCart
-                        ? "bg-brand-primary text-white shadow-blue-500/20"
+                        ? "bg-brand-primary text-white shadow-brand-primary/20"
                         : "bg-zinc-900 text-white hover:bg-black shadow-black/10"
                     )}
                   >
@@ -249,23 +223,75 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                     )}
                   </button>
 
-                  <button 
-                    className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-[0.98]",
-                      saved 
-                        ? "text-rose-500 bg-rose-50 border-rose-100" 
-                        : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
-                    )}
-                    onClick={(e) => handleActionClick(e, () => toggleSave(property.property_id))}
+                  <button
+                    onClick={(e) => handleActionClick(e, () => setIsAskModalOpen(true))}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border-2 border-zinc-200 bg-white py-3 ty-caption font-bold text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-all active:scale-[0.98]"
                   >
-                    <Heart className={cn("h-5 w-5", saved && "fill-current")} />
+                    <MessageCircleQuestion className="h-4 w-4" />
+                    Ask
                   </button>
+                </div>
+
+                {/* Secondary Actions Row */}
+                <div className="flex items-center gap-2.5">
+                  <a
+                    href={`/property/${property.property_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-3 ty-caption font-bold text-zinc-700 transition-all hover:bg-zinc-50 active:scale-[0.98]"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Full Details
+                  </a>
+                  
+                  <div className="flex gap-2">
+                    <button 
+                      className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-xl border transition-all active:scale-[0.98]",
+                        saved 
+                          ? "text-rose-500 bg-rose-50 border-rose-100" 
+                          : "border-zinc-200 text-zinc-500 bg-white hover:bg-zinc-50"
+                      )}
+                      onClick={(e) => handleActionClick(e, () => toggleSave(property.property_id))}
+                    >
+                      <Heart className={cn("h-5 w-5", saved && "fill-current")} />
+                    </button>
+
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (navigator.share) {
+                          try {
+                            await navigator.share({
+                              title: `${property.type} in ${property.area}`,
+                              url: window.location.origin + `/property/${property.property_id}`
+                            });
+                          } catch (err) {
+                            if (err instanceof Error && err.name !== 'AbortError') {
+                              console.error('Error sharing:', err);
+                            }
+                          }
+                        }
+                      }}
+                      className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-500 transition-all hover:bg-zinc-50 active:scale-[0.98]"
+                    >
+                      <Share2 className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Ask Question Modal */}
+      <AskQuestionModal
+        property={property}
+        isOpen={isAskModalOpen}
+        onClose={() => setIsAskModalOpen(false)}
+      />
     </motion.div>
   );
 }
@@ -273,16 +299,28 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 export function PropertyCardSkeleton() {
   return (
     <div className="flex flex-col border border-zinc-100 bg-white p-3 rounded-[24px] shadow-sm relative overflow-hidden">
-      <div className="flex items-center gap-4">
-        <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-[14px] sm:rounded-[18px] bg-zinc-100 shimmer-bg" />
-        <div className="flex flex-1 flex-col gap-2 py-1">
-          <div className="h-5 sm:h-6 w-3/4 rounded-lg bg-zinc-100 shimmer-bg" />
-          <div className="h-3.5 sm:h-4 w-1/2 rounded-md bg-zinc-50 shimmer-bg" />
-          <div className="h-3 sm:h-4 w-2/3 rounded-md bg-zinc-50 shimmer-bg" />
-        </div>
-        <div className="flex h-16 sm:h-20 flex-col items-end justify-between py-1 shrink-0">
-          <div className="h-6 w-16 rounded-full bg-zinc-50 shimmer-bg" />
-          <div className="h-4 w-4 rounded-full bg-zinc-50 shimmer-bg" />
+      <div className="flex gap-4">
+        {/* Match the new larger image size */}
+        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-[18px] sm:rounded-[22px] bg-zinc-100 shimmer-bg" />
+        
+        <div className="flex flex-1 flex-col justify-center gap-2 py-1">
+          {/* Header Row Skeleton */}
+          <div className="flex justify-between items-start gap-4">
+            <div className="h-5 sm:h-6 w-1/2 rounded-lg bg-zinc-100 shimmer-bg" />
+            <div className="h-5 sm:h-6 w-20 rounded-lg bg-zinc-100 shimmer-bg" />
+          </div>
+          
+          {/* Location Row Skeleton */}
+          <div className="h-4 w-1/3 rounded-md bg-zinc-50 shimmer-bg" />
+          
+          {/* Highlights Row Skeleton */}
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex gap-2">
+              <div className="h-5 w-16 rounded-md bg-zinc-50 shimmer-bg" />
+              <div className="h-5 w-16 rounded-md bg-zinc-50 shimmer-bg" />
+            </div>
+            <div className="h-5 w-5 rounded-full bg-zinc-50 shimmer-bg" />
+          </div>
         </div>
       </div>
     </div>

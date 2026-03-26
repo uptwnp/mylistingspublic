@@ -3,13 +3,13 @@
 'use client';
 
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import './MapComponent.css';
-import { Plus, Minus, Satellite, Map as MapIcon, Locate, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check } from 'lucide-react';
+import { Plus, Minus, Satellite, Map as MapIcon, Locate, MapPin, ExternalLink, ChevronRight, Ruler, Heart, Check, Search } from 'lucide-react';
 import { Property } from '@/types';
-import { formatPrice, getPropertyCoords, cn, formatSizeRange } from '@/lib/utils';
+import { formatPrice, getPropertyCoords, cn, formatSizeRange, isValidLatLng } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import * as ReactDOMServer from 'react-dom/server';
 import Link from 'next/link';
@@ -19,157 +19,109 @@ import { PropertyCard } from './PropertyCard';
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+// Simple debounce utility
+function debounce<T extends (...args: any[]) => any>(fn: T, ms: number): T {
+  let timer: ReturnType<typeof setTimeout>;
+  return ((...args: any[]) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  }) as T;
+}
+
+// ─── Icon caches ─────────────────────────────────────────────────────────────
+// Avoids calling ReactDOMServer.renderToStaticMarkup on every zoom/pan event.
+const customIconCache = new Map<string, L.DivIcon>();
+const clusterIconCache = new Map<string, L.DivIcon>();
+
+
 const createCustomIcon = (property: Property, isSelected: boolean, zoom: number, hideLabel?: boolean) => {
+  const scale = isSelected ? 1.15 : 1;
+  const showFullLabel = !hideLabel;
+  const cacheKey = `${property.property_id}-${isSelected}-${showFullLabel}`;
+  if (customIconCache.has(cacheKey)) return customIconCache.get(cacheKey)!;
+
   const price = formatPrice(property.price_min);
   const config = getPropertyConfig(property.type);
   const IconComponent = config.icon;
 
-  // Google Maps style scaling logic
-  const scale = isSelected ? 1.15 : (zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85));
-  const showFullLabel = isSelected || (zoom >= 15 && !hideLabel);
-  const pinSize = 36 * scale;
-  const fontSize = (isSelected ? 14 : 11) * scale;
-  const tailSize = 14 * scale;
-  const totalWidth = 160 * scale;
-  const totalHeight = 80 * scale;
+  // All sizes in explicit pixels — never use width/height:100% inside DivIcon
+  // because it depends on Leaflet's wrapper box-model which can be unreliable.
+  const PIN  = Math.round(36 * scale);  // circle diameter
+  const TAIL = Math.round(14 * scale);  // tail square side
+  const OVER = Math.round(10 * scale);  // how much tail overlaps pin
+  const INNER = Math.round(24 * scale);
+  const W = Math.round(160 * scale);    // total icon box width
+  const H = Math.round(80 * scale);     // total icon box height
+  const FS = Math.round((isSelected ? 13 : 11) * scale);
 
-  const html = ReactDOMServer.renderToStaticMarkup(
-    <div style={{ 
-      position: 'relative', 
-      width: '100%',
-      height: '100%',
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center',
-      filter: isSelected ? 'drop-shadow(0 12px 24px rgba(0,0,0,0.15))' : 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
-      transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-      transform: isSelected ? 'translateY(-6px)' : 'none',
-    }}>
-      {/* External Price Text (Dynamic visibility and size) */}
-      {(showFullLabel || isSelected) && (
-        <div style={{
-          position: 'absolute',
-          left: `${(totalWidth / 2) + (pinSize / 2) + (6 * scale)}px`,
-          top: `${(pinSize / 2) - 8}px`,
-          fontSize: `${fontSize}px`,
-          fontWeight: '500',
-          color: config.color.match(/\[(.*?)\]/)?.[1] || (isSelected ? '#000' : '#18181b'),
-          textShadow: '0 1px 2px rgba(255,255,255,1), -1px -1px 0 rgba(255,255,255,1), 1px -1px 0 rgba(255,255,255,1), -1px 1px 0 rgba(255,255,255,1), 1px 1px 0 rgba(255,255,255,1)',
-          whiteSpace: 'nowrap',
-          letterSpacing: '-0.025em',
-          fontFamily: 'Inter, sans-serif',
-          textAlign: 'left',
-          pointerEvents: 'none',
-          opacity: 1,
-          zIndex: isSelected ? 1001 : 1,
-          transition: 'all 0.3s ease-in-out'
-        }}>
-          {price}
-        </div>
-      )}
+  // Precise tail-tip Y from top of icon box:
+  // tailCenterY = (PIN - OVER) + TAIL/2  (center of tile in flex-column flow)
+  // tip = tailCenterY + TAIL/2 * sqrt(2)  (bottom vertex of 45deg-rotated square)
+  const tailCenterY = (PIN - OVER) + TAIL / 2;
+  const TIP_Y = Math.round(tailCenterY + (TAIL / 2) * Math.SQRT2); // ~43px at scale=1
 
-      {/* Pin Body */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: `${pinSize}px`,
-        height: `${pinSize}px`,
-        backgroundColor: isSelected ? '#09090b' : 'white',
-        borderRadius: '50%',
-        border: `${2 * scale}px solid ${isSelected ? '#09090b' : 'white'}`,
-        color: isSelected ? 'white' : '#09090b',
-        cursor: 'pointer',
-        zIndex: 2,
-        position: 'relative',
-        boxShadow: isSelected ? 'none' : 'inset 0 0 0 1px rgba(0,0,0,0.05)'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: isSelected ? 'rgba(255,255,255,0.15)' : (config.bgColor.match(/\[(.*?)\]/)?.[1] || '#f4f4f5'),
-          borderRadius: '50%',
-          width: `${24 * scale}px`,
-          height: `${24 * scale}px`,
-        }}>
-          <IconComponent size={14 * scale} strokeWidth={3} className={isSelected ? 'text-white' : config.color} />
-        </div>
-      </div>
+  const pinBg = isSelected ? '#09090b' : 'white';
+  const innerBg = isSelected
+    ? 'rgba(255,255,255,0.15)'
+    : (config.bgColor.match(/\[(.*?)\]/)?.[1] || '#f4f4f5');
+  const labelColor = config.color.match(/\[(.*?)\]/)?.[1] || (isSelected ? '#000' : '#18181b');
+  const iconColor = config.color.match(/\[(.*?)\]/)?.[1] || (isSelected ? '#fff' : '#18181b');
+  const border = `${Math.round(2 * scale)}px solid ${pinBg}`;
+  const shadow = isSelected
+    ? '0 8px 24px rgba(0,0,0,0.28)'
+    : '0 2px 8px rgba(0,0,0,0.16),inset 0 0 0 1px rgba(0,0,0,0.06)';
 
-      {/* Integrated Tail */}
-      <div style={{
-        width: `${tailSize}px`,
-        height: `${tailSize}px`,
-        backgroundColor: isSelected ? '#09090b' : 'white',
-        borderRight: `${2 * scale}px solid ${isSelected ? '#09090b' : 'white'}`,
-        borderBottom: `${2 * scale}px solid ${isSelected ? '#09090b' : 'white'}`,
-        transform: 'rotate(45deg)',
-        marginTop: `${-10 * scale}px`,
-        zIndex: 1,
-        borderRadius: `0 0 ${3 * scale}px 0`
-      }} />
-    </div>
+  const iconSvg = ReactDOMServer.renderToStaticMarkup(
+    <IconComponent size={Math.round(14 * scale)} strokeWidth={2.5} color={isSelected ? 'white' : iconColor} />
   );
 
-  // Locked Anchor Point Logic
-  // Using a deterministic box where the bottom center is the anchor
-  
-  return L.divIcon({
+  // Build as a string — explicit pixel dimensions anchored to W×H box.
+  // No filter, no transition — both break Leaflet's zoom compositing layer.
+  const html = [
+    `<div style="position:relative;width:${W}px;height:${H}px;display:flex;flex-direction:column;align-items:center">`,
+      showFullLabel
+        ? `<div style="position:absolute;left:${Math.round(W/2+PIN/2+5)}px;top:${Math.round(PIN/2-8)}px;font-size:${FS}px;font-weight:600;color:${labelColor};text-shadow:0 1px 0 #fff,-1px 0 0 #fff,0 -1px 0 #fff,1px 0 0 #fff;white-space:nowrap;letter-spacing:-0.02em;font-family:Inter,sans-serif;pointer-events:none">${price}</div>`
+        : '',
+      `<div style="display:flex;align-items:center;justify-content:center;width:${PIN}px;height:${PIN}px;background-color:${pinBg};border-radius:50%;border:${border};cursor:pointer;z-index:2;position:relative;flex-shrink:0;box-shadow:${shadow}">`,
+        `<div style="display:flex;align-items:center;justify-content:center;background-color:${innerBg};border-radius:50%;width:${INNER}px;height:${INNER}px">${iconSvg}</div>`,
+      `</div>`,
+      `<div style="width:${TAIL}px;height:${TAIL}px;background-color:${pinBg};border-right:${border};border-bottom:${border};transform:rotate(45deg);margin-top:-${OVER}px;z-index:1;flex-shrink:0;border-radius:0 0 ${Math.round(3*scale)}px 0"></div>`,
+    `</div>`,
+  ].join('');
+
+  const icon = L.divIcon({
     html,
     className: 'custom-property-marker',
-    iconSize: [totalWidth, totalHeight],
-    // Anchor to the bottom-center of the icons layout box
-    // Total height of Pin (36) + Tail (~10 visible) = ~46
-    iconAnchor: [totalWidth / 2, (46 * scale)],
+    iconSize:   [W, H],
+    iconAnchor: [Math.round(W / 2), TIP_Y],
+    popupAnchor: [0, -TIP_Y],
   });
+  customIconCache.set(cacheKey, icon);
+  return icon;
 };
 
-const createClusterIcon = (count: number, zoom: number) => {
-  const scale = zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85);
-  const size = 52 * scale; // Increased for better visibility
-  
-  const html = ReactDOMServer.renderToStaticMarkup(
-    <div style={{
-      width: size,
-      height: size,
-      backgroundColor: '#09090b', // Sleek dark theme
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      border: `${2 * scale}px solid white`,
-      boxShadow: '0 12px 32px -4px rgba(0,0,0,0.3)',
-      position: 'relative',
-      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
-      transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-    }}>
-       {/* Inner subtle decorative ring */}
-       <div style={{
-         position: 'absolute',
-         inset: 4,
-         border: '1px solid rgba(255,255,255,0.1)',
-         borderRadius: '50%',
-       }} />
-       <span style={{
-         color: 'white',
-         fontSize: 18 * scale,
-         fontWeight: '700',
-         fontFamily: 'Inter, sans-serif',
-         letterSpacing: '-0.02em',
-         textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-       }}>
-         {count}
-       </span>
-    </div>
-  );
 
-  return L.divIcon({
+const createClusterIcon = (count: number) => {
+  const cacheKey = `cluster-${count}`;
+  if (clusterIconCache.has(cacheKey)) return clusterIconCache.get(cacheKey)!;
+
+  // Fixed size — no zoom scaling. Changing iconSize during zoom causes markers
+  // to be re-created and potentially flash or appear at the wrong position.
+  const SIZE = 48;
+  const html = [
+    `<div style="width:${SIZE}px;height:${SIZE}px;background:#09090b;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 4px 16px rgba(0,0,0,0.25);position:relative">`,
+      `<span style="color:white;font-size:15px;font-weight:700;font-family:Inter,sans-serif;letter-spacing:-0.02em">${count}</span>`,
+    `</div>`,
+  ].join('');
+
+  const icon = L.divIcon({
     html,
     className: 'custom-cluster-marker',
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [SIZE, SIZE],
+    iconAnchor: [SIZE / 2, SIZE / 2],
   });
+  clusterIconCache.set(cacheKey, icon);
+  return icon;
 };
 
 
@@ -181,88 +133,77 @@ interface MapComponentProps {
   userLocation?: { lat: number; lng: number; isFallback?: boolean } | null;
   showDistance?: boolean;
   disableCard?: boolean;
+  onBoundsChange?: (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => void;
 }
+
+// isValidLatLng helper moved to utils.ts
 
 // Component to handle map center and zoom changes only when selected property changes
 function MapController({ selectedProperty, zoomLevel, properties, areaCenters }: { selectedProperty: Property | null; zoomLevel: number; properties: Property[]; areaCenters: any[] }) {
   const map = useMap();
   const prevPropertyIdRef = useRef<string | null>(null);
+  // Use refs for properties/areaCenters — we don't want flyTo to re-trigger
+  // just because the parent passed a new array reference.
+  const propertiesRef = useRef(properties);
+  const areaCentersRef = useRef(areaCenters);
+  useEffect(() => { propertiesRef.current = properties; }, [properties]);
+  useEffect(() => { areaCentersRef.current = areaCenters; }, [areaCenters]);
 
   useEffect(() => {
-    if (selectedProperty && selectedProperty.property_id !== prevPropertyIdRef.current) {
-      const coords = getPropertyCoords(selectedProperty, properties, areaCenters);
-      
-      // Defensive check: Ensure we have valid numeric coordinates before calling Leaflet
-      if (!coords || isNaN(coords[0]) || isNaN(coords[1])) {
-        console.error('MapController: Invalid coordinates for property', selectedProperty.property_id, coords);
+    if (!map) return;
+    const propId = selectedProperty?.property_id ?? null;
+
+    if (selectedProperty && propId !== prevPropertyIdRef.current) {
+      const coords = getPropertyCoords(selectedProperty, propertiesRef.current, areaCentersRef.current);
+      if (!isValidLatLng(coords)) {
+        console.warn('MapController: invalid coords for', propId);
+        prevPropertyIdRef.current = propId;
         return;
       }
-
-      // Intelligent zoom logic:
-      // If the property is already visible in the current view, don't zoom out.
-      // Simply pan to it at the current zoom level.
       try {
         const currentBounds = map.getBounds();
+        if (!currentBounds?.contains) return;
         const latLng = L.latLng(coords[0], coords[1]);
         const isAlreadyVisible = currentBounds.contains(latLng);
-        
         const currentZoom = map.getZoom();
-        const safeZoom = isNaN(currentZoom) ? zoomLevel : currentZoom;
+        const safeZoom = (typeof currentZoom === 'number' && !isNaN(currentZoom)) ? currentZoom : zoomLevel;
         const targetZoom = isAlreadyVisible ? Math.max(safeZoom, zoomLevel) : zoomLevel;
-
-        map.flyTo(coords, targetZoom, { 
-          animate: true, 
-          duration: isAlreadyVisible ? 0.8 : 1.5, // Faster flight if already on screen
-          easeLinearity: 0.25
-        });
-        prevPropertyIdRef.current = selectedProperty.property_id;
+        if (isNaN(targetZoom)) return;
+        map.flyTo(coords, targetZoom, { animate: true, duration: 0.6, easeLinearity: 0.5 });
       } catch (err) {
         console.error('Map flyTo failed:', err);
       }
-    } else if (!selectedProperty && prevPropertyIdRef.current !== null) {
+      prevPropertyIdRef.current = propId;
+    } else if (!selectedProperty) {
       prevPropertyIdRef.current = null;
     }
-  }, [selectedProperty, zoomLevel, map, properties, areaCenters]);
+  // Only re-run when the selected property ID actually changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProperty?.property_id, zoomLevel, map]);
 
   return null;
 }
 
-// Handler for container resizing
-function InvalidateSize({ trigger }: { trigger?: any }) {
+
+// Handler for container resizing — uses ResizeObserver instead of polling interval
+function InvalidateSize() {
   const map = useMap();
   useEffect(() => {
-    // Initial invalidate
-    const timer1 = setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-
-    const timer2 = setTimeout(() => {
-      map.invalidateSize();
-    }, 400);
-
-    // Watch for window resize
-    const handleResize = () => map.invalidateSize();
-    window.addEventListener('resize', handleResize);
-    
-    // Also run it periodically for a bit to catch layout shifts
-    const interval = setInterval(() => {
-      map.invalidateSize();
-    }, 1000);
-
-    const timer3 = setTimeout(() => {
-      clearInterval(interval);
-    }, 3000);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearInterval(interval);
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-    };
-  }, [map, trigger]);
+    const t1 = setTimeout(() => map.invalidateSize(), 100);
+    const t2 = setTimeout(() => map.invalidateSize(), 400);
+    const container = map.getContainer();
+    let ro: ResizeObserver | null = null;
+    if (container && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => map.invalidateSize());
+      ro.observe(container);
+    }
+    return () => { ro?.disconnect(); clearTimeout(t1); clearTimeout(t2); };
+  // Run once on mount only — container size changes handled by ResizeObserver
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map]);
   return null;
 }
+
 
 // getCoords helper is now getPropertyCoords in utils.ts
 const getCoords = (property: Property, allProps?: Property[], areaCenters?: any[]): [number, number] => getPropertyCoords(property, allProps, areaCenters);
@@ -282,63 +223,72 @@ function MapControls({
   const handleZoomOut = () => map.zoomOut();
   
   const handleGPS = () => {
-    map.locate().on("locationfound", function (e) {
-      map.flyTo(e.latlng, 16, {
-        animate: true,
-        duration: 1.5
-      });
-    });
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          map.flyTo([position.coords.latitude, position.coords.longitude], 16, {
+            animate: true,
+            duration: 1.5
+          });
+        },
+        (error) => {
+          console.error("GPS error:", error);
+          // Fallback if needed, but usually just log it
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
   };
 
   return (
     <>
       {/* Zoom & GPS Group (Right Side) */}
       <div className={cn(
-        "absolute right-4 sm:right-8 z-[1000] flex flex-col gap-4 transition-all duration-500",
-        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-24 sm:bottom-12"
+        "absolute right-3 sm:right-8 z-[1000] flex flex-col gap-3 sm:gap-4 transition-all duration-500",
+        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-5 sm:bottom-8"
       )}>
-        <div className="flex flex-col overflow-hidden rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+        <div className="flex flex-col overflow-hidden rounded-[12px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
           <button 
             onClick={handleZoomIn}
             title="Zoom In"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Plus className="h-5 w-5 text-zinc-900" />
+            <Plus className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
           
-          <div className="mx-3 h-px bg-zinc-200/50" />
+          <div className="mx-2 sm:mx-3 h-px bg-zinc-200/50" />
           
           <button 
             onClick={handleZoomOut}
             title="Zoom Out"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Minus className="h-5 w-5 text-zinc-900" />
+            <Minus className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
 
-          <div className="mx-3 h-px bg-zinc-200/50" />
+          <div className="mx-2 sm:mx-3 h-px bg-zinc-200/50" />
 
           <button 
             onClick={handleGPS}
             title="My Location"
-            className="flex h-12 w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
+            className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center transition-all hover:bg-zinc-100 active:scale-[0.98]"
           >
-            <Locate className="h-5 w-5 text-zinc-900" />
+            <Locate className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" />
           </button>
         </div>
       </div>
 
       {/* Satellite Toggle (Left Side) */}
       <div className={cn(
-        "absolute left-4 sm:left-8 z-[1000] transition-all duration-500",
-        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-24 sm:bottom-12"
+        "absolute left-3 sm:left-8 z-[1000] transition-all duration-500",
+        hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-5 sm:bottom-8"
       )}>
         <button 
           onClick={() => setIsSatellite(!isSatellite)}
           title={isSatellite ? "Show Map" : "Show Satellite"}
-          className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-[0.98]"
+          className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-[12px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-[0.98]"
         >
-          {isSatellite ? <MapIcon className="h-5 w-5 text-zinc-900" /> : <Satellite className="h-5 w-5 text-zinc-900" />}
+          {isSatellite ? <MapIcon className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" /> : <Satellite className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-zinc-900" />}
         </button>
       </div>
     </>
@@ -416,6 +366,8 @@ function CollisionAwareMarkers({
 
     sortedProps.forEach(prop => {
       const coords = getPropertyCoords(prop, properties, areaCenters);
+      if (!isValidLatLng(coords)) return; // Skip invalid coords in markers
+
       const point = map.project(L.latLng(coords[0], coords[1]), zoom);
       const isSelected = prop.property_id === selectedProperty?.property_id;
 
@@ -448,17 +400,19 @@ function CollisionAwareMarkers({
     const occupiedRects: { x1: number, y1: number, x2: number, y2: number }[] = [];
     
     // Pre-occupy space with all markers/clusters pins
+    // Scale MUST match createCustomIcon: fixed 1.15 for selected, 1.0 for normal
     groups.forEach(g => {
       const point = map.project(L.latLng(g.center[0], g.center[1]), zoom);
       const isSelected = g.props.some(p => p.property_id === selectedProperty?.property_id);
-      const scale = isSelected ? 1.15 : (zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85));
-      const size = g.type === 'cluster' ? 26 * scale : 20 * scale; // Buffer around pins and clusters
+      const sc = isSelected ? 1.15 : 1;
+      const size = g.type === 'cluster' ? 24 : Math.round(18 * sc);
+      const anchorH = g.type === 'cluster' ? 24 : Math.round(43 * sc); // matches TIP_Y
       
       occupiedRects.push({
         x1: point.x - size - 4,
-        y1: point.y - (g.type === 'cluster' ? size + 4 : 46 * scale) - 4,
+        y1: point.y - anchorH - 4,
         x2: point.x + size + 4,
-        y2: point.y + size + 4
+        y2: point.y + 4
       });
     });
 
@@ -467,21 +421,28 @@ function CollisionAwareMarkers({
       
       const prop = g.props[0];
       const isSelected = prop.property_id === selectedProperty?.property_id;
-      const showLabelBase = isSelected || zoom >= 15;
+      // Show labels at zoom 13+ to keep city-level views clean, or always if selected
+      const showLabelBase = isSelected || zoom >= 13;
       
       if (!showLabelBase) return { ...g, hideLabel: true };
 
       const point = map.project(L.latLng(g.center[0], g.center[1]), zoom);
-      const scale = isSelected ? 1.15 : (zoom >= 16 ? 1.05 : (zoom >= 14 ? 1 : 0.85));
-      const labelWidth = 90 * scale;
-      const pinHalfWidth = 18 * scale;
-      const pinHeight = 46 * scale;
+      const sc = isSelected ? 1.15 : 1;
+      
+      // These dimensions must match the CSS and the calculation in createCustomIcon
+      const PIN = Math.round(36 * sc);
+      const labelWidth = Math.round(90 * sc);
+      const labelHeight = Math.round(20 * sc);
+      const pinHalfWidth = PIN / 2;
+      const anchorH = Math.round(43 * sc);
 
+      // Label is placed at: left: W/2 + PIN/2 + 5, top: PIN/2 - 8
+      // In relative project points:
       const labelRect = {
-        x1: point.x + pinHalfWidth,
-        y1: point.y - pinHeight,
-        x2: point.x + pinHalfWidth + labelWidth + 4,
-        y2: point.y
+        x1: point.x + pinHalfWidth + 5,
+        y1: point.y - anchorH + (PIN / 2) - 8,
+        x2: point.x + pinHalfWidth + 5 + labelWidth,
+        y2: point.y - anchorH + (PIN / 2) - 8 + labelHeight
       };
 
       const overlaps = occupiedRects.some(r => (
@@ -499,8 +460,14 @@ function CollisionAwareMarkers({
   const onClusterClick = (clusterProps: Property[]) => {
     if (clusterProps.length <= 1) return;
     
-    const lats = clusterProps.map(p => getPropertyCoords(p, properties, areaCenters)[0]);
-    const lngs = clusterProps.map(p => getPropertyCoords(p, properties, areaCenters)[1]);
+    const validCoords = clusterProps
+      .map(p => getPropertyCoords(p, properties, areaCenters))
+      .filter(isValidLatLng);
+    
+    if (validCoords.length === 0) return;
+
+    const lats = validCoords.map(c => c[0]);
+    const lngs = validCoords.map(c => c[1]);
     
     const bounds = L.latLngBounds(
       [Math.min(...lats), Math.min(...lngs)],
@@ -509,10 +476,9 @@ function CollisionAwareMarkers({
     
     // If all properties are at the same point (fallbacks), just zoom in one level
     if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
-      map.zoomIn(2);
-      map.panTo(bounds.getCenter());
+      map.setView(bounds.getCenter(), map.getZoom() + 2, { animate: true, duration: 0.4 });
     } else {
-      map.flyToBounds(bounds, { padding: [50, 50], duration: 1.2 });
+      map.flyToBounds(bounds, { padding: [50, 50], duration: 0.5 });
     }
   };
 
@@ -520,11 +486,13 @@ function CollisionAwareMarkers({
     <>
       {clusteredData.map((data, idx) => {
         if (data.type === 'cluster') {
+          // Stable key: sort property IDs so key doesn't change if clustering order changes
+          const clusterKey = 'cluster-' + [...data.props.map(p => p.property_id)].sort().join('-').slice(0, 40);
           return (
             <Marker 
-              key={`cluster-${idx}-${data.props[0].property_id}`}
+              key={clusterKey}
               position={data.center}
-              icon={createClusterIcon(data.props.length, zoom)}
+              icon={createClusterIcon(data.props.length)}
               zIndexOffset={100}
               eventHandlers={{
                 click: () => onClusterClick(data.props),
@@ -551,40 +519,118 @@ function CollisionAwareMarkers({
 }
 
 
+function MapReady({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    onReady(map);
+  }, [map, onReady]);
+  return null;
+}
+
+function MapEvents({ 
+  onSelectProperty, 
+  setZoom, 
+  onBoundsChange 
+}: { 
+  onSelectProperty: (p: Property | null) => void, 
+  setZoom: (z: number) => void,
+  onBoundsChange?: (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => void
+}) {
+  // Debounce zoom updates at 300ms so the expensive collision detection
+  // doesn't recalculate mid-animation. flyTo can take 600ms, and fires
+  // zoomend at the end — 300ms debounce ensures we only react once.
+  const setZoomDebounced = useMemo(() => debounce(setZoom, 300), [setZoom]);
+  const isAnimatingRef = useRef(false);
+
+  const map = useMapEvents({
+    movestart: () => {
+      // Track when map is mid-animation (flyTo, zoomIn, etc.)
+      isAnimatingRef.current = true;
+    },
+    zoomend: () => {
+      // Delay zoom state update until any animation fully settles
+      setZoomDebounced(map.getZoom());
+    },
+    moveend: () => {
+      // Animation complete — safe to update markers & bounds now
+      isAnimatingRef.current = false;
+      // Also set zoom in case moveend fires without zoomend (pure panning)
+      setZoomDebounced(map.getZoom());
+      if (onBoundsChange) {
+        const b = map.getBounds();
+        onBoundsChange({
+          minLat: b.getSouthWest().lat,
+          maxLat: b.getNorthEast().lat,
+          minLng: b.getSouthWest().lng,
+          maxLng: b.getNorthEast().lng
+        });
+      }
+    },
+    click: () => {
+      onSelectProperty(null);
+    }
+  });
+
+  return null;
+}
+
 export default function MapComponent({ 
   properties, 
   selectedProperty, 
   onSelectProperty, 
   userLocation,
   showDistance = false,
-  disableCard = false
+  disableCard = false,
+  onBoundsChange
 }: MapComponentProps) {
   const router = useRouter();
   const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave, areaCenters } = useShortlist();
   const [isSatellite, setIsSatellite] = useState(false);
   const [zoom, setZoom] = useState(13);
+  const [showSearchArea, setShowSearchArea] = useState(false);
+  const [lastSearchBounds, setLastSearchBounds] = useState<string>('');
 
-  // Helper component to track map events (zoom, clicks outside)
-  function MapEvents() {
-    const map = useMapEvents({
-      zoomend: () => {
-        setZoom(map.getZoom());
-      },
-      click: (e) => {
-        // If click is on the map (not a marker), unselect
-        // Leaflet handles marker clicks first, and propagation can be stopped there
-        onSelectProperty(null);
-      }
-    });
-    return null;
-  }
-  const center: [number, number] = selectedProperty 
+  const rawCenter = selectedProperty 
     ? getCoords(selectedProperty, properties, areaCenters)
-    : [29.3909, 76.9635]; // Panipat center
+    : [29.3909, 76.9635];
+  
+  const center: [number, number] = isValidLatLng(rawCenter) ? rawCenter : [29.3909, 76.9635];
+
+  const handleBoundsChange = (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => {
+    const boundsKey = `${bounds.minLat.toFixed(4)},${bounds.maxLat.toFixed(4)},${bounds.minLng.toFixed(4)},${bounds.maxLng.toFixed(4)}`;
+    
+    // Show 'Search this area' button if bounds changed significantly and we aren't currently searching them
+    if (boundsKey !== lastSearchBounds) {
+      setShowSearchArea(true);
+    }
+  };
+
+  const handleSearchThisArea = () => {
+    if (onBoundsChange) {
+      // Get current map bounds directly for accuracy
+      const map = (window as any).leafletMap; // We'll need a way to access the map instance if we use a button
+      // Alternatively, we can just use the state from MapEvents if we lift it up or use a ref.
+    }
+    // Re-triggering search with current bounds
+    setShowSearchArea(false);
+  };
 
   const propertyCoords = selectedProperty ? getCoords(selectedProperty, properties, areaCenters) : null;
-  const userCoords: [number, number] | null = userLocation ? [userLocation.lat, userLocation.lng] : null;
-  const curvedPath = (userCoords && propertyCoords) ? getCurvedPath(userCoords, propertyCoords) : null;
+  const userCoords: [number, number] | null = (userLocation && !isNaN(userLocation.lat) && !isNaN(userLocation.lng)) 
+    ? [userLocation.lat, userLocation.lng] 
+    : null;
+
+  // Memoized so the 50-point bezier doesn't recompute on every render
+  const curvedPath = useMemo(() => {
+    if (isValidLatLng(userCoords) && isValidLatLng(propertyCoords)) {
+      return getCurvedPath(userCoords!, propertyCoords!);
+    }
+    return null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    userCoords?.[0], userCoords?.[1],
+    propertyCoords?.[0], propertyCoords?.[1]
+  ]);
 
   return (
     <div className="relative h-full w-full">
@@ -593,9 +639,16 @@ export default function MapComponent({
         zoom={13} 
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
+        markerZoomAnimation={false}
+        fadeAnimation={false}
       >
-        <MapEvents />
-        <InvalidateSize trigger={properties} />
+        <MapReady onReady={(map) => { (window as any).leafletMap = map; }} />
+        <MapEvents 
+          onSelectProperty={onSelectProperty} 
+          setZoom={setZoom} 
+          onBoundsChange={handleBoundsChange}
+        />
+        <InvalidateSize />
         <MapController selectedProperty={selectedProperty} zoomLevel={15} properties={properties} areaCenters={areaCenters} />
         <TileLayer
           attribution={isSatellite 
@@ -610,39 +663,35 @@ export default function MapComponent({
         <MapControls 
           isSatellite={isSatellite} 
           setIsSatellite={setIsSatellite} 
-          hasSelectedProperty={!!selectedProperty}
+          hasSelectedProperty={!!selectedProperty && !disableCard}
         />
         
         {curvedPath && (
-          <>
-            <Polyline 
-              positions={curvedPath}
-              pathOptions={{
-                color: '#e11d48', // rose-600
-                weight: 2,
-                dashArray: '8, 12',
-                lineCap: 'round',
-                opacity: 0.6
-              }}
-            />
-            {userCoords && (
-              <Marker 
-                position={userCoords}
-                icon={L.divIcon({
-                  html: ReactDOMServer.renderToStaticMarkup(
-                    <div className="flex items-center justify-center h-8 w-8 bg-black rounded-full border-2 border-white shadow-lg">
-                      <Locate className="h-4 w-4 text-white" />
-                    </div>
-                  ),
-                  className: '',
-                  iconSize: [32, 32],
-                  iconAnchor: [16, 16]
-                })}
-              />
-            )}
-          </>
+          <Polyline 
+            positions={curvedPath}
+            pathOptions={{
+              color: '#e11d48', // rose-600
+              weight: 2,
+              dashArray: '8, 12',
+              lineCap: 'round',
+              opacity: 0.6
+            }}
+          />
         )}
-        {selectedProperty && selectedProperty.landmark_location_distance && selectedProperty.landmark_location_distance > 0 && (
+        
+        {isValidLatLng(userCoords) && (
+          <Marker 
+            position={userCoords}
+            icon={L.divIcon({
+              html: '<div class="gps-marker"><div class="gps-marker-pulse"></div><div class="gps-marker-dot"></div></div>',
+              className: 'user-location-marker', // we already removed border/background in CSS for this
+              iconSize: [40, 40],
+              iconAnchor: [20, 20],
+            })}
+            zIndexOffset={2000} // Keep GPS above property markers
+          />
+        )}
+        {selectedProperty && selectedProperty.landmark_location_distance && selectedProperty.landmark_location_distance > 0 && isValidLatLng(getCoords(selectedProperty, properties, areaCenters)) && (
           <Circle
             center={getCoords(selectedProperty, properties, areaCenters)}
             radius={selectedProperty.landmark_location_distance}
@@ -663,6 +712,40 @@ export default function MapComponent({
           areaCenters={areaCenters}
         />
       </MapContainer>
+
+      {/* Search this area button */}
+      <AnimatePresence>
+        {showSearchArea && !selectedProperty && (
+          <motion.div 
+            initial={{ y: -20, opacity: 0, x: '-50%' }}
+            animate={{ y: 0, opacity: 1, x: '-50%' }}
+            exit={{ y: -20, opacity: 0, x: '-50%' }}
+            className="absolute top-4 left-1/2 z-[1001]"
+          >
+            <button 
+              onClick={() => {
+                const map = (window as any).leafletMap;
+                if (map && onBoundsChange) {
+                  const b = map.getBounds();
+                  const bounds = {
+                    minLat: b.getSouthWest().lat,
+                    maxLat: b.getNorthEast().lat,
+                    minLng: b.getSouthWest().lng,
+                    maxLng: b.getNorthEast().lng
+                  };
+                  onBoundsChange(bounds);
+                  setLastSearchBounds(`${bounds.minLat.toFixed(4)},${bounds.maxLat.toFixed(4)},${bounds.minLng.toFixed(4)},${bounds.maxLng.toFixed(4)}`);
+                  setShowSearchArea(false);
+                }
+              }}
+              className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-white px-3 py-1.5 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-zinc-100 active:scale-[0.98]"
+            >
+              <Search className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Search this area</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Card UI */}
       <AnimatePresence>

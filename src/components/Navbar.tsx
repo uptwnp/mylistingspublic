@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, Home, Menu, ShoppingCart, User, LogOut, ChevronDown, MapPin, Building2, Trees, Globe, SlidersHorizontal, Search, Store, X, Wallet } from 'lucide-react';
 import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
@@ -14,6 +13,8 @@ import { useCallback } from 'react';
 import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
 import { useBrand } from '@/context/BrandContext';
 import { getAreas } from '@/lib/supabase';
+import { Icons } from '@/components/ui/Icons';
+
 
 
 export default function Navbar() {
@@ -30,7 +31,8 @@ export default function Navbar() {
     maxSize, setMaxSize,
     selectedHighlights, setSelectedHighlights,
     clearFilters,
-    closeAllModals
+    closeAllModals,
+    syncFilters
   } = useShortlist();
   const brand = useBrand();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -102,25 +104,46 @@ export default function Navbar() {
     };
   }, [isForceExpanded]);
 
-  const handleApplyFilters = useCallback((overrides?: { city?: string; area?: string; budget?: { label: string; value: number }; type?: string }) => {
+  const handleApplyFilters = useCallback((overrides?: { 
+    city?: string; 
+    area?: string; 
+    budget?: { label: string; value: number }; 
+    type?: string;
+    keywords?: string;
+    minSize?: string;
+    maxSize?: string;
+    highlights?: string[];
+  }) => {
     const finalCity = overrides?.city ?? selectedCity;
     const finalArea = overrides?.area ?? query;
     const finalBudget = overrides?.budget ?? budget;
     const finalType = overrides?.type ?? propertyType;
+    const finalKeywords = overrides?.keywords !== undefined ? overrides.keywords : keywords;
+    const finalMinSize = overrides?.minSize !== undefined ? overrides.minSize : minSize;
+    const finalMaxSize = overrides?.maxSize !== undefined ? overrides.maxSize : maxSize;
+    const finalHighlights = overrides?.highlights !== undefined ? overrides.highlights : selectedHighlights;
     
     // Create query params for extra filters
     const params = new URLSearchParams();
-    if (keywords) params.set('q', keywords);
-    if (minSize) params.set('minSize', minSize);
-    if (maxSize) params.set('maxSize', maxSize);
-    if (selectedHighlights.length > 0) params.set('highlights', selectedHighlights.join(','));
+    if (finalKeywords) params.set('q', finalKeywords);
+    if (finalMinSize) params.set('minSize', finalMinSize);
+    if (finalMaxSize) params.set('maxSize', finalMaxSize);
+    if (finalHighlights.length > 0) params.set('highlights', finalHighlights.join(','));
+
+    // Check if the current URL is already what we're trying to push
+    const currentPath = pathname;
+    const currentParams = searchParams.toString();
+    const currentUrlString = currentParams ? `${currentPath}?${currentParams}` : currentPath;
 
     // Prioritize hierarchical SEO URL for primary search parameters
     const seoUrl = getSeoUrl(finalCity, finalType, finalArea, finalBudget.label);
     if (seoUrl) {
       const queryString = params.toString();
       const url = queryString ? `${seoUrl}${queryString ? `?${queryString}` : ''}` : seoUrl;
-      router.push(url);
+      
+      if (url !== currentUrlString) {
+        router.push(url);
+      }
       closeAllModals(true);
       return;
     }
@@ -132,105 +155,90 @@ export default function Navbar() {
     if (finalType !== "Any Type") params.set('type', finalType);
 
     const url = `/explore?${params.toString()}`;
-    router.push(url);
+    if (url !== currentUrlString) {
+      router.push(url);
+    }
     closeAllModals(true);
-  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, closeAllModals]);
+  }, [selectedCity, query, keywords, budget, propertyType, minSize, maxSize, selectedHighlights, router, closeAllModals, pathname, searchParams]);
+
+  // Tracking to prevent Sync vs Auto-apply fighting
+  const lastSyncedPathRef = useRef<string>('');
+  const [hasSyncedInitialUrl, setHasSyncedInitialUrl] = useState(false);
+  const { isInitialized } = useShortlist();
 
   // Sync search state from URL
   useEffect(() => {
     // Check if it's a dynamic SEO route
+    const currentPath = pathname;
+    const currentParams = searchParams.toString();
+    const currentUrl = currentParams ? `${currentPath}?${currentParams}` : currentPath;
+    
+    // Skip if we just synced this URL to prevent loops
+    if (lastSyncedPathRef.current === currentUrl) return;
+
     const seoData = parseSeoSlug(pathname.slice(1));
     const isStandardExplore = pathname === '/explore' || pathname === '/map';
     
     // Only sync if we're on the /explore page, /map page, OR an SEO route
     if (!isStandardExplore && !seoData) return;
     
+    const nextFilters: any = {};
+    
     if (seoData) {
-      // Priority: Hierarchical SEO segments
-      if (seoData.city && seoData.city !== selectedCity) setSelectedCity(seoData.city);
-      if (seoData.type && seoData.type !== propertyType) setPropertyType(seoData.type);
-      if (seoData.area && seoData.area !== query) setQuery(seoData.area);
-      else if (!seoData.area && query !== '') setQuery(''); // Clear if it's 'anywhere' in SEO path
+      if (seoData.city) nextFilters.city = seoData.city;
+      
+      const normalizedType = (seoData.type || 'Any Type').trim();
+      const isActuallyAny = ['all-types', 'any type', 'any', 'everything', 'properties'].includes(normalizedType.toLowerCase());
+      nextFilters.type = isActuallyAny ? 'Any Type' : normalizedType;
+      
+      const normalizedArea = (seoData.area || '').trim();
+      const isNewAnywhere = !normalizedArea || normalizedArea.toLowerCase() === 'anywhere';
+      nextFilters.area = isNewAnywhere ? '' : normalizedArea;
 
       if (seoData.budget) {
-        const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === seoData.budget) || BUDGET_OPTIONS[0];
-        if (foundBudget.label !== budget.label) setBudget(foundBudget);
-      } else if (budget.label !== 'Any Budget') {
-        setBudget(BUDGET_OPTIONS[0]);
+        nextFilters.budget = BUDGET_OPTIONS.find(opt => opt.label.toLowerCase() === seoData.budget?.toLowerCase()) || BUDGET_OPTIONS[0];
+      } else {
+        nextFilters.budget = BUDGET_OPTIONS[0];
       }
-    }
+    } else {
+      // Standard explore/map
+      const city = searchParams.get('city');
+      if (city) nextFilters.city = city;
 
-    // Secondary: Sync other filters from search params (supports combination)
-    // Only sync if they were EXPLICITLY provided to avoid resetting SEO route state
-    const keywordsParam = searchParams.get('q') || searchParams.get('keywords');
-    if (keywordsParam !== null && keywordsParam !== keywords) setKeywords(keywordsParam);
-    
-    const minSizeParam = searchParams.get('minSize');
-    if (minSizeParam !== null && minSizeParam !== minSize) setMinSize(minSizeParam);
-    
-    const maxSizeParam = searchParams.get('maxSize');
-    if (maxSizeParam !== null && maxSizeParam !== maxSize) setMaxSize(maxSizeParam);
-    
-    const highlightsParam = searchParams.get('highlights');
-    if (highlightsParam !== null) {
-      const hList = highlightsParam.split(',').filter(Boolean);
-      if (JSON.stringify(hList) !== JSON.stringify(selectedHighlights)) {
-        setSelectedHighlights(hList);
-      }
-    }
-
-    // Standard sync ONLY if not on SEO route or if params are present
-    if (!seoData) {
       const area = searchParams.get('area');
-      if (area !== null && area !== query) setQuery(area);
+      if (area !== null) nextFilters.area = area === 'anywhere' ? '' : area;
 
       const budgetLabel = searchParams.get('budget');
-      if (budgetLabel !== null) {
-        const foundBudget = BUDGET_OPTIONS.find(opt => opt.label === budgetLabel) || BUDGET_OPTIONS[0];
-        if (foundBudget.label !== budget.label) setBudget(foundBudget);
+      if (budgetLabel) {
+        nextFilters.budget = BUDGET_OPTIONS.find(opt => opt.label === budgetLabel) || BUDGET_OPTIONS[0];
       }
 
       const type = searchParams.get('type');
-      if (type !== null && type !== propertyType) setPropertyType(type);
-
-      const city = searchParams.get('city');
-      if (city && city !== selectedCity) {
-        setSelectedCity(city);
-      }
+      if (type) nextFilters.type = type;
     }
-  }, [pathname, searchParams]);
 
-  // Auto-apply when on Explore or SEO property pages
-  useEffect(() => {
-    const isStandardExplore = pathname === '/explore' || pathname === '/map';
-    const isSeoPage = !!parseSeoSlug(pathname.slice(1));
-
-    if (isStandardExplore || isSeoPage) {
-      // Avoid recursive updates: only push if state changed from URL
-      const seoData = parseSeoSlug(pathname.slice(1));
-      
-      const areaInUrl = (seoData?.area || searchParams.get('area') || '').trim();
-      const budgetInUrl = (seoData?.budget || searchParams.get('budget') || 'Any Budget').trim();
-      const typeInUrl = (seoData?.type || searchParams.get('type') || 'Any Type').trim();
-      const keywordsInUrl = (searchParams.get('q') || searchParams.get('keywords') || '').trim();
-      const minSizeInUrl = (searchParams.get('minSize') || '').trim();
-      const maxSizeInUrl = (searchParams.get('maxSize') || '').trim();
-      const highlightsInUrl = (searchParams.get('highlights') || '').trim();
-      
-      const isDifferent = 
-        query.trim() !== areaInUrl || 
-        budget.label.trim() !== budgetInUrl || 
-        propertyType.trim() !== typeInUrl ||
-        keywords.trim() !== keywordsInUrl ||
-        minSize.toString().trim() !== minSizeInUrl ||
-        maxSize.toString().trim() !== maxSizeInUrl ||
-        selectedHighlights.join(',') !== highlightsInUrl;
-        
-      if (isDifferent) {
-        handleApplyFilters();
-      }
+    // Common filters
+    const keywordsParam = searchParams.get('q') || searchParams.get('keywords');
+    if (keywordsParam !== null) nextFilters.keywords = keywordsParam;
+    
+    const minSizeParam = searchParams.get('minSize');
+    if (minSizeParam !== null) nextFilters.minSize = minSizeParam;
+    
+    const maxSizeParam = searchParams.get('maxSize');
+    if (maxSizeParam !== null) nextFilters.maxSize = maxSizeParam;
+    
+    const highlightsParam = searchParams.get('highlights');
+    if (highlightsParam !== null) {
+      nextFilters.highlights = highlightsParam.split(',').filter(Boolean);
     }
-  }, [budget, propertyType, query, keywords, minSize, maxSize, selectedHighlights, handleApplyFilters, pathname, searchParams]);
+
+    // Perform batch sync
+    syncFilters(nextFilters);
+
+    lastSyncedPathRef.current = currentUrl;
+    setHasSyncedInitialUrl(true);
+  }, [pathname, searchParams, isInitialized, syncFilters]);
+
 
 
   const additionalFiltersCount = [
@@ -261,9 +269,9 @@ export default function Navbar() {
       <nav 
         ref={navRef}
         className={cn(
-        "fixed top-0 z-50 w-full transition-all duration-700 ease-in-out",
+        "fixed top-0 z-[70] w-full transition-all duration-700 ease-in-out",
         shouldShowCompact 
-          ? "border-b border-zinc-200/50 bg-[#fafafa]/80 backdrop-blur-3xl py-3 shadow-sm" 
+          ? "border-b border-zinc-200/50 bg-[#fafafa]/80 backdrop-blur-xl py-3 shadow-sm" 
           : "bg-white/40 backdrop-blur-xl py-4 sm:py-6"
       )}>
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">
@@ -273,10 +281,10 @@ export default function Navbar() {
             <div className="flex flex-1 items-center gap-0 sm:gap-6 min-w-0">
               <div className="flex items-center gap-2 group shrink-0">
                 <Link href="/" className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-zinc-900 shadow-lg shadow-black/10 transition-all hover:scale-105 ">
-                  <Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <Icons.Home className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </Link>
 
-                <AnimatePresence mode="popLayout" initial={false}>
+                <AnimatePresence mode="wait" initial={false}>
                   {(isMobile && shouldShowCompact) ? (
                     <motion.div 
                       key="mobile-search-pill"
@@ -296,7 +304,7 @@ export default function Navbar() {
                           }}
                           className="flex h-6 w-6 items-center justify-center -ml-1 active:scale-[0.98] transition-transform cursor-pointer"
                         >
-                          <Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
+                          <Icons.Search className="h-4 w-4 text-zinc-900" strokeWidth={3} />
                         </div>
                         <button 
                           onClick={() => {
@@ -374,7 +382,7 @@ export default function Navbar() {
                         )}
                         suppressHydrationWarning={true}
                       >
-                        <Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 ", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
+                        <Icons.Building2 className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 ", selectedCity === tabCity ? "text-zinc-900" : "text-zinc-300")} />
                         <span className="ty-micro font-bold">{tabCity}</span>
                         {selectedCity === tabCity && (
                           <div 
@@ -391,12 +399,12 @@ export default function Navbar() {
                         )}
                         suppressHydrationWarning={true}
                       >
-                        <Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 active:scale-[0.98]", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
+                        <Icons.Globe className={cn("h-4 w-4 sm:h-5 sm:w-5 transition-all group-hover:scale-110 active:scale-[0.98]", OTHER_CITIES.includes(selectedCity) ? "text-zinc-900" : "text-zinc-300")} />
                         <div className="relative flex items-center justify-center">
                           <span className="ty-micro font-bold leading-none">
                             {OTHER_CITIES.includes(selectedCity) ? selectedCity : "Other"}
                           </span>
-                          <ChevronDown className={cn(
+                          <Icons.ChevronDown className={cn(
                             "absolute left-full ml-1 mb-0.5 h-3 w-3 transition-transform text-zinc-400 group-hover:text-zinc-600", 
                             isOtherCityDropdownOpen && "rotate-180"
                           )} />
@@ -445,7 +453,7 @@ export default function Navbar() {
                 href="/sell" 
                 className="hidden xl:block rounded-full px-4 py-2 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-100"
               >
-                Sell Property
+                Sale Property
               </Link>
 
               <div className="relative" ref={menuRef}>
@@ -453,8 +461,8 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-all hover:shadow-md cursor-pointer ml-1 "
                 >
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    { (shortlistItems.length > 0 || !isMobile) ? (
+                  <AnimatePresence mode="wait" initial={false}>
+                    { (shortlistItems.length > 0 || !isMobile || shouldShowCompact) ? (
                       <motion.div
                         key="cart-icon"
                         initial={{ opacity: 0, rotateX: -90, y: 10 }}
@@ -467,7 +475,7 @@ export default function Navbar() {
                             "relative flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                             shortlistItems.length > 0 ? "bg-zinc-900 text-white hover:bg-zinc-700" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                           )}>
-                            <ShoppingCart className={cn("h-5 w-5", shortlistItems.length > 0 ? "text-zinc-300" : "text-zinc-600")} />
+                            <Icons.ShoppingCart className={cn("h-5 w-5", shortlistItems.length > 0 ? "text-zinc-300" : "text-zinc-600")} />
                             {shortlistItems.length > 0 && (
                               <span className="absolute -top-2 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f43f5e] border-2 border-white text-[9px] font-black text-white shadow-md">
                                 {shortlistItems.length}
@@ -495,11 +503,11 @@ export default function Navbar() {
                         }}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors"
                       >
-                        <Search className="h-4 w-4" strokeWidth={3} />
+                        <Icons.Search className="h-4 w-4" strokeWidth={3} />
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <Menu className="h-4 w-4 text-zinc-600" />
+                  <Icons.Menu className="h-4 w-4 text-zinc-600" />
                 </div>
 
                 <AnimatePresence>
@@ -516,23 +524,23 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Home className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
-                          Sell Property
+                          <Icons.Home className="h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
+                          Sale Property
                         </Link>
                         <Link 
                           href="/agent" 
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Building2 className="h-4 w-4 text-zinc-400" />
+                          <Icons.Building2 className="h-4 w-4 text-zinc-400" />
                           Agent
                         </Link>
                         <Link 
                           href="/refer" 
-                          className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-emerald-600 transition-colors hover:bg-emerald-50"
+                          className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-blue-600 transition-colors hover:bg-blue-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Wallet className="h-4 w-4 text-emerald-400" />
+                          <Icons.Wallet className="h-4 w-4 text-blue-400" />
                           Refer and Earn
                         </Link>
                         <Link 
@@ -540,7 +548,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <Heart className="h-4 w-4 text-zinc-400" />
+                          <Icons.Heart className="h-4 w-4 text-zinc-400" />
                           Saved properties
                         </Link>
                         <Link 
@@ -548,7 +556,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-3 ty-caption font-bold text-zinc-900 transition-colors hover:bg-zinc-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          <ShoppingCart className="h-4 w-4 text-zinc-400" />
+                          <Icons.ShoppingCart className="h-4 w-4 text-zinc-400" />
                           Shortlist
                         </Link>
                       </div>
@@ -604,7 +612,7 @@ export default function Navbar() {
                 onClick={() => setIsMobileSearchOpen(false)}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-100 text-zinc-900 shadow-sm transition-all active:scale-[0.98]"
               >
-                <X className="h-5 w-5" />
+                <Icons.X className="h-5 w-5" />
               </button>
               <div className="flex gap-4">
                 {["Panipat", "Karnal", "Other"].map((city) => {
@@ -675,15 +683,15 @@ export default function Navbar() {
                   className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-xl shadow-zinc-200/40 text-left transition-all active:scale-[0.98] active:bg-zinc-50"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="ty-subtitle font-bold text-zinc-900">Where?</h2>
-                    <MapPin className="h-5 w-5 text-zinc-400" />
+                    <h2 className="ty-subtitle font-bold text-zinc-900">Where in {selectedCity}?</h2>
+                    <Icons.MapPin className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-sm font-bold", !query ? "text-zinc-400" : "text-zinc-900")}>
                       {query || "Search areas..."}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-3 w-3 text-zinc-400" />
+                    <Icons.ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
 
@@ -694,14 +702,14 @@ export default function Navbar() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="ty-subtitle font-bold text-zinc-900">What's your budget?</h2>
-                    <Wallet className="h-5 w-5 text-zinc-400" />
+                    <Icons.Wallet className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-sm font-bold", budget.label === "Any Budget" ? "text-zinc-400" : "text-zinc-900")}>
                       {budget.label === "Any Budget" ? "Select your price range" : budget.label}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-3 w-3 text-zinc-400" />
+                    <Icons.ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
 
@@ -712,14 +720,14 @@ export default function Navbar() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="ty-subtitle font-bold text-zinc-900">Property type?</h2>
-                    <Home className="h-5 w-5 text-zinc-400" />
+                    <Icons.Home className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-sm font-bold", propertyType === "Any Type" ? "text-zinc-400" : "text-zinc-900")}>
                       {propertyType === "Any Type" ? "What are you looking for?" : propertyType}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
-                    <ChevronDown className="h-3 w-3 text-zinc-400" />
+                    <Icons.ChevronDown className="h-3 w-3 text-zinc-400" />
                   </div>
                 </button>
               </div>
@@ -730,17 +738,25 @@ export default function Navbar() {
               <button 
                 onClick={() => {
                   clearFilters();
-                  handleApplyFilters();
+                  handleApplyFilters({
+                    area: '',
+                    budget: BUDGET_OPTIONS[0],
+                    type: 'Any Type',
+                    keywords: '',
+                    minSize: '',
+                    maxSize: '',
+                    highlights: []
+                  });
                 }}
-                className="ty-caption font-black text-zinc-900 underline underline-offset-4"
+                className="flex items-center gap-2 rounded-xl bg-zinc-900 px-6 py-2.5 ty-caption font-bold text-white transition-all hover:bg-black active:scale-[0.98]"
               >
-                Clear all
+                Clear all filters
               </button>
               <button 
                 onClick={() => handleApplyFilters()}
                 className="flex items-center gap-2 rounded-full bg-brand-primary px-8 py-3.5 ty-caption font-black text-white shadow-xl shadow-blue-200 transition-all "
               >
-                <Search className="h-4 w-4" strokeWidth={3} />
+                <Icons.Search className="h-4 w-4" strokeWidth={3} />
                 <span>Search</span>
               </button>
             </div>
@@ -774,6 +790,7 @@ export default function Navbar() {
             setTimeout(() => setActiveSelectionSheet('type'), 100);
           } else {
             setActiveSelectionSheet(null);
+            handleApplyFilters({ budget: val });
           }
         }}
       />
@@ -786,9 +803,14 @@ export default function Navbar() {
         selectedValue={propertyType}
         onSelect={(val) => {
           setPropertyType(val);
-          setTimeout(() => {
+          if (!isMobileSearchOpen) {
             setActiveSelectionSheet(null);
-          }, 100);
+            handleApplyFilters({ type: val });
+          } else {
+            setTimeout(() => {
+              setActiveSelectionSheet(null);
+            }, 100);
+          }
         }}
       />
 
@@ -806,6 +828,7 @@ export default function Navbar() {
             setTimeout(() => setActiveSelectionSheet('budget'), 100);
           } else {
             setActiveSelectionSheet(null);
+            handleApplyFilters({ area: val });
           }
         }}
       />

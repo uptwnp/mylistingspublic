@@ -40,7 +40,7 @@ export default function AgentPage() {
       <section className="relative pt-32 pb-20 sm:pt-48 sm:pb-40 px-6 overflow-hidden min-h-[70vh] flex items-center bg-white border-b border-zinc-50">
         {/* Subtle Background Accents */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-brand-primary/5 blur-[120px] rounded-full pointer-events-none -z-10" />
-        <div className="absolute -bottom-10 -right-20 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute -bottom-10 -right-20 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
         <div className="mx-auto max-w-4xl text-center">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 sm:mb-12">
@@ -85,7 +85,7 @@ export default function AgentPage() {
               onClick={() => document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth' })}
               className="w-full sm:w-auto px-10 py-5 rounded-full bg-zinc-900 text-white ty-title font-bold hover:bg-black transition-all shadow-xl uppercase active:scale-[0.97]"
             >
-              Start Free Today — Grow Your Property Business
+              Start Free Today
             </button>
           </motion.div>
         </div>
@@ -103,7 +103,7 @@ export default function AgentPage() {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
               {[
                 { title: "Give More Options to Your Clients", desc: "Access properties from other agents instantly and never lose a deal due to lack of inventory.", icon: Home, color: "bg-blue-500" },
-                { title: "Sell Your Inventory Faster", desc: "Let other agents promote your listings to their buyers, multiplying your reach exponentially.", icon: TrendingUp, color: "bg-emerald-500" },
+                { title: "Sell Your Inventory Faster", desc: "Let other agents promote your listings to their buyers, multiplying your reach exponentially.", icon: TrendingUp, color: "bg-blue-500" },
                 { title: "Safe & Controlled Sharing", desc: "Share only limited details — your full data stays protected and under your control at all times.", icon: ShieldCheck, color: "bg-orange-500" },
                 { title: "Your Own Website — Free", desc: "Create a professional website to showcase your listings and build your digital brand authority.", icon: Globe, color: "bg-zinc-900" }
               ].map((card, i) => (
@@ -152,7 +152,7 @@ export default function AgentPage() {
             <div className="bg-white p-8 sm:p-16 rounded-[40px] border border-zinc-100 text-center shadow-2xl relative overflow-hidden">
                {isFormSubmitted ? (
                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="py-10">
-                    <div className="h-16 w-16 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-6 mx-auto shadow-lg shadow-emerald-100">
+                    <div className="h-16 w-16 rounded-full bg-blue-500 text-white flex items-center justify-center mb-6 mx-auto shadow-lg shadow-blue-100">
                        <CheckCircle2 className="h-8 w-8" strokeWidth={3} />
                     </div>
                     <h2 className="ty-display font-black text-zinc-900 mb-4 uppercase tracking-tighter">Application Sent</h2>

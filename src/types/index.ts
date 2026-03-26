@@ -10,7 +10,7 @@ export type Property = {
   size_unit: string;
   price_min: number;
   price_max: number;
-  tags: string[];
+
   highlights: string[];
   image_urls: string[];
   is_photos_public: boolean;

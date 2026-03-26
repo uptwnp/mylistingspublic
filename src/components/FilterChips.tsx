@@ -67,15 +67,7 @@ export function FilterChips({ onToggleMap, hasResults }: { onToggleMap?: () => v
   return (
     <div className="w-full bg-white border-b border-zinc-100 sm:hidden">
       <div className="flex items-center gap-2 overflow-x-auto px-4 py-3 no-scrollbar">
-        {(!hasResults && onToggleMap) && (
-          <button
-            onClick={onToggleMap}
-            className="flex items-center gap-2 rounded-full px-4 py-2 ty-caption font-black bg-brand-primary text-white shadow-lg shadow-blue-200 transition-all active:scale-[0.98] shrink-0"
-          >
-            <MapIcon className="h-3.5 w-3.5" />
-            <span>Show Map</span>
-          </button>
-        )}
+
 
         {chips.map((chip) => {
           const Icon = chip.icon;

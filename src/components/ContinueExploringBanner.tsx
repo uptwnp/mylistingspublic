@@ -27,7 +27,15 @@ export function ContinueExploringBanner() {
     fetchLastProperty();
   }, [recentlyVisitedIds]);
 
-  if (!lastProperty) return null;
+  if (recentlyVisitedIds.length === 0) return null;
+
+  if (!lastProperty) {
+    return (
+      <div className="flex w-full justify-center px-4 sm:px-0 py-1 sm:py-2">
+        <div className="h-[44px] sm:h-[50px] w-64 rounded-full bg-zinc-50/50 shimmer-bg" />
+      </div>
+    );
+  }
 
   const hasImage = Array.isArray(lastProperty.image_urls) && lastProperty.image_urls.length > 0;
   
@@ -64,27 +72,27 @@ export function ContinueExploringBanner() {
   const searchUrl = seoUrl || `/explore?${queryParams.toString()}`;
 
   return (
-    <div className="flex w-full justify-center px-4 sm:px-0 py-2 sm:py-4">
+    <div className="flex w-full justify-center px-4 sm:px-0 py-1 sm:py-2">
       <Link 
         href={searchUrl}
-        className="flex items-center gap-2 sm:gap-4 rounded-full border border-zinc-200/80 bg-white p-2 pl-6 sm:pl-8 shadow-xl shadow-black-[0.03] transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/5 hover:border-zinc-300 active:scale-[0.98] group max-w-fit"
+        className="flex items-center gap-2 sm:gap-3 rounded-full border border-zinc-100 bg-white/60 p-1 pl-4 sm:pl-5 transition-all hover:bg-white hover:border-zinc-200 active:scale-[0.98] group max-w-fit backdrop-blur-sm"
       >
-        <div className="flex items-center gap-2 sm:gap-3 py-1">
-             <span className="text-sm sm:text-base font-bold text-zinc-900 tracking-tight capitalize">
-                Continue exploring {baseType.toLowerCase()} {priceText} in {lastProperty.area}
+        <div className="flex items-center gap-2 sm:gap-2.5 py-1">
+             <span className="text-[12px] sm:text-[13px] font-bold text-zinc-900 tracking-tight capitalize">
+                {baseType.toLowerCase()} {priceText} in {lastProperty.area}
              </span>
              <span className="hidden sm:inline-block text-zinc-200 text-lg mx-1">•</span>
-             <span className="hidden sm:inline-block text-sm font-semibold text-zinc-500 whitespace-nowrap">
+             <span className="hidden sm:inline-block text-[12px] font-semibold text-zinc-500 whitespace-nowrap">
                {lastProperty.city}
              </span>
         </div>
         
-        <div className="flex items-center justify-center text-zinc-300 ml-1 sm:ml-2">
-          <ChevronRight className="h-5 w-5 group-hover:text-zinc-600 transition-colors" />
+        <div className="flex items-center justify-center text-zinc-300 ml-1">
+          <ChevronRight className="h-4 w-4 group-hover:text-zinc-600 transition-colors" />
         </div>
         
         {hasImage && (
-          <div className="relative h-10 w-10 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-full ml-1 border border-zinc-100/50 shadow-sm">
+          <div className="relative h-8 w-8 sm:h-9 sm:w-9 shrink-0 overflow-hidden rounded-full ml-1 border border-zinc-100/50">
             <Image
               src={lastProperty.image_urls[0]}
               alt="Property preview"

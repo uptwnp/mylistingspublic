@@ -19,8 +19,8 @@ export async function generateSeoMetadata(
   const { city, type, area, budget } = seoData;
   const titleParts = [];
   
-  // Property Type: e.g., "Plots", "Houses", or "Properties"
-  const baseType = type ? type : "Properties";
+  const isAnyType = !type || type.toLowerCase() === 'all-types' || type.toLowerCase() === 'any type' || type.toLowerCase() === 'any-type' || type.toLowerCase() === 'anything';
+  const baseType = isAnyType ? "Properties" : type;
   titleParts.push(baseType);
 
   titleParts.push("for Sale");
@@ -46,7 +46,6 @@ export async function generateSeoMetadata(
   const canonicalParts = [citySlug];
   
   const isAnyArea = !area || area.toLowerCase() === 'anywhere';
-  const isAnyType = !type || type.toLowerCase() === 'all-types' || type.toLowerCase() === 'any type' || type.toLowerCase() === 'anything';
   const isAnyBudget = !budget || budget.toLowerCase() === 'any budget';
 
   if (!isAnyArea) {

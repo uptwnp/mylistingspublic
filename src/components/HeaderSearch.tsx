@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Wallet, Home as HomeIcon, Trees, ChevronDown, SlidersHorizontal, X, Locate } from 'lucide-react';
+import { Search, MapPin, Wallet, Home as HomeIcon, Trees, LandPlot, Store, Building2, LayoutGrid, ChevronDown, SlidersHorizontal, X, Locate } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
+import { getPropertyConfig } from '@/lib/property-icons';
 
 
 export const BUDGET_OPTIONS = [
@@ -27,7 +28,7 @@ export const BUDGET_OPTIONS = [
 ];
 
 export const PROPERTY_TYPES = [
-  "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Factory", "Godown"
+  "Any Type", "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Factory", "Godown"
 ];
 
 interface HeaderSearchProps {
@@ -151,6 +152,10 @@ export function HeaderSearch({
                     placeholder="Search areas..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     className="w-full bg-transparent ty-body font-bold text-zinc-900 outline-none placeholder:text-zinc-400 min-w-0"
                   />
                   {activeSegment === 'location' && query && (
@@ -356,7 +361,12 @@ export function HeaderSearch({
                               propertyType === type ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
                             )}
                           >
-                            <HomeIcon className="h-5 w-5 text-zinc-400" />
+                            {(() => {
+                              const config = getPropertyConfig(type);
+                              const Icon = type === "Any Type" ? LayoutGrid : config.icon;
+                              const iconColor = type === "Any Type" ? "text-zinc-400" : config.color;
+                              return <Icon className={cn("h-5 w-5", iconColor)} />;
+                            })()}
                             <span>{type}</span>
                           </button>
                         ))}
@@ -371,14 +381,16 @@ export function HeaderSearch({
             <div className="sm:hidden w-full px-4 text-center">
                <button
                   onClick={() => onExpand?.()}
-                  className="flex w-full items-center gap-4 rounded-[32px] border border-zinc-200/80 bg-white p-4 shadow-2xl"
+                  className="flex w-full items-center gap-3 rounded-full border border-blue-100 bg-blue-50/30 p-1.5 pl-6 shadow-xl shadow-blue-900/5 transition-all active:scale-[0.98] text-left"
                >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white">
-                    <Search className="h-5 w-5" strokeWidth={3} />
+                  <div className="flex flex-col items-start min-w-0 flex-1">
+                    <span className="text-[13px] font-black text-brand-primary leading-none tracking-tight uppercase mb-1">Start your search</span>
+                    <span className="text-[12px] font-bold text-zinc-400 truncate leading-none tracking-tight">
+                      {query ? `${query}, ${city}` : `Search anything in ${city}`}
+                    </span>
                   </div>
-                  <div className="flex flex-col items-start">
-                    <span className="ty-body font-bold text-zinc-900 uppercase">Start your search</span>
-                    <span className="ty-caption font-bold text-zinc-400">{query ? `${query}, ${city}` : city}</span>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-blue-200">
+                    <Search className="h-5 w-5" strokeWidth={3} />
                   </div>
                </button>
             </div>

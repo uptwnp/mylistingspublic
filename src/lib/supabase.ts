@@ -36,9 +36,7 @@ const formatPropertyData = (property: Record<string, unknown>) => {
     ...property,
     public_id: String(property.public_id ?? ''),
     property_id: String(property.property_id ?? ''),
-    tags: typeof property.tags === 'string' 
-      ? property.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-      : Array.isArray(property.tags) ? (property.tags as any).filter(Boolean) : [],
+
     highlights: typeof property.highlights === 'string'
       ? property.highlights.split(',').map((h: string) => h.trim()).filter(Boolean)
       : Array.isArray(property.highlights) ? (property.highlights as any).filter(Boolean) : [],
@@ -56,7 +54,7 @@ const formatPropertyData = (property: Record<string, unknown>) => {
   return formatted;
 };
 
-const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,tags,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status';
+const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status';
 
 export async function getProperties(
   page = 0, 
@@ -73,15 +71,19 @@ export async function getProperties(
   highlights?: string,
   keywords?: string,
   userLat?: number | null,
-  userLng?: number | null
+  userLng?: number | null,
+  bounds?: { minLat: number; maxLat: number; minLng: number; maxLng: number } | null
 ) {
   if (!supabase) return { data: [], count: 0 };
 
-  const safeLimit = Math.min(limit, 20); // Strict maximum for pagination
-  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${userLat || 'noLat'}_${userLng || 'noLng'}_${page}`;
+  const safeLimit = Math.min(limit, bounds ? 100 : 20); // Higher limit when searching by bounds
+  const cacheLat = userLat ? Math.round(userLat * 1000) / 1000 : 'noLat';
+  const cacheLng = userLng ? Math.round(userLng * 1000) / 1000 : 'noLng';
+  const boundsKey = bounds ? `${bounds.minLat}_${bounds.maxLat}_${bounds.minLng}_${bounds.maxLng}` : 'noBounds';
+  const cacheKey = `${CACHE_KEY}_${city || 'All'}_${type || 'All'}_${area || 'All'}_${budget || 'Any'}_${minSize || '0'}_${maxSize || 'Any'}_${highlights || 'None'}_${keywords || 'None'}_${sortField}_${sortOrder}_${cacheLat}_${cacheLng}_${boundsKey}_${page}`;
   
   // 1. Try LocalStorage Cache (Browser Only) - Perceived Instant Speed
-  if (useCache && typeof window !== 'undefined' && page === 0) {
+  if (useCache && typeof window !== 'undefined' && page === 0 && !bounds) {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
@@ -93,10 +95,16 @@ export async function getProperties(
     }
   }
 
-  // 2. Map Budget string to numeric values (consistent with SQL function)
+  // 2. Normalize and check budget string to numeric values (consistent with SQL function)
   let p_min_price = null;
   let p_max_price = null;
-  if (budget && budget !== 'Any Budget') {
+  
+  // Normalize params for SQL search
+  const normalizedCity = (!city || city === 'All' || city === 'any' || !!bounds) ? 'All' : city; // If we have bounds, we ignore city/area filters to catch everything in view
+  const normalizedType = (!type || ['All', 'Any Type', 'all-types', 'anything', 'any'].includes(type)) ? 'All' : type;
+  const normalizedArea = (!area || ['All', 'anywhere', 'any', 'Anywhere'].includes(area) || !!bounds) ? 'All' : area;
+
+  if (budget && !['All', 'Any Budget', 'any-budget', 'Any'].includes(budget)) {
     const b = budget.toLowerCase();
     if (b.includes('under 40')) p_max_price = 40;
     else if (b.includes('40 to 80')) { p_min_price = 40; p_max_price = 80; }
@@ -113,21 +121,25 @@ export async function getProperties(
   // 3. Unified RPC Call (The "Vercel Optimized" Way)
   try {
     const { data, error } = await supabase.rpc('get_public_properties_v2', {
-      p_city: city || 'All',
-      p_type: type || 'All',
-      p_area: area || 'All',
+      p_city: normalizedCity,
+      p_type: normalizedType,
+      p_area: normalizedArea,
       p_min_price,
       p_max_price,
       p_min_size: minSize ? parseFloat(minSize) : null,
       p_max_size: maxSize ? parseFloat(maxSize) : null,
-      p_highlights: highlights,
-      p_keywords: keywords,
-      p_user_lat: userLat,
-      p_user_lng: userLng,
+      p_highlights: highlights || null,
+      p_keywords: keywords || null,
+      p_user_lat: userLat || null,
+      p_user_lng: userLng || null,
       p_sort_field: sortField,
       p_sort_order: sortOrder,
       p_page: page,
-      p_limit: safeLimit
+      p_limit: safeLimit,
+      p_min_lat: bounds?.minLat || null,
+      p_max_lat: bounds?.maxLat || null,
+      p_min_lng: bounds?.minLng || null,
+      p_max_lng: bounds?.maxLng || null
     });
 
     if (error) {
@@ -138,6 +150,19 @@ export async function getProperties(
 
     const { properties, total_count } = (data as any)[0] || { properties: [], total_count: 0 };
     const formattedData = properties?.map(formatPropertyData) || [];
+
+    // SMART FALLBACK: If 0 results for an area, and no keywords were specified,
+    // retry once by treating the area string as keywords across all areas.
+    // This handles users typing "Corner" in the location box.
+    if (total_count === 0 && normalizedArea !== 'All' && !keywords && area && area !== 'Near Me') {
+      return getProperties(
+        page, limit, useCache, 
+        city, type, sortField, sortOrder, 
+        'All', budget, minSize, maxSize, highlights, 
+        area, // Treat area as keywords
+        userLat, userLng, bounds
+      );
+    }
 
     // Local Storage Caching
     if (useCache && page === 0 && typeof window !== 'undefined') {
@@ -179,9 +204,10 @@ export async function getPropertyById(id: string | number) {
 export async function getPropertiesByIds(ids: string[]) {
   if (!supabase || !ids || ids.length === 0) return [];
   
-  const cleanIds = ids.map(id => String(id).trim())
-    .filter(id => /^\d+$/.test(id))
-    .slice(0, 20);
+  // Deduplicate IDs before querying to prevent duplicate-key React errors
+  const cleanIds = [...new Set(
+    ids.map(id => String(id).trim()).filter(id => /^\d+$/.test(id))
+  )].slice(0, 20);
   
   if (cleanIds.length === 0) return [];
 
@@ -196,7 +222,17 @@ export async function getPropertiesByIds(ids: string[]) {
       return [];
     }
 
-    return (data as Record<string, unknown>[])?.map(formatPropertyData) || [];
+    // Deduplicate results by property_id as a defensive guard
+    const seen = new Set<string>();
+    const unique = (data as Record<string, unknown>[])
+      ?.map(formatPropertyData)
+      .filter(p => {
+        if (seen.has(p.property_id)) return false;
+        seen.add(p.property_id);
+        return true;
+      }) || [];
+
+    return unique;
   } catch (err) {
     console.error('Critical error in getPropertiesByIds:', err);
     return [];

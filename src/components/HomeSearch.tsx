@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, MapPin, Wallet, Home as HomeIcon, Trees, Locate } from 'lucide-react';
+import { Search, X, MapPin, Wallet, Home as HomeIcon, Trees, LandPlot, Locate } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -9,10 +9,11 @@ import { getAreas } from '@/lib/supabase';
 import { useShortlist } from '@/context/ShortlistContext';
 import { BUDGET_OPTIONS } from './HeaderSearch';
 import { getSeoUrl } from '@/lib/seo-utils';
+import { getPropertyConfig } from '@/lib/property-icons';
 
 
 const PROPERTY_TYPES = [
-  "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Industrial Land", "Industrial Built-up", "Agriculture Land", "Factory", "Godown"
+  "Any Type", "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Industrial Land", "Industrial Built-up", "Agriculture Land", "Factory", "Godown"
 ];
 
 export function HomeSearch() {
@@ -62,20 +63,33 @@ export function HomeSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
+  const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string; keywords?: string }) => {
     const params = new URLSearchParams();
     
-    const finalArea = overrides?.area ?? query;
+    // Distinguish between areas and keywords
+    // Only treat finalArea as an actual area if it's in the suggestions or was an override
+    const rawInput = overrides?.area ?? query;
+    const isKnownArea = allAreas.some(a => a.toLowerCase() === rawInput.toLowerCase()) || rawInput.toLowerCase() === 'near me' || !!overrides?.area;
+    
+    const finalArea = isKnownArea ? rawInput : "";
+    const finalKeywords = isKnownArea ? (overrides?.keywords ?? "") : (overrides?.keywords ?? rawInput);
     const finalBudget = overrides?.budget ?? budget;
     const finalType = overrides?.type ?? propertyType;
 
     if (finalArea) params.set('area', finalArea);
+    if (finalKeywords) params.set('q', finalKeywords);
     if (finalBudget.value > 0) params.set('budget', finalBudget.label);
     if (finalType !== "Any Type") params.set('type', finalType);
     
     const seoUrl = getSeoUrl(selectedCity, finalType, finalArea, finalBudget.label);
     if (seoUrl) {
-      router.push(seoUrl);
+      const queryString = params.toString();
+      // Only keep the q param if we had keywords
+      const finalParams = new URLSearchParams();
+      if (finalKeywords) finalParams.set('q', finalKeywords);
+      const qStr = finalParams.toString();
+      
+      router.push(qStr ? `${seoUrl}?${qStr}` : seoUrl);
       return;
     }
 
@@ -97,7 +111,7 @@ export function HomeSearch() {
             activeSegment === 'location' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
-          <span className="ty-label text-zinc-900 mb-0.5">Location</span>
+          <span className="ty-micro font-black tracking-widest text-zinc-400 mb-1 uppercase">Location</span>
           <div className="flex items-center w-full min-w-0">
             <input 
               type="text"
@@ -105,7 +119,11 @@ export function HomeSearch() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setActiveSegment('location')}
-              className="w-full bg-transparent ty-caption font-semibold text-zinc-500 outline-none placeholder:text-zinc-400 min-w-0"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              className="w-full bg-transparent ty-body font-bold text-zinc-900 outline-none placeholder:text-zinc-400 min-w-0"
             />
             {activeSegment === 'location' && query && (
               <button 
@@ -211,11 +229,12 @@ export function HomeSearch() {
             activeSegment === 'budget' ? "bg-white shadow-lg ring-1 ring-black/5 z-10" : "hover:bg-zinc-100"
           )}
         >
-          <span className="ty-label text-zinc-900 mb-0.5">Budget</span>
+          <span className="ty-micro font-black tracking-widest text-zinc-400 mb-1 uppercase">Budget</span>
           <div className="flex items-center w-full min-w-0">
-            <span className="ty-caption font-semibold text-zinc-400 truncate w-full">
+            <span className="ty-body font-bold text-zinc-900 truncate w-full">
               {budget.value === 0 ? "Any Budget" : budget.label}
             </span>
+
             {activeSegment === 'budget' && budget.value > 0 && (
               <button 
                 onClick={(e) => { e.stopPropagation(); setBudget(BUDGET_OPTIONS[0]); }}
@@ -268,9 +287,9 @@ export function HomeSearch() {
             onClick={(e) => { e.stopPropagation(); setActiveSegment('type'); }}
             className="flex flex-col items-start px-8 py-4 text-left w-full h-full cursor-pointer group"
           >
-            <span className="ty-label text-zinc-900 mb-0.5 whitespace-nowrap">Property Type</span>
+            <span className="ty-micro font-black tracking-widest text-zinc-400 mb-1 uppercase whitespace-nowrap">Property Type</span>
             <div className="flex items-center w-full min-w-0">
-              <span className="ty-caption font-semibold text-zinc-400 truncate w-full">{propertyType === "Any Type" ? "Add guests" : propertyType}</span>
+              <span className="ty-body font-bold text-zinc-900 truncate w-full">{propertyType === "Any Type" ? "Add guests" : propertyType}</span>
               {activeSegment === 'type' && propertyType !== "Any Type" && (
                 <button 
                   onClick={(e) => { e.stopPropagation(); setPropertyType("Any Type"); }}
@@ -305,7 +324,12 @@ export function HomeSearch() {
                         propertyType === type ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
                       )}
                     >
-                      {type === "Residential Plot" || type.includes("Land") ? <Trees className="h-5 w-5" /> : <HomeIcon className="h-5 w-5" />}
+                      {(() => {
+                        const config = getPropertyConfig(type);
+                        const Icon = type === "Any Type" ? HomeIcon : config.icon;
+                        const iconColor = type === "Any Type" ? "text-zinc-400" : (propertyType === type ? "text-white" : config.color);
+                        return <Icon className={cn("h-5 w-5", iconColor)} />;
+                      })()}
                       <span className="ty-body font-bold">{type}</span>
                     </button>
                   ))}
@@ -318,10 +342,11 @@ export function HomeSearch() {
           <button 
             onClick={(e) => { e.stopPropagation(); handleSearch(); }}
             className={cn(
-              "mr-2 flex h-12 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition-all shadow-lg shadow-blue-500/20",
-              activeSegment ? "px-6 w-auto gap-3 hover:bg-blue-700" : "w-12 px-0 hover:bg-blue-700"
+              "mr-2 flex h-14 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition-all shadow-xl shadow-blue-500/20 shimmer-premium",
+              activeSegment ? "px-8 w-auto gap-3 hover:bg-blue-700 active:scale-95" : "w-14 px-0 hover:bg-blue-700 active:scale-90"
             )}
           >
+
             <Search className="h-5 w-5" strokeWidth={3} />
             <AnimatePresence mode="wait">
               {activeSegment && (

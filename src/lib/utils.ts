@@ -43,7 +43,22 @@ export function formatSizeRange(min: number, max: number, unit: string | null, p
   return `${min} - ${max} ${unitStr}`.trim();
 }
 
+export function isValidLatLng(coords: any): coords is [number, number] {
+  return Array.isArray(coords) && 
+    coords.length === 2 && 
+    typeof coords[0] === 'number' && 
+    typeof coords[1] === 'number' &&
+    !Number.isNaN(coords[0]) && 
+    !Number.isNaN(coords[1]) &&
+    Number.isFinite(coords[0]) && 
+    Number.isFinite(coords[1]);
+}
+
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  if (typeof lat1 !== 'number' || typeof lon1 !== 'number' || typeof lat2 !== 'number' || typeof lon2 !== 'number' ||
+      isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+    return 0;
+  }
   const R = 6371; // Radius of the earth in km
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);

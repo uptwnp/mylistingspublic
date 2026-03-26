@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Property } from '@/types';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
-import { SlidersHorizontal, Map as MapIcon, LayoutGrid, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, Map as MapIcon, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { calculateDistance, getPropertyCoords } from '@/lib/utils';
+import { calculateDistance, getPropertyCoords, isValidLatLng } from '@/lib/utils';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import { parseSeoSlug } from '@/lib/seo-utils';
+import { parseSeoSlug, getSeoUrl } from '@/lib/seo-utils';
 import { FilterChips } from '@/components/FilterChips';
 
 
@@ -25,7 +25,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
     <div className="flex h-full w-full items-center justify-center bg-zinc-50 animate-pulse">
       <div className="text-center">
         <MapIcon className="mx-auto h-8 w-8 text-zinc-200 mb-3" />
-        <span className="ty-micro font-bold text-zinc-400 uppercase tracking-widest">Initialising Map...</span>
+        <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest">Locating properties for you...</span>
       </div>
     </div>
   ),
@@ -54,21 +54,32 @@ export function ExploreView({
   const [loading, setLoading] = useState(initialProperties.length === 0);
   const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
   const [isFirstMount, setIsFirstMount] = useState(true);
-
-  useEffect(() => {
-    // Determine actual view mode based on screen width
-    if (window.innerWidth < 1024) {
-      setViewMode('list');
-    }
-    // Small delay to enable animations AFTER layout is settled
-    const timer = setTimeout(() => setIsFirstMount(false), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const [page, setPage] = useState(0);
+  const [mapBounds, setMapBounds] = useState<{ minLat: number; maxLat: number; minLng: number; maxLng: number } | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Determine actual view mode based on screen width and URL params
+    const viewParam = searchParams.get('view');
+    
+    if (viewParam === 'map') {
+      setViewMode('map');
+    } else if (viewParam === 'list') {
+      setViewMode('list');
+    } else if (viewParam === 'split') {
+      setViewMode('split');
+    } else if (window.innerWidth < 1024) {
+      setViewMode('list');
+    }
+    
+    // Small delay to enable animations AFTER layout is settled
+    const timer = setTimeout(() => setIsFirstMount(false), 100);
+    return () => clearTimeout(timer);
+  }, [searchParams]);
+
+  const [page, setPage] = useState(0);
+
   const activeArea = overrideArea || searchParams.get('area');
 
   const { 
@@ -140,67 +151,90 @@ export function ExploreView({
     }
   }, [activeArea, userLocation, selectedCity]); // Removed sortField from here to stop the 'sorting trap'
 
-  // Reset page when any core search filter changes
+  // Reset page and mapBounds when any core search filter changes
   useEffect(() => {
     setPage(0);
+    setMapBounds(null);
   }, [selectedCity, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
+
+  const mountedRef = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      
-      const city = overrideCity || searchParams.get('city') || selectedCity;
-      const area = overrideArea || searchParams.get('area');
-      const budget = overrideBudget || searchParams.get('budget');
-      const type = overrideType || searchParams.get('type');
-      const minSize = searchParams.get('minSize');
-      const maxSize = searchParams.get('maxSize');
-      const highlights = searchParams.get('highlights');
-      const keywords = searchParams.get('keywords');
-
-      // Fetch data with all filters
-      const { data, count } = await getProperties(
-        page, 
-        itemsPerPage, 
-        false, 
-        city === 'All' ? undefined : city,
-        type || undefined,
-        sortField === 'distance' ? 'distance' : sortField,
-        sortOrder,
-        area || undefined,
-        budget || undefined,
-        minSize || undefined,
-        maxSize || undefined,
-        highlights || undefined,
-        keywords || undefined,
-        userLocation?.lat,
-        userLocation?.lng
-      );
-      
-      let finalData = [...data];
-      setTotalCount(count);
-
-      // Calculate distances locally only for card labels ("1.2 km away")
-      if (userLocation) {
-        finalData = finalData.map(p => {
-          const [pLat, pLng] = getPropertyCoords(p, finalData, areaCenters);
-          return {
-            ...p,
-            landmark_location_distance: calculateDistance(userLocation.lat, userLocation.lng, pLat, pLng)
-          };
-        });
+      // Logic to skip initial fetch if we have SSR data
+      // We only skip if this is the first execution AND we have initial properties
+      if (!mountedRef.current && initialProperties.length > 0) {
+        mountedRef.current = true;
+        return;
       }
 
-      setProperties(finalData);
-      cacheProperties(finalData);
-      setLoading(false);
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      try {
+        setLoading(true);
+        
+        const city = overrideCity || searchParams.get('city') || selectedCity;
+        const area = overrideArea || searchParams.get('area');
+        const budget = overrideBudget || searchParams.get('budget');
+        const type = overrideType || searchParams.get('type');
+        const minSize = searchParams.get('minSize');
+        const maxSize = searchParams.get('maxSize');
+        const highlights = searchParams.get('highlights');
+        const keywords = searchParams.get('q') || searchParams.get('keywords');
+
+        // Fetch data with all filters
+        const { data, count } = await getProperties(
+          page, 
+          itemsPerPage, 
+          true, 
+          city === 'All' ? undefined : city,
+          type || undefined,
+          sortField === 'distance' ? 'distance' : sortField,
+          sortOrder,
+          area || undefined,
+          budget || undefined,
+          minSize || undefined,
+          maxSize || undefined,
+          highlights || undefined,
+          keywords || undefined,
+          userLocation?.lat,
+          userLocation?.lng,
+          mapBounds
+        );
+        
+        let finalData = data ? [...data] : [];
+        setTotalCount(count || 0);
+
+        // Calculate distances locally only for card labels ("1.2 km away")
+        if (userLocation && isValidLatLng([userLocation.lat, userLocation.lng])) {
+          finalData = finalData.map(p => {
+            const coords = getPropertyCoords(p, finalData, areaCenters);
+            // Defensive distance check
+            if (isValidLatLng(coords)) {
+              return {
+                ...p,
+                landmark_location_distance: calculateDistance(userLocation.lat, userLocation.lng, coords[0], coords[1])
+              };
+            }
+            return p;
+          });
+        }
+
+        setProperties(finalData);
+        cacheProperties(finalData);
+        // Scroll before React paints the new list to avoid visible jump
+        requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        setLoading(false);
+      } catch (err) {
+        console.error('Explore fetch crash:', err);
+        setLoading(false);
+        // On critical failure, fallback to empty or cached
+        if (properties.length === 0) setProperties([]);
+      }
     };
     fetchData();
-  }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget]);
+  }, [page, selectedCity, sortField, sortOrder, userLocation, searchParams, overrideCity, overrideType, overrideArea, overrideBudget, initialProperties, mapBounds]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pt-20 sm:pt-24">
+    <div className="flex min-h-screen flex-col bg-white pt-20 sm:pt-20">
       {/* Mobile-only Filter Chips (Shows directly) */}
       <div className="mb-4 sm:mb-2">
         <FilterChips 
@@ -213,9 +247,12 @@ export function ExploreView({
       <div className="mx-auto max-w-[1440px] w-full px-4 sm:px-6 lg:px-12 flex-1 flex flex-col">
 
         {/* Main Content Area */}
-        <div className="relative flex flex-1 gap-8 lg:gap-8">
+        <div className={cn(
+          "relative flex flex-1 gap-4 lg:gap-8",
+          viewMode === 'map' ? "flex-row" : "flex-col lg:flex-row"
+        )}>
           
-          {/* List Side */}
+          {/* List Side — hidden in map mode on ALL screens */}
           <div 
             id="property-list-container"
             className={cn(
@@ -236,7 +273,7 @@ export function ExploreView({
                       const city = overrideCity || searchParams.get('city') || selectedCity;
 
                       const isPlaceholder = (v: any) => !v || typeof v !== 'string' || 
-                        ['all', 'any', 'all-types', 'any-type', 'any-budget', 'any budget', 'any-area', 'anywhere', 'nothing', 'undefined', 'null'].includes(v.toLowerCase());
+                        ['all', 'any', 'all-types', 'any type', 'any-type', 'any-budget', 'any budget', 'any-area', 'anywhere', 'nothing', 'undefined', 'null'].includes(v.toLowerCase());
 
                       const displayType = !isPlaceholder(type) ? type : 'Properties';
                       const displayArea = !isPlaceholder(area) ? area : '';
@@ -247,23 +284,24 @@ export function ExploreView({
                       
                       return (
                         <>
-                          <span className="font-bold">{countText}</span>
-                          <span className="font-bold capitalize">{displayType}</span>
-                          <span className="font-normal text-zinc-400 lowercase"> for sale </span>
+                          <span className="font-extrabold text-brand-primary">{countText}</span>
+                          <span className="font-extrabold capitalize text-zinc-900">{displayType}</span>
+                          <span className="font-medium text-zinc-500 lowercase px-1.5"> for sale </span>
                           {displayArea && (
                             <>
-                              <span className="font-normal text-zinc-400 lowercase">in </span>
-                              <span className="font-bold capitalize">
+                              <span className="font-medium text-zinc-500 lowercase pr-1.5">in </span>
+                              <span className="font-extrabold capitalize text-zinc-900">
                                 {displayArea.toLowerCase() === 'near me' || displayArea.toLowerCase() === 'near-me' ? 'Near Me' : `${displayArea}, ${city}`}
                               </span>
                             </>
                           )}
                           {!displayArea && city && city !== 'All' && (
                             <>
-                              <span className="font-normal text-zinc-400 lowercase">in </span>
-                              <span className="font-bold capitalize">{city}</span>
+                              <span className="font-medium text-zinc-500 lowercase pr-1.5">in </span>
+                              <span className="font-extrabold capitalize text-zinc-900">{city}</span>
                             </>
                           )}
+
                           {displayBudget && displayBudget !== 'Any Budget' && (
                             <>
                               <span className="font-normal text-zinc-400 lowercase"> in </span>
@@ -336,7 +374,13 @@ export function ExploreView({
                   <button 
                     onClick={() => {
                       clearFilters();
-                      router.push('/explore');
+                      // Redirect to standard explore (default city) with no filters
+                      const url = getSeoUrl(selectedCity, 'Any Type', 'anywhere', 'Any Budget');
+                      if (url) {
+                        router.push(url);
+                      } else {
+                        router.push('/explore');
+                      }
                     }} 
                     className="rounded-full bg-zinc-900 px-8 py-3 ty-caption font-bold text-white transition-all hover:bg-black active:scale-[0.98]"
                   >
@@ -347,7 +391,7 @@ export function ExploreView({
             </div>
 
             {/* Pagination */}
-            {!loading && properties.length > 0 && totalCount > itemsPerPage && (
+            {!loading && properties.length > 0 && totalCount > itemsPerPage && !mapBounds && (
               <div className="mt-8 border-t border-zinc-100 bg-white py-6 mb-20 lg:mb-0">
                 <div className="flex items-center justify-between gap-4">
                   <button
@@ -372,46 +416,82 @@ export function ExploreView({
             )}
           </div>
 
-          {/* Map Side */}
-          <div className={cn(
-            "sticky top-20 h-[calc(100vh-80px)]",
-            !isFirstMount && "transition-all duration-300",
-            viewMode === 'split' ? 'hidden lg:flex lg:flex-1' : 
-            viewMode === 'map' ? 'w-full flex' : 'hidden',
-            "items-center justify-center pt-2 lg:pt-4 pb-5"
-          )}>
-            <div className="relative h-full w-full overflow-hidden sm:rounded-3xl border border-zinc-200 shadow-sm group">
-              <div className="absolute top-4 right-4 z-40 flex gap-2">
-                {viewMode === 'split' && (
-                  <button onClick={() => setViewMode('map')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900"><Maximize2 className="h-5 w-5" /></button>
-                )}
-                {viewMode === 'map' && (
-                  <button onClick={() => setViewMode('split')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900"><Minimize2 className="h-5 w-5" /></button>
-                )}
-                <button onClick={() => setViewMode('list')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900"><X className="h-5 w-5" /></button>
+          {/* Map Side — full screen overlay in 'map' mode, right panel in 'split' mode */}
+          {/* Split mode: desktop inline panel */}
+          {viewMode === 'split' && (
+            <div className={cn(
+              "hidden lg:flex lg:flex-1 sticky top-20 h-[calc(100vh-80px)] items-center justify-center pt-1 lg:pt-4 pb-3 lg:pb-5",
+              !isFirstMount && "transition-all duration-300"
+            )}>
+              <div className="relative h-full w-full overflow-hidden sm:rounded-3xl border border-zinc-200 shadow-sm">
+                <div className="absolute top-4 right-4 z-40 flex gap-2">
+                  <button onClick={() => setViewMode('map')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]">
+                    <Maximize2 className="h-5 w-5" />
+                  </button>
+                  <button onClick={() => setViewMode('list')} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-500 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <MapComponent 
+                  properties={properties} 
+                  selectedProperty={selectedProperty}
+                  onSelectProperty={setSelectedProperty}
+                  userLocation={userLocation}
+                  showDistance={activeArea === 'Near Me' || sortField === 'distance'}
+                  onBoundsChange={setMapBounds}
+                />
               </div>
-              <MapComponent 
-                properties={properties} 
-                selectedProperty={selectedProperty}
-                onSelectProperty={setSelectedProperty}
-                userLocation={userLocation}
-                showDistance={activeArea === 'Near Me' || sortField === 'distance'}
-              />
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* View Toggle */}
-      <button 
-        onClick={() => setViewMode(viewMode === 'list' ? (window.innerWidth >= 1024 ? 'split' : 'map') : 'list')}
-        className={cn(
-          "fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl transition-all hover:scale-105",
-          viewMode === 'split' && "lg:hidden"
-        )}
-      >
-        {viewMode === 'map' ? <><LayoutGrid className="h-4 w-4" /><span>Show List</span></> : <><MapIcon className="h-4 w-4" /><span>Show Map</span></>}
-      </button>
+      {/* Full-screen map overlay — sits below navbar (top-20) */}
+      {viewMode === 'map' && (
+        <div className="fixed top-20 bottom-0 left-0 right-0 z-[60] bg-white">
+          {/* Controls: top-right — Minimize (desktop only) + Close */}
+          <div className="absolute top-4 right-4 z-[1001] flex gap-2">
+            {/* Minimize to split — desktop only */}
+            <button
+              onClick={() => setViewMode('split')}
+              className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-600 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]"
+              title="Split view"
+            >
+              <Minimize2 className="h-5 w-5" />
+            </button>
+            {/* Close to list — all screens */}
+            <button
+              onClick={() => setViewMode('list')}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-600 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]"
+              title="Close map"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <MapComponent
+            properties={properties}
+            selectedProperty={selectedProperty}
+            onSelectProperty={setSelectedProperty}
+            userLocation={userLocation}
+            showDistance={activeArea === 'Near Me' || sortField === 'distance'}
+            onBoundsChange={setMapBounds}
+          />
+        </div>
+      )}
+
+
+      {/* Floating 'Show Map' pill — only shown in list mode on mobile */}
+      {properties.length > 0 && viewMode === 'list' && (
+        <button
+          onClick={() => setViewMode(window.innerWidth >= 1024 ? 'split' : 'map')}
+          className="fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl active:scale-[0.98] lg:hidden"
+        >
+          <MapIcon className="h-4 w-4" />
+          <span>Show Map</span>
+        </button>
+      )}
     </div>
   );
 }
+

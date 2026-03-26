@@ -41,6 +41,12 @@ export function PropertySection({ title, city, type, initialData }: PropertySect
 
   useEffect(() => {
     if (!hasEntered) return;
+    
+    // Skip fetching if we already have initial properties for THIS city and type
+    // This prevents the redundant client-side fetch on hydrate
+    if (initialData && properties.length > 0 && initialData.data === properties) {
+      return;
+    }
 
     async function fetchSectionProperties() {
       setLoading(true);
@@ -56,7 +62,7 @@ export function PropertySection({ title, city, type, initialData }: PropertySect
     }
 
     fetchSectionProperties();
-  }, [hasEntered, city, type, title]);
+  }, [hasEntered, city, type, title, initialData]);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -69,7 +75,7 @@ export function PropertySection({ title, city, type, initialData }: PropertySect
           <h2 className="ty-display font-black tracking-tight text-zinc-900 truncate">
             {title}
           </h2>
-          <p className="ty-caption text-zinc-500 font-medium truncate">Hand-picked properties in {city}.</p>
+          <p className="ty-caption text-zinc-500 font-medium truncate">Latest properties in {city}.</p>
         </div>
         <Link 
           href={getSeoUrl(city, type) || `/explore?city=${city}&type=${type}`}

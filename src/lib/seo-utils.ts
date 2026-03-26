@@ -59,6 +59,10 @@ export function parseSeoSlug(slug: string | string[]) {
             budget = budgetMatch.label;
             return;
           }
+          if (part === 'any-budget' && !budget) {
+            budget = 'Any Budget';
+            return;
+          }
 
           // Check for Property Type
           const typeMatch = SEO_PROPERTY_TYPES.find(t => t.slug === part || t.synonyms?.includes(part));
@@ -66,15 +70,23 @@ export function parseSeoSlug(slug: string | string[]) {
             type = typeMatch.value;
             return;
           }
+          if (part === 'all-types' && !type) {
+            type = 'Any Type';
+            return;
+          }
 
           // If it's the first remaining part and not matched by type/budget/skip-words, it's the Area
-          if (index === 0 && !area && part !== 'anywhere' && part !== 'all-types' && part !== 'any-budget') {
+          if (index === 0 && !area) {
             if (part === 'near-me') {
               area = 'Near Me';
-            } else {
+              return;
+            } else if (part === 'anywhere') {
+              area = undefined;
+              return;
+            } else if (part !== 'all-types' && part !== 'any-budget') {
               area = part.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+              return;
             }
-            return;
           }
 
           // Fallback for unidentified segments if we still need area/type

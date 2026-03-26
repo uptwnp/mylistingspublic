@@ -98,7 +98,7 @@ export function InquiryModal() {
                 <div className="flex items-center gap-2">
                   <div className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-xl transition-all",
-                    isAdded ? "bg-emerald-500 text-white" : "bg-zinc-900 text-white"
+                    isAdded ? "bg-blue-500 text-white" : "bg-zinc-900 text-white"
                   )}>
                     {isAdded ? <CheckCircle2 className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
                   </div>
@@ -140,9 +140,9 @@ export function InquiryModal() {
                       <div className="px-4 py-3 bg-white border-t border-zinc-100 space-y-2 text-[11px] text-zinc-500 leading-relaxed font-medium">
                         <p>A <span className="text-zinc-900 font-bold">Shortlist</span> is your personal wish-list of properties you're interested in.</p>
                         <ul className="space-y-1.5 list-none">
-                          <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">✓</span>Browse freely, save what you like</li>
-                          <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">✓</span>Share your list with family or friends</li>
-                          <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">✓</span>Request a callback or site visit for all items at once</li>
+                          <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">✓</span>Browse freely, save what you like</li>
+                          <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">✓</span>Share your list with family or friends</li>
+                          <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">✓</span>Request a callback or site visit for all items at once</li>
                         </ul>
                         <p className="text-zinc-400 italic">No commitment required — just a convenient way to organize.</p>
                       </div>
@@ -158,7 +158,7 @@ export function InquiryModal() {
                 {property && (
                   <div className={cn(
                     "flex items-center gap-3 p-3 rounded-2xl border transition-all",
-                    isAdded ? "border-emerald-100 bg-emerald-50/60" : "border-zinc-100 bg-zinc-50"
+                    isAdded ? "border-blue-100 bg-blue-50/60" : "border-zinc-100 bg-zinc-50"
                   )}>
                     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-zinc-200">
                       {hasImage ? (
@@ -176,8 +176,8 @@ export function InquiryModal() {
                         <div className="flex h-full w-full items-center justify-center text-zinc-400 text-[8px] font-bold uppercase p-1 text-center">No Image</div>
                       )}
                       {isAdded && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/20 backdrop-blur-[1px]">
-                          <div className="bg-emerald-500 rounded-full p-1">
+                        <div className="absolute inset-0 flex items-center justify-center bg-blue-500/20 backdrop-blur-[1px]">
+                          <div className="bg-blue-500 rounded-full p-1">
                             <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
                           </div>
                         </div>
@@ -193,7 +193,7 @@ export function InquiryModal() {
                     </div>
                     {isAdded && (
                       <div className="flex flex-col items-end shrink-0">
-                        <span className="text-[8px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Saved</span>
+                        <span className="text-[8px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">Saved</span>
                       </div>
                     )}
                   </div>
@@ -244,6 +244,7 @@ export function InquiryModal() {
                           onChange={(e) => setNote(e.target.value)}
                           placeholder="e.g. Open from two sides? Clear registry?"
                           rows={2}
+                          spellCheck={false}
                           className="w-full rounded-2xl border border-zinc-100 bg-zinc-50/80 p-3.5 text-sm font-medium text-zinc-900 outline-none transition-all focus:border-zinc-900 focus:bg-white focus:ring-1 focus:ring-zinc-900/5 placeholder:text-zinc-300 resize-none"
                         />
                       </div>
@@ -254,12 +255,12 @@ export function InquiryModal() {
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
-                      className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4 flex items-start gap-3"
+                      className="rounded-2xl bg-blue-50 border border-blue-100 p-4 flex items-start gap-3"
                     >
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm font-bold text-emerald-800">Property added to your shortlist!</p>
-                        <p className="text-xs font-medium text-emerald-600 mt-0.5">
+                        <p className="text-sm font-bold text-blue-800">Property added to your shortlist!</p>
+                        <p className="text-xs font-medium text-blue-600 mt-0.5">
                           {wantSiteVisit ? 'Site visit requested. ' : ''}
                           {note ? 'Your note is saved.' : 'Go to shortlist to request a callback or consultation.'}
                         </p>
