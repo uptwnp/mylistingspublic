@@ -35,12 +35,12 @@ export function NoPhotosPlaceholder({
   if (isMini) {
     return (
       <div 
-        className={cn("flex h-full w-full items-center justify-center transition-all duration-300", className)}
+        className={cn("flex h-full w-full items-center justify-center transition-all duration-300 relative overflow-hidden", className)}
         style={{ backgroundColor: secondaryColor }}
       >
-         <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+         <div className="relative z-10">
              <Icon 
-               className="h-1/2 w-1/2 relative z-10 opacity-40 text-zinc-900" 
+               className="h-10 w-10 sm:h-12 sm:w-12" 
              />
          </div>
       </div>
@@ -48,14 +48,14 @@ export function NoPhotosPlaceholder({
   }
 
   return (
-    <div 
-      className={cn(
-        "relative flex h-full w-full flex-col items-center justify-center overflow-hidden",
-        className
-      )}
-      style={{ backgroundColor: secondaryColor }}
-    >
-      {/* Background soft glow */}
+      <div 
+        className={cn(
+          "relative flex h-full w-full flex-col items-center justify-center overflow-hidden",
+          className
+        )}
+        style={{ backgroundColor: secondaryColor }}
+      >
+        {/* Background soft glow */}
       <div className="absolute inset-0 z-0">
         <div 
           className="absolute left-1/2 top-1/2 h-[150%] w-[150%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-10"

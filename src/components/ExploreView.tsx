@@ -178,7 +178,7 @@ export function ExploreView({
         const minSize = searchParams.get('minSize');
         const maxSize = searchParams.get('maxSize');
         const highlights = searchParams.get('highlights');
-        const keywords = searchParams.get('keywords');
+        const keywords = searchParams.get('q') || searchParams.get('keywords');
 
         // Fetch data with all filters
         const { data, count } = await getProperties(
@@ -273,7 +273,7 @@ export function ExploreView({
                       const city = overrideCity || searchParams.get('city') || selectedCity;
 
                       const isPlaceholder = (v: any) => !v || typeof v !== 'string' || 
-                        ['all', 'any', 'all-types', 'any-type', 'any-budget', 'any budget', 'any-area', 'anywhere', 'nothing', 'undefined', 'null'].includes(v.toLowerCase());
+                        ['all', 'any', 'all-types', 'any type', 'any-type', 'any-budget', 'any budget', 'any-area', 'anywhere', 'nothing', 'undefined', 'null'].includes(v.toLowerCase());
 
                       const displayType = !isPlaceholder(type) ? type : 'Properties';
                       const displayArea = !isPlaceholder(area) ? area : '';

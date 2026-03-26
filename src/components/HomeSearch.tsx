@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, MapPin, Wallet, Home as HomeIcon, Trees, Locate } from 'lucide-react';
+import { Search, X, MapPin, Wallet, Home as HomeIcon, Trees, LandPlot, Locate } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,7 @@ import { getAreas } from '@/lib/supabase';
 import { useShortlist } from '@/context/ShortlistContext';
 import { BUDGET_OPTIONS } from './HeaderSearch';
 import { getSeoUrl } from '@/lib/seo-utils';
+import { getPropertyConfig } from '@/lib/property-icons';
 
 
 const PROPERTY_TYPES = [
@@ -62,20 +63,33 @@ export function HomeSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string }) => {
+  const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string; keywords?: string }) => {
     const params = new URLSearchParams();
     
-    const finalArea = overrides?.area ?? query;
+    // Distinguish between areas and keywords
+    // Only treat finalArea as an actual area if it's in the suggestions or was an override
+    const rawInput = overrides?.area ?? query;
+    const isKnownArea = allAreas.some(a => a.toLowerCase() === rawInput.toLowerCase()) || rawInput.toLowerCase() === 'near me' || !!overrides?.area;
+    
+    const finalArea = isKnownArea ? rawInput : "";
+    const finalKeywords = isKnownArea ? (overrides?.keywords ?? "") : (overrides?.keywords ?? rawInput);
     const finalBudget = overrides?.budget ?? budget;
     const finalType = overrides?.type ?? propertyType;
 
     if (finalArea) params.set('area', finalArea);
+    if (finalKeywords) params.set('q', finalKeywords);
     if (finalBudget.value > 0) params.set('budget', finalBudget.label);
     if (finalType !== "Any Type") params.set('type', finalType);
     
     const seoUrl = getSeoUrl(selectedCity, finalType, finalArea, finalBudget.label);
     if (seoUrl) {
-      router.push(seoUrl);
+      const queryString = params.toString();
+      // Only keep the q param if we had keywords
+      const finalParams = new URLSearchParams();
+      if (finalKeywords) finalParams.set('q', finalKeywords);
+      const qStr = finalParams.toString();
+      
+      router.push(qStr ? `${seoUrl}?${qStr}` : seoUrl);
       return;
     }
 
@@ -310,7 +324,12 @@ export function HomeSearch() {
                         propertyType === type ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
                       )}
                     >
-                      {type === "Residential Plot" || type.includes("Land") ? <Trees className="h-5 w-5" /> : <HomeIcon className="h-5 w-5" />}
+                      {(() => {
+                        const config = getPropertyConfig(type);
+                        const Icon = type === "Any Type" ? HomeIcon : config.icon;
+                        const iconColor = type === "Any Type" ? "text-zinc-400" : (propertyType === type ? "text-white" : config.color);
+                        return <Icon className={cn("h-5 w-5", iconColor)} />;
+                      })()}
                       <span className="ty-body font-bold">{type}</span>
                     </button>
                   ))}

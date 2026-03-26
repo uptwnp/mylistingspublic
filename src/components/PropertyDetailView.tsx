@@ -300,7 +300,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                   className="flex h-full w-full flex-col items-center justify-center p-6 sm:p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   <div className="flex flex-col items-center scale-90 sm:scale-100">
-                    <Icon className={cn("h-20 w-20 md:h-32 md:w-32 opacity-20", config.color)} />
+                    <Icon className={cn("h-20 w-20 md:h-32 md:w-32", config.color)} />
                     <div className="text-center mt-3 md:mt-4">
                       <p className="ty-subtitle md:ty-title font-normal text-zinc-400 mb-4">No photos available</p>
                       <button className="rounded-full bg-black px-6 py-2 md:px-8 md:py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-[0.98]">

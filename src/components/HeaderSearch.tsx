@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Wallet, Home as HomeIcon, Trees, ChevronDown, SlidersHorizontal, X, Locate } from 'lucide-react';
+import { Search, MapPin, Wallet, Home as HomeIcon, Trees, LandPlot, Store, Building2, LayoutGrid, ChevronDown, SlidersHorizontal, X, Locate } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePathname, useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
+import { getPropertyConfig } from '@/lib/property-icons';
 
 
 export const BUDGET_OPTIONS = [
@@ -360,7 +361,12 @@ export function HeaderSearch({
                               propertyType === type ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
                             )}
                           >
-                            <HomeIcon className="h-5 w-5 text-zinc-400" />
+                            {(() => {
+                              const config = getPropertyConfig(type);
+                              const Icon = type === "Any Type" ? LayoutGrid : config.icon;
+                              const iconColor = type === "Any Type" ? "text-zinc-400" : config.color;
+                              return <Icon className={cn("h-5 w-5", iconColor)} />;
+                            })()}
                             <span>{type}</span>
                           </button>
                         ))}

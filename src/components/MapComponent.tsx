@@ -667,33 +667,29 @@ export default function MapComponent({
         />
         
         {curvedPath && (
-          <>
-            <Polyline 
-              positions={curvedPath}
-              pathOptions={{
-                color: '#e11d48', // rose-600
-                weight: 2,
-                dashArray: '8, 12',
-                lineCap: 'round',
-                opacity: 0.6
-              }}
-            />
-            {isValidLatLng(userCoords) && (
-              <Marker 
-                position={userCoords}
-                icon={L.divIcon({
-                  html: ReactDOMServer.renderToStaticMarkup(
-                    <div className="flex items-center justify-center h-8 w-8 bg-black rounded-full border-2 border-white shadow-lg">
-                      <Locate className="h-4 w-4 text-white" />
-                    </div>
-                  ),
-                  className: '',
-                  iconSize: [32, 32],
-                  iconAnchor: [16, 16]
-                })}
-              />
-            )}
-          </>
+          <Polyline 
+            positions={curvedPath}
+            pathOptions={{
+              color: '#e11d48', // rose-600
+              weight: 2,
+              dashArray: '8, 12',
+              lineCap: 'round',
+              opacity: 0.6
+            }}
+          />
+        )}
+        
+        {isValidLatLng(userCoords) && (
+          <Marker 
+            position={userCoords}
+            icon={L.divIcon({
+              html: '<div class="gps-marker"><div class="gps-marker-pulse"></div><div class="gps-marker-dot"></div></div>',
+              className: 'user-location-marker', // we already removed border/background in CSS for this
+              iconSize: [40, 40],
+              iconAnchor: [20, 20],
+            })}
+            zIndexOffset={2000} // Keep GPS above property markers
+          />
         )}
         {selectedProperty && selectedProperty.landmark_location_distance && selectedProperty.landmark_location_distance > 0 && isValidLatLng(getCoords(selectedProperty, properties, areaCenters)) && (
           <Circle

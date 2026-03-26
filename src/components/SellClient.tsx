@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, MapPin, IndianRupee, Maximize2, User, Phone, ArrowRight, CheckCircle2, 
-  Landmark, Home, Trees, Search, Locate, MessageCircle, ArrowLeft, Store, ShieldCheck, 
+  Landmark, Home, Trees, LandPlot, Search, Locate, MessageCircle, ArrowLeft, Store, ShieldCheck, 
   Users, Globe, Zap, Clock, Briefcase, Trophy, X, ChevronRight, Loader2, Trash2,
   FileText, AlertCircle, Clock3, ClipboardCheck, Ban
 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { useBrand } from '@/context/BrandContext';
 import { getAreas, getCities } from '@/lib/supabase';
 import { submitPropertyForSaleAction, getUserListingsAction, deleteUserListingAction } from '@/app/actions/leads';
+import { getPropertyConfig } from '@/lib/property-icons';
 import dynamic from 'next/dynamic';
 
 const MapPicker = dynamic<any>(() => import('@/components/MapPicker'), {
@@ -26,7 +27,7 @@ const MapPicker = dynamic<any>(() => import('@/components/MapPicker'), {
 });
 
 const PROPERTY_TYPES = [
-  { id: 'residential_plot', label: 'Residential Plot', icon: Trees },
+  { id: 'residential_plot', label: 'Residential Plot', icon: LandPlot },
   { id: 'flat', label: 'Flat/Apartment', icon: Building2 },
   { id: 'house', label: 'House/Villa', icon: Home },
   { id: 'commercial', label: 'Commercial', icon: Store },
@@ -527,9 +528,15 @@ export function SellClient() {
                                     className={cn("flex items-center justify-between gap-4 rounded-2xl border-2 p-5 transition-all text-left", 
                                     isActive ? "border-brand-primary bg-brand-primary/5 text-brand-primary" : "border-zinc-50 bg-white text-zinc-500 hover:border-zinc-200")}>
                                     <div className="flex items-center gap-4">
-                                      <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-400", isActive && "bg-brand-primary/10 text-brand-primary")}>
-                                        <Icon className="h-5 w-5" />
-                                      </div>
+                                      {(() => {
+                                        const config = getPropertyConfig(type.label);
+                                        const Icon = config.icon;
+                                        return (
+                                          <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors", isActive ? "bg-brand-primary/10 text-brand-primary" : config.bgColor)}>
+                                            <Icon className={cn("h-5 w-5", isActive ? "text-brand-primary" : config.color)} />
+                                          </div>
+                                        );
+                                      })()}
                                       <span className="ty-body font-black tracking-tight uppercase">{type.label}</span>
                                     </div>
                                     <ChevronRight className={cn("h-4 w-4 opacity-0 transition-all", isActive && "opacity-100 translate-x-1")} />

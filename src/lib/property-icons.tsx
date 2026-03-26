@@ -2,6 +2,7 @@ import {
   Home, 
   Building2, 
   Map, 
+  LandPlot,
   Store, 
   Briefcase, 
   ShoppingBag, 
@@ -9,6 +10,7 @@ import {
   HelpCircle,
   LucideIcon
 } from 'lucide-react';
+import { ColoredHouseIcon, ColoredFlatIcon, ColoredPlotIcon, ColoredCommercialIcon } from '@/components/ColoredIcons';
 
 interface PropertyTypeConfig {
   icon: LucideIcon;
@@ -19,58 +21,76 @@ interface PropertyTypeConfig {
 
 export const PROPERTY_TYPE_CONFIG: Record<string, PropertyTypeConfig> = {
   'Apartment': {
-    icon: Building2,
+    icon: ColoredFlatIcon as any,
     label: 'Apartment',
     color: 'text-[#7B1FA2]',
     bgColor: 'bg-[#F3E5F5]'
   },
   'Flat': {
-    icon: Building2,
+    icon: ColoredFlatIcon as any,
     label: 'Flat',
     color: 'text-[#7B1FA2]',
     bgColor: 'bg-[#F3E5F5]'
   },
   'Villa': {
-    icon: Home,
+    icon: ColoredHouseIcon as any,
     label: 'Villa',
     color: 'text-[#F57C00]',
     bgColor: 'bg-[#FFF3E0]'
   },
   'House': {
-    icon: Home,
+    icon: ColoredHouseIcon as any,
     label: 'House',
     color: 'text-[#F57C00]',
     bgColor: 'bg-[#FFF3E0]'
   },
   'Plot': {
-    icon: Map,
+    icon: ColoredPlotIcon as any,
     label: 'Plot',
-    color: 'text-[#1976D2]',
-    bgColor: 'bg-[#E3F2FD]'
+    color: 'text-[#2E7D32]',
+    bgColor: 'bg-[#E8F5E9]'
   },
   'Land': {
-    icon: Map,
+    icon: ColoredPlotIcon as any,
     label: 'Land',
-    color: 'text-[#1976D2]',
-    bgColor: 'bg-[#E3F2FD]'
+    color: 'text-[#2E7D32]',
+    bgColor: 'bg-[#E8F5E9]'
   },
   'Commercial': {
-    icon: Store,
+    icon: ColoredCommercialIcon as any,
     label: 'Commercial',
     color: 'text-[#1976D2]',
     bgColor: 'bg-[#E3F2FD]'
   },
+  'Residential Plot': {
+    icon: ColoredPlotIcon as any,
+    label: 'Plot',
+    color: 'text-[#2E7D32]',
+    bgColor: 'bg-[#E8F5E9]'
+  },
+  'Residential House': {
+    icon: ColoredHouseIcon as any,
+    label: 'House',
+    color: 'text-[#F57C00]',
+    bgColor: 'bg-[#FFF3E0]'
+  },
   'Shop': {
-    icon: ShoppingBag,
+    icon: ColoredCommercialIcon as any,
     label: 'Shop',
     color: 'text-[#1976D2]',
     bgColor: 'bg-[#E3F2FD]'
   },
   'Office': {
-    icon: Briefcase,
+    icon: ColoredCommercialIcon as any,
     label: 'Office',
     color: 'text-[#1976D2]',
     bgColor: 'bg-[#E3F2FD]'
+  },
+  'Floor': {
+    icon: ColoredFlatIcon as any,
+    label: 'Floor',
+    color: 'text-[#7B1FA2]',
+    bgColor: 'bg-[#F3E5F5]'
   },
   'Showroom': {
     icon: Store,

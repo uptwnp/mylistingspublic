@@ -122,7 +122,7 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
               {/* Header */}
               <div className="flex items-center justify-between px-5 pt-4 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-white">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-200">
                     <MessageCircleQuestion className="h-5 w-5" />
                   </div>
                   <div>
@@ -263,7 +263,7 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
                       : 'border-zinc-100 text-zinc-300 cursor-not-allowed'
                   )}
                 >
-                  <LayoutGrid className="h-4 w-4" />
+                  <LayoutGrid className="h-4 w-4 text-blue-500" />
                   Save this &amp; Explore More
                 </button>
               </div>

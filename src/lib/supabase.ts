@@ -151,6 +151,19 @@ export async function getProperties(
     const { properties, total_count } = (data as any)[0] || { properties: [], total_count: 0 };
     const formattedData = properties?.map(formatPropertyData) || [];
 
+    // SMART FALLBACK: If 0 results for an area, and no keywords were specified,
+    // retry once by treating the area string as keywords across all areas.
+    // This handles users typing "Corner" in the location box.
+    if (total_count === 0 && normalizedArea !== 'All' && !keywords && area && area !== 'Near Me') {
+      return getProperties(
+        page, limit, useCache, 
+        city, type, sortField, sortOrder, 
+        'All', budget, minSize, maxSize, highlights, 
+        area, // Treat area as keywords
+        userLat, userLng, bounds
+      );
+    }
+
     // Local Storage Caching
     if (useCache && page === 0 && typeof window !== 'undefined') {
       localStorage.setItem(cacheKey, JSON.stringify({ data: { data: formattedData, count: total_count }, timestamp: Date.now() }));
