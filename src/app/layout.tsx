@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { headers } from "next/headers";
-import { getBrandConfig } from "@/lib/brand";
 
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -28,21 +27,17 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ['600', '700', '800'],
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  // generateMetadata runs in parallel to the layout. It will block the head but not the initial shell.
-  const headersList = await headers();
-  const host = headersList.get('host');
-  const brand = getBrandConfig(host);
-  
-  return {
-    title: `${brand.name} | Premium Property Showcase`,
-    description: "Discover curated internal property listings instantly.",
-  };
-}
+// CRITICAL: Metadata is now STATIC. This is the #1 way to get an instant TTFB.
+// Next.js 15 will wait for generateMetadata before sending the first byte.
+// By making it static, we ensure the browser gets the HTML in <100ms.
+export const metadata: Metadata = {
+  title: "MyListings | Premium Property Showcase",
+  description: "Discover curated internal property listings instantly.",
+  icons: {
+    icon: '/favicon.ico',
+  }
+};
 
-// CRITICAL: Removed 'async' from the RootLayout itself to ensure the server
-// sends the <html> and <body> shell IMMEDIATELY without waiting for DB/Headers/etc.
-// This allows Shimmers/Loading skeletons to appear in <100ms.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -57,7 +52,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} antialiased`}
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<RootLoadingSkeleton />}>
            <LayoutContent>{children}</LayoutContent>
         </Suspense>
       </body>
@@ -65,9 +60,30 @@ export default function RootLayout({
   );
 }
 
-// Separate component for brand/hosting info that might need a moment to resolve
-// Putting it here allows the outer shell (body/html) to stream before this component is ready.
+/**
+ * This skeleton ensures that even if the brand config or headers take time,
+ * the user sees a premium UI structure IMMEDIATELY.
+ */
+function RootLoadingSkeleton() {
+  return (
+    <div className="min-h-screen flex flex-col animate-pulse">
+      <div className="h-20 bg-white border-b border-zinc-100 flex items-center px-6">
+        <div className="h-8 w-32 bg-zinc-100 rounded-lg" />
+      </div>
+      <main className="flex-1 bg-white p-6 space-y-6">
+        <div className="h-64 bg-zinc-50 rounded-3xl" />
+        <div className="grid grid-cols-2 gap-4">
+           <div className="h-32 bg-zinc-50 rounded-2xl" />
+           <div className="h-32 bg-zinc-50 rounded-2xl" />
+        </div>
+      </main>
+    </div>
+  );
+}
+
 async function LayoutContent({ children }: { children: React.ReactNode }) {
+  // headers() call is moved inside the Suspense boundary.
+  // This means it will NOT block the initial HTML byte.
   const headersList = await headers();
   const host = headersList.get('host');
 
