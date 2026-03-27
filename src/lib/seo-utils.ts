@@ -11,8 +11,8 @@ export const SEO_CITIES = [
 
 export const SEO_PROPERTY_TYPES = [
   { slug: 'plot', value: 'Residential Plot', synonyms: ['plots', 'land', 'residential-plot'] },
-  { slug: 'house', value: 'Residential House', synonyms: ['houses', 'villas', 'villa', 'residential-house'] },
-  { slug: 'flat', value: 'Flat', synonyms: ['flats', 'apartment', 'apartments'] },
+  { slug: 'house', value: 'Residential House', synonyms: ['houses', 'villas', 'villa', 'residential-house', 'house/villa', 'house-villa'] },
+  { slug: 'flat', value: 'Flat', synonyms: ['flats', 'apartment', 'apartments', 'flat/apartment', 'flat-apartment'] },
   { slug: 'floor', value: 'Floor', synonyms: ['floors'] },
   { slug: 'shop', value: 'Shop', synonyms: ['shops', 'commercial-shop'] },
   { slug: 'office', value: 'Office', synonyms: ['offices', 'workspace'] },
@@ -166,10 +166,13 @@ export function getSeoUrl(city?: string, type?: string, area?: string, budgetLab
     ? 'anywhere' 
     : (area.toLowerCase() === 'near me' ? 'near-me' : area.toLowerCase().trim().replace(/\s+/g, '-'));
   
-  const typeMatch = type ? SEO_PROPERTY_TYPES.find(t => t.value === type) : null;
+  const typeMatch = type ? SEO_PROPERTY_TYPES.find(t => 
+    t.value.toLowerCase() === type.toLowerCase() || 
+    t.synonyms?.some(s => s.toLowerCase() === type.toLowerCase())
+  ) : null;
   const finalType = typeMatch 
     ? typeMatch.slug 
-    : (type && type !== 'Any Type' && type !== 'anything' && type !== 'all-types' ? type.toLowerCase().trim().replace(/\s+/g, '-') : 'all-types');
+    : (type && type !== 'Any Type' && type !== 'anything' && type !== 'all-types' ? type.toLowerCase().trim().replace(/[\/\s]+/g, '-') : 'all-types');
   
   const budgetMatch = budgetLabel ? BUDGET_MAPPINGS.find(b => b.label === budgetLabel) : null;
   const finalBudget = budgetMatch 
