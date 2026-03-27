@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getAreaCenters } from '@/lib/supabase';
 import { syncShortlistAction, submitConsultationRequestAction } from '@/app/actions/leads';
+import { Property } from '@/types';
 
 import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
 
@@ -60,10 +61,10 @@ interface ShortlistContextType {
   setSortOrder: (o: 'asc' | 'desc') => void;
   
   inquiries: Record<string, InquiryData>;
-  inquiryProperty: Record<string, unknown> | null;
-  setInquiryProperty: (property: Record<string, unknown> | null) => void;
+  inquiryProperty: Property | string | null;
+  setInquiryProperty: (property: Property | string | null) => void;
   updateInquiry: (id: string, inquiryData: InquiryData) => void;
-  addToShortlist: (property: Record<string, unknown> | string) => void;
+  addToShortlist: (property: Property | string) => void;
   removeFromShortlist: (id: string) => void;
   toggleSave: (id: string) => void;
   isInShortlist: (id: string) => boolean;
@@ -97,8 +98,8 @@ interface ShortlistContextType {
   isInitialized: boolean;
   
   // Property Cache for instant navigation
-  cachedProperties: Record<string, Record<string, unknown>>;
-  cacheProperties: (properties: Array<Record<string, unknown>>) => void;
+  cachedProperties: Record<string, Property>;
+  cacheProperties: (properties: Property[]) => void;
   syncFilters: (filters: { 
     city?: string, 
     type?: string, 
@@ -144,7 +145,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | 'area' | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [inquiries, setInquiries] = useState<Record<string, InquiryData>>({});
-  const [inquiryProperty, setInquiryProperty] = useState<Record<string, unknown> | null>(null);
+  const [inquiryProperty, setInquiryProperty] = useState<Property | string | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number, isFallback?: boolean} | null>(null);
   
   const [contactDetails, setContactDetailsState] = useState<ContactDetails | null>(null);
@@ -153,7 +154,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
 
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
   const [areaCenters, setAreaCenters] = useState<Array<Record<string, unknown>>>([]);
-  const [cachedProperties, setCachedProperties] = useState<Record<string, Record<string, unknown>>>({});
+  const [cachedProperties, setCachedProperties] = useState<Record<string, Property>>({});
 
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_KEY);
@@ -420,7 +421,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     setSortOrder('desc');
   };
 
-  const addToShortlist = (property: Record<string, unknown> | string) => {
+  const addToShortlist = (property: Property | string) => {
     const id = typeof property === 'string' ? property : String(property.property_id || '');
     if (!shortlistItems.includes(id)) {
       setShortlistItems(prev => [...prev, id]);
@@ -470,7 +471,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const cacheProperties = React.useCallback((props: Array<Record<string, unknown>>) => {
+  const cacheProperties = React.useCallback((props: Property[]) => {
     if (!props || props.length === 0) return;
     setCachedProperties(prev => {
       const next = { ...prev };

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
 import { getFallbackUnit } from './utils';
+import { Property } from '@/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -34,7 +35,7 @@ async function dedupeRequest<T>(key: string, fetcher: () => Promise<T>): Promise
 }
 
 
-const formatPropertyData = (property: Record<string, unknown>) => {
+const formatPropertyData = (property: Record<string, unknown>): Property => {
   const formatted = {
     ...property,
     public_id: String(property.public_id ?? ''),
@@ -54,7 +55,7 @@ const formatPropertyData = (property: Record<string, unknown>) => {
     })
   };
   
-  return formatted as (Record<string, unknown> & { property_id: string });
+  return formatted as unknown as Property;
 };
 
 const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status';

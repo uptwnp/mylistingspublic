@@ -1,13 +1,14 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, CheckCircle2, MapPin, ArrowRight, LayoutGrid, ChevronDown, ChevronUp, Bookmark, Home } from 'lucide-react';
+import { X, Check, CheckCircle2, MapPin, ArrowRight, LayoutGrid, ChevronDown, ChevronUp, Bookmark } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useShortlist } from '@/context/ShortlistContext';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { getPropertyConfig } from '@/lib/property-icons';
+import { Property } from '@/types';
 
 export function InquiryModal() {
   const router = useRouter();
@@ -19,12 +20,13 @@ export function InquiryModal() {
 
   useEffect(() => {
     if (inquiryProperty) {
-      const id = typeof inquiryProperty === 'string' ? inquiryProperty : inquiryProperty.property_id;
-      const existingInquiry = inquiries[id];
+      const property = typeof inquiryProperty === 'string' ? null : inquiryProperty as any;
+      const id = property ? property.property_id : String(inquiryProperty);
+      const existingInquiry = (inquiries as any)[id];
       if (existingInquiry) {
         setWantSiteVisit(existingInquiry.wantSiteVisit);
         setNote(existingInquiry.question || '');
-        setIsAdded(true); // already in shortlist → show confirmed state
+        setIsAdded(true);
       } else {
         setWantSiteVisit(false);
         setNote('');
@@ -36,7 +38,8 @@ export function InquiryModal() {
 
   const handleAdd = () => {
     if (!inquiryProperty) return;
-    const id = typeof inquiryProperty === 'string' ? inquiryProperty : inquiryProperty.property_id;
+    const property = typeof inquiryProperty === 'string' ? null : inquiryProperty as any;
+    const id = property ? property.property_id : String(inquiryProperty);
     confirmAddToShortlist(id, {
       wantSiteVisit,
       interestedInPurchase: false,
@@ -48,7 +51,8 @@ export function InquiryModal() {
 
   const handleUpdate = () => {
     if (!inquiryProperty) return;
-    const id = typeof inquiryProperty === 'string' ? inquiryProperty : inquiryProperty.property_id;
+    const property = typeof inquiryProperty === 'string' ? null : inquiryProperty as any;
+    const id = property ? property.property_id : String(inquiryProperty);
     confirmAddToShortlist(id, {
       wantSiteVisit,
       interestedInPurchase: false,
@@ -60,8 +64,8 @@ export function InquiryModal() {
 
   if (!inquiryProperty) return null;
 
-  const property = typeof inquiryProperty === 'string' ? null : inquiryProperty;
-  const isEdit = isInShortlist(property?.property_id ?? (inquiryProperty as string));
+  const property = typeof inquiryProperty === 'string' ? null : inquiryProperty as Property;
+  const isEdit = isInShortlist(property?.property_id ?? String(inquiryProperty));
   const config = property ? getPropertyConfig(property.type) : null;
   const Icon = config?.icon;
   const hasImage = Array.isArray(property?.image_urls) && property!.image_urls.length > 0;
