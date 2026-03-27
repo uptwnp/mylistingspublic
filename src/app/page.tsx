@@ -1,4 +1,4 @@
-import { getProperties, getHomepageData } from "@/lib/supabase";
+import { getHomepageData } from "@/lib/supabase";
 import { HomeClientWrapper } from "@/components/HomeClientWrapper";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
@@ -9,21 +9,25 @@ export const revalidate = 3600; // Cache page for 1 hour (ISR)
 
 const CITY_KEY = 'dealer_network_selected_city';
 
-export default async function Home() {
-  // Use cookies to determine the city, but wrap the heavy fetching in Suspense
-  // to prevent the entire page from being blocked.
-  const cookieStore = await cookies();
-  const serverCity = cookieStore.get(CITY_KEY)?.value || 'Panipat';
-
+// CRITICAL: Homepage is now a direct shell.
+// By NOT making the main Home function async and NOT awaiting cookies at the top level,
+// we allow the RootLayout (Navbar/Footer) and the <RootLoading /> shimmers
+// to appear on the user's screen in <100ms.
+export default function Home() {
   return (
     <Suspense fallback={<RootLoading />}>
-      <HomeContent serverCity={serverCity} />
+      <HomeContent />
     </Suspense>
   );
 }
 
-// Separate component for data fetching to allow streaming
-async function HomeContent({ serverCity }: { serverCity: string }) {
+// Data fetching and dynamic header logic (cookies) is now isolated inside 
+// this sub-component, which is Suspended. This ensures the rest of the 
+// page (and the shell) can stream without waiting for the database.
+async function HomeContent() {
+  const cookieStore = await cookies();
+  const serverCity = cookieStore.get(CITY_KEY)?.value || 'Panipat';
+
   // Batched fetch for ALL homepage data in ONE RPC call.
   // This reduces TTFB by eliminating multiple round-trips and connection overhead.
   const batch = await getHomepageData(serverCity);
