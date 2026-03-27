@@ -10,11 +10,10 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { BUDGET_OPTIONS } from './HeaderSearch';
 import { getSeoUrl } from '@/lib/seo-utils';
 import { getPropertyConfig } from '@/lib/property-icons';
+import { SEARCH_PROPERTY_GROUPS } from '@/lib/constants';
 
 
-const PROPERTY_TYPES = [
-  "Any Type", "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Industrial Land", "Industrial Built-up", "Agriculture Land", "Factory", "Godown"
-];
+// PROPERTY_TYPES local constant removed in favor of SEARCH_PROPERTY_GROUPS from constants.ts
 
 export function HomeSearch() {
   const router = useRouter();
@@ -311,26 +310,28 @@ export function HomeSearch() {
               >
                  <h3 className="mb-5 px-4 ty-label text-zinc-400">Property Category</h3>
                 <div className="flex flex-col gap-1">
-                  {PROPERTY_TYPES.map((type) => (
+                  {SEARCH_PROPERTY_GROUPS.map((group) => (
                     <button 
-                      key={type}
+                      key={group.label}
                         onClick={(e) => { 
                           e.stopPropagation(); 
-                          setPropertyType(type); 
+                          // Use the first value as the 'representative' value for the state,
+                          // but the Explore page should ideally handle the label or the list.
+                          // For now, setting it to the label is consistent with our 'consolidated' strategy.
+                          setPropertyType(group.label); 
                           setActiveSegment(null); 
                         }}
                       className={cn(
                         "flex items-center gap-4 rounded-xl px-4 py-4 text-left ty-body font-bold transition-all",
-                        propertyType === type ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
+                        propertyType === group.label ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-50"
                       )}
                     >
                       {(() => {
-                        const config = getPropertyConfig(type);
-                        const Icon = type === "Any Type" ? HomeIcon : config.icon;
-                        const iconColor = type === "Any Type" ? "text-zinc-400" : (propertyType === type ? "text-white" : config.color);
+                        const Icon = group.icon;
+                        const iconColor = group.label === "Any Type" ? "text-zinc-400" : (propertyType === group.label ? "text-white" : "text-blue-500");
                         return <Icon className={cn("h-5 w-5", iconColor)} />;
                       })()}
-                      <span className="ty-body font-bold">{type}</span>
+                      <span className="ty-body font-bold">{group.label}</span>
                     </button>
                   ))}
                 </div>

@@ -7,16 +7,18 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 // Handle missing environment variables gracefully during build
 export const supabase = (supabaseUrl && supabaseAnonKey) 
   ? createClient(supabaseUrl, supabaseAnonKey)
-  : null as any;
+  : null as unknown as ReturnType<typeof createClient>;
 
 const CACHE_KEY = 'property_platform_results_v6';
 const AREAS_CACHE_KEY = 'property_platform_areas_v1';
 const CITIES_CACHE_KEY = 'property_platform_cities_v1';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _EXCLUDE_UNUSED = [AREAS_CACHE_KEY, CITIES_CACHE_KEY];
 const CENTERS_CACHE_KEY = 'property_platform_centers_v1';
 const CACHE_TTL = 3600000; // 1 hour
 
 // Simple in-memory deduplication for pending requests
-const pendingRequests: Record<string, Promise<any> | undefined> = {};
+const pendingRequests: Record<string, Promise<unknown> | undefined> = {};
 
 async function dedupeRequest<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
   const existing = pendingRequests[key];
@@ -39,19 +41,19 @@ const formatPropertyData = (property: Record<string, unknown>) => {
 
     highlights: typeof property.highlights === 'string'
       ? property.highlights.split(',').map((h: string) => h.trim()).filter(Boolean)
-      : Array.isArray(property.highlights) ? (property.highlights as any).filter(Boolean) : [],
+      : Array.isArray(property.highlights) ? (property.highlights as string[]).filter(Boolean) : [],
     image_urls: (typeof property.image_urls === 'string' 
       ? property.image_urls.split(',').map((url: string) => url.trim()).filter(Boolean)
-      : Array.isArray(property.image_urls) ? property.image_urls : []
+      : Array.isArray(property.image_urls) ? (property.image_urls as string[]) : []
     ).map((url: string) => {
       if (typeof url === 'string' && url.includes('r2.cloudflarestorage.com')) {
         return url.replace('c60696ba6ea91f21fe51c590227fc61d.r2.cloudflarestorage.com/properties', 'pub-9e00030e294c40efa96642db5ba7f437.r2.dev');
       }
       return url;
     })
-  } as any;
+  };
   
-  return formatted;
+  return formatted as (Record<string, unknown> & { property_id: string });
 };
 
 const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status';
@@ -148,7 +150,8 @@ export async function getProperties(
       throw error; 
     }
 
-    const { properties, total_count } = (data as any)[0] || { properties: [], total_count: 0 };
+    const queryResult = data as unknown as { properties: any[]; total_count: number }[];
+    const { properties, total_count } = queryResult[0] || { properties: [], total_count: 0 };
     const formattedData = properties?.map(formatPropertyData) || [];
 
     // SMART FALLBACK: If 0 results for an area, and no keywords were specified,
@@ -170,7 +173,10 @@ export async function getProperties(
     }
 
     return { data: formattedData, count: total_count };
-  } catch (err) {
+  } catch (err: unknown) {
+    if ((err as Error).name === 'AbortError' || (err as Error).message === 'canceled') {
+      return { data: [], count: 0 };
+    }
     console.error('RPC failed, ensure get_public_properties_v2 is deployed in SQL Editor:', err);
     return { data: [], count: 0 };
   }
@@ -233,7 +239,7 @@ export async function getPropertiesByIds(ids: string[]) {
       }) || [];
 
     return unique;
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Critical error in getPropertiesByIds:', err);
     return [];
   }
@@ -253,7 +259,7 @@ export async function getPropertyCount(city?: string) {
     const { count, error } = await query;
     if (error) return 0;
     return count || 0;
-  } catch (err) {
+  } catch (err: unknown) {
     return 0;
   }
 }
@@ -315,7 +321,7 @@ export async function getAreaCenters() {
   });
 }
 
-export async function upsertVisitor(visitorData: Record<string, any>) {
+export async function upsertVisitor(visitorData: Record<string, unknown>) {
   if (!supabase) throw new Error('Supabase not initialized');
 
   const { data, error } = await supabase
@@ -344,7 +350,7 @@ export async function upsertVisitor(visitorData: Record<string, any>) {
   return data;
 }
 
-export async function submitInquiry(inquiryData: any) {
+export async function submitInquiry(inquiryData: Record<string, any>) {
   if (!supabase) throw new Error('Supabase not initialized');
   
   // 1. Create or Update Visitor
@@ -365,7 +371,7 @@ export async function submitInquiry(inquiryData: any) {
   return { visitor, data };
 }
 
-export async function submitPropertyForSale(propertyData: any, visitorData: any) {
+export async function submitPropertyForSale(propertyData: Record<string, any>, visitorData: Record<string, any>) {
   if (!supabase) throw new Error('Supabase not initialized');
 
   // 1. Create or Update Visitor
@@ -408,7 +414,7 @@ export const clearPropertyCache = () => {
   }
 };
 
-export async function syncShortlist(visitorData: any, shortlistItems: string[], inquiries: Record<string, any>) {
+export async function syncShortlist(visitorData: Record<string, any>, shortlistItems: string[], inquiries: Record<string, any>) {
   if (!supabase) return;
   
   return upsertVisitor({
@@ -421,7 +427,7 @@ export async function syncShortlist(visitorData: any, shortlistItems: string[], 
   });
 }
 
-export async function submitConsultationRequest(request: any) {
+export async function submitConsultationRequest(request: Record<string, any>) {
   if (!supabase) throw new Error('Supabase not initialized');
 
   // 1. Upsert Visitor first to ensure we have an ID

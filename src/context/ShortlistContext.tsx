@@ -60,10 +60,10 @@ interface ShortlistContextType {
   setSortOrder: (o: 'asc' | 'desc') => void;
   
   inquiries: Record<string, InquiryData>;
-  inquiryProperty: any | null;
-  setInquiryProperty: (property: any | null) => void;
+  inquiryProperty: Record<string, unknown> | null;
+  setInquiryProperty: (property: Record<string, unknown> | null) => void;
   updateInquiry: (id: string, inquiryData: InquiryData) => void;
-  addToShortlist: (property: any) => void;
+  addToShortlist: (property: Record<string, unknown> | string) => void;
   removeFromShortlist: (id: string) => void;
   toggleSave: (id: string) => void;
   isInShortlist: (id: string) => boolean;
@@ -91,14 +91,14 @@ interface ShortlistContextType {
   addConsultationRequest: (request: Omit<ConsultationRequest, 'id' | 'timestamp'>) => void;
   updateConsultationRequest: (id: string, updates: Partial<ConsultationRequest>) => void;
   removeConsultationRequest: (id: string) => void;
-  areaCenters: any[];
+  areaCenters: Array<Record<string, unknown>>;
   loadAreaCentersOnce: () => Promise<void>;
   closeAllModals: (skipHistory?: boolean) => void;
   isInitialized: boolean;
   
   // Property Cache for instant navigation
-  cachedProperties: Record<string, any>;
-  cacheProperties: (properties: any[]) => void;
+  cachedProperties: Record<string, Record<string, unknown>>;
+  cacheProperties: (properties: Array<Record<string, unknown>>) => void;
   syncFilters: (filters: { 
     city?: string, 
     type?: string, 
@@ -144,7 +144,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [activeSelectionSheet, setActiveSelectionSheet] = useState<'budget' | 'type' | 'area' | null>(null);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [inquiries, setInquiries] = useState<Record<string, InquiryData>>({});
-  const [inquiryProperty, setInquiryProperty] = useState<any | null>(null);
+  const [inquiryProperty, setInquiryProperty] = useState<Record<string, unknown> | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number, isFallback?: boolean} | null>(null);
   
   const [contactDetails, setContactDetailsState] = useState<ContactDetails | null>(null);
@@ -152,8 +152,8 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [onContactSuccess, setOnContactSuccess] = useState<(() => void) | null>(null);
 
   const [consultationRequests, setConsultationRequests] = useState<ConsultationRequest[]>([]);
-  const [areaCenters, setAreaCenters] = useState<any[]>([]);
-  const [cachedProperties, setCachedProperties] = useState<Record<string, any>>({});
+  const [areaCenters, setAreaCenters] = useState<Array<Record<string, unknown>>>([]);
+  const [cachedProperties, setCachedProperties] = useState<Record<string, Record<string, unknown>>>({});
 
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_KEY);
@@ -420,8 +420,8 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     setSortOrder('desc');
   };
 
-  const addToShortlist = (property: any) => {
-    const id = typeof property === 'string' ? property : property.property_id;
+  const addToShortlist = (property: Record<string, unknown> | string) => {
+    const id = typeof property === 'string' ? property : String(property.property_id || '');
     if (!shortlistItems.includes(id)) {
       setShortlistItems(prev => [...prev, id]);
     }
@@ -470,12 +470,12 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const cacheProperties = React.useCallback((props: any[]) => {
+  const cacheProperties = React.useCallback((props: Array<Record<string, unknown>>) => {
     if (!props || props.length === 0) return;
     setCachedProperties(prev => {
       const next = { ...prev };
       props.forEach(p => {
-        if (p?.property_id) next[p.property_id] = p;
+        if (p?.property_id) next[String(p.property_id)] = p;
       });
       
       // Keep only latest 100 properties to prevent memory bloat

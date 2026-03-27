@@ -17,7 +17,7 @@ export default async function Home() {
   const [plotData, apartmentData, villaData, commercialData] = await Promise.all([
     getProperties(0, 6, false, serverCity, 'Residential Plot'),
     getProperties(0, 6, false, serverCity, 'Flat'),
-    getProperties(0, 6, false, serverCity, 'Residential House'),
+    getProperties(0, 6, false, serverCity, 'House'),
     getProperties(0, 6, false, serverCity, 'Commercial Built-up')
   ]);
 

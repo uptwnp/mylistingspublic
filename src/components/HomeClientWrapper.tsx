@@ -98,7 +98,7 @@ export function HomeClientWrapper({
         <PropertySection 
           title={`Villas for sale`} 
           city={selectedCity}
-          type="Residential House" 
+          type="House" 
           initialData={selectedCity === serverCity ? initialVillas : undefined}
         />
 

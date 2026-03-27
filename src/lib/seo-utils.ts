@@ -11,14 +11,22 @@ export const SEO_CITIES = [
 
 export const SEO_PROPERTY_TYPES = [
   { slug: 'plot', value: 'Residential Plot', synonyms: ['plots', 'land', 'residential-plot'] },
-  { slug: 'house', value: 'Residential House', synonyms: ['houses', 'villas', 'villa', 'residential-house', 'house/villa', 'house-villa'] },
-  { slug: 'flat', value: 'Flat', synonyms: ['flats', 'apartment', 'apartments', 'flat/apartment', 'flat-apartment'] },
+  { slug: 'house', value: 'House', synonyms: ['houses', 'residential-house'] },
+  { slug: 'villa', value: 'Villa', synonyms: ['villas', 'house-villa', 'House / Villa'] },
+  { slug: 'flat', value: 'Flat', synonyms: ['flats', 'apartment', 'apartments', 'flat-apartment', 'Flat / Apt'] },
+  { slug: 'penthouse', value: 'Penthouse', synonyms: ['penthouses'] },
   { slug: 'floor', value: 'Floor', synonyms: ['floors'] },
-  { slug: 'shop', value: 'Shop', synonyms: ['shops', 'commercial-shop'] },
+  { slug: 'shop', value: 'Shop', synonyms: ['shops', 'commercial-shop', 'Shop / Showroom'] },
+  { slug: 'showroom', value: 'Showroom', synonyms: ['showrooms'] },
   { slug: 'office', value: 'Office', synonyms: ['offices', 'workspace'] },
-  { slug: 'factory', value: 'Factory', synonyms: ['industrial', 'godown', 'factories'] },
-  { slug: 'commercial', value: 'Commercial Built-up', synonyms: ['business', 'commercial-built-up', 'big-commercial'] },
-  { slug: 'agriculture', value: 'Agriculture Land', synonyms: ['farm', 'farmland', 'agriculture-land'] },
+  { slug: 'warehouse', value: 'Warehouse', synonyms: ['warehouses', 'godown', 'Whouse / Factory'] },
+  { slug: 'factory', value: 'Factory', synonyms: ['factories'] },
+  { slug: 'industrial-plot', value: 'Industrial Plot', synonyms: ['industrial-plots', 'Indus. Plot'] },
+  { slug: 'agriculture', value: 'Agriculture Land', synonyms: ['farm', 'farmland', 'agriculture-land', 'Farm Land'] },
+  { slug: 'farmhouse', value: 'Farm House', synonyms: ['farm-house'] },
+  { slug: 'hotel', value: 'Hotel', synonyms: ['hotels', 'Hotel / PG / Qtr'] },
+  { slug: 'pg', value: 'PG', synonyms: ['paying-guest'] },
+  { slug: 'labour-quarter', value: 'Labour Quarter', synonyms: ['staff-quarter'] },
 ];
 
 export const BUDGET_MAPPINGS = [

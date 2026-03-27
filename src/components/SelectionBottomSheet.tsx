@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, Home as HomeIcon, Trees, LandPlot, Store, Building2, Search, MapPin, Locate, Globe, LayoutGrid } from 'lucide-react';
+import { X, Wallet, Home as HomeIcon, Trees, LandPlot, Store, Building2, Search, MapPin, Locate, Globe, LayoutGrid, Warehouse, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/context/ShortlistContext';
 import { getAreas } from '@/lib/supabase';
@@ -22,14 +22,19 @@ const BUDGET_OPTIONS = [
 
 const PROPERTY_TYPES = [
   { label: "Any Type", value: "Any Type", icon: LayoutGrid },
-  { label: "Plots", value: "Residential Plot", icon: LandPlot },
-  { label: "Houses", value: "Residential House", icon: HomeIcon },
-  { label: "Shop", value: "Shop", icon: Store },
-  { label: "Factory", value: "Factory", icon: Building2 },
-  { label: "Commercial", value: "Commercial Built-up", icon: Building2 },
-  { label: "Industrial", value: "Industrial Land", icon: LandPlot },
-  { label: "Agriculture", value: "Agriculture Land", icon: Trees },
+  { label: "Residential Plot", value: "Residential Plot", icon: LandPlot },
+  { label: "House", value: "House", icon: HomeIcon },
+  { label: "Floor", value: "Floor", icon: Building2 },
+  { label: "Flat", value: "Flat", icon: Building2 },
+  { label: "Commercial Plot", value: "Commercial Plot", icon: LandPlot },
+  { label: "Commercial Built-up", value: "Commercial Built-up", icon: Building2 },
   { label: "Office", value: "Office", icon: Building2 },
+  { label: "Industrial Plot", value: "Industrial Plot", icon: LandPlot },
+  { label: "Industrial Built-up", value: "Industrial Built-up", icon: Warehouse },
+  { label: "Agriculture Land", value: "Agriculture Land", icon: Trees },
+  { label: "Farm House", value: "Farm House", icon: HomeIcon },
+  { label: "Labour Quarter", value: "Labour Quarter", icon: Building2 },
+  { label: "Other", value: "Other", icon: HelpCircle },
 ];
 
 interface SelectionBottomSheetProps {

@@ -11,6 +11,7 @@ import { SORT_CATEGORIES, NEARBY_SORT_CATEGORY } from '@/lib/constants';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { getSeoUrl, parseSeoSlug } from '@/lib/seo-utils';
 import { getPropertyConfig } from '@/lib/property-icons';
+import { SEARCH_PROPERTY_GROUPS } from '@/lib/constants';
 
 
 export const BUDGET_OPTIONS = [
@@ -27,9 +28,7 @@ export const BUDGET_OPTIONS = [
   { label: "100 Cr+", value: 10001 },
 ];
 
-export const PROPERTY_TYPES = [
-  "Any Type", "Residential Plot", "Residential House", "Floor", "Flat", "Shop", "Office", "Villa", "Commercial Built-up", "Big Commercial", "Factory", "Godown"
-];
+// PROPERTY_TYPES local constant removed in favor of SEARCH_PROPERTY_GROUPS from constants.ts
 
 interface HeaderSearchProps {
   isScrolled: boolean;
@@ -348,26 +347,25 @@ export function HeaderSearch({
                       className="absolute right-0 top-[calc(100%+8px)] z-50 w-80 bg-white rounded-[24px] border border-zinc-100 shadow-2xl p-4 hidden sm:block"
                     >
                       <div className="flex flex-col gap-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                        {PROPERTY_TYPES.map((type) => (
+                        {SEARCH_PROPERTY_GROUPS.map((group) => (
                           <button 
-                            key={type}
+                            key={group.label}
                             onClick={(e) => { 
                               e.stopPropagation(); 
-                              setPropertyType(type); 
+                              setPropertyType(group.label); 
                               setActiveSegment(null); 
                             }}
                             className={cn(
                               "flex items-center gap-4 rounded-xl px-4 py-3 text-left ty-body font-bold transition-all border-2",
-                              propertyType === type ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
+                              propertyType === group.label ? "border-zinc-900 bg-zinc-50" : "border-transparent hover:bg-zinc-50"
                             )}
                           >
                             {(() => {
-                              const config = getPropertyConfig(type);
-                              const Icon = type === "Any Type" ? LayoutGrid : config.icon;
-                              const iconColor = type === "Any Type" ? "text-zinc-400" : config.color;
+                              const Icon = group.icon;
+                              const iconColor = group.label === "Any Type" ? "text-zinc-400" : "text-blue-500";
                               return <Icon className={cn("h-5 w-5", iconColor)} />;
                             })()}
-                            <span>{type}</span>
+                            <span>{group.label}</span>
                           </button>
                         ))}
                       </div>

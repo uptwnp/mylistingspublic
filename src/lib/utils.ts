@@ -34,7 +34,7 @@ export function getFallbackUnit(price: number | null | undefined, size: number |
   return 'Sq.Yds';
 }
 
-export function formatSizeRange(min: number, max: number, unit: string | null, price?: number) {
+export function formatSizeRange(min: number, max: number, unit: string | null, _price?: number) {
   if (!min && !max) return 'N/A';
   
   const unitStr = unit || 'Sq.Yds';
@@ -43,7 +43,7 @@ export function formatSizeRange(min: number, max: number, unit: string | null, p
   return `${min} - ${max} ${unitStr}`.trim();
 }
 
-export function isValidLatLng(coords: any): coords is [number, number] {
+export function isValidLatLng(coords: unknown): coords is [number, number] {
   return Array.isArray(coords) && 
     coords.length === 2 && 
     typeof coords[0] === 'number' && 
@@ -72,6 +72,7 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
   return d;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getMedian(arr: number[]) {
   if (arr.length === 0) return 0;
   const sorted = [...arr].sort((a, b) => a - b);
@@ -79,7 +80,7 @@ function getMedian(arr: number[]) {
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-export function getPropertyCoords(property: Partial<Property>, allProperties?: Partial<Property>[], areaCenters?: any[]): [number, number] {
+export function getPropertyCoords(property: Partial<Property>, _allProperties?: Partial<Property>[], _areaCenters?: unknown[]): [number, number] {
   // Use pre-parsed coordinates from our new view, but insure they are actually numbers
   const lat = typeof property.latitude === 'number' ? property.latitude : Number(property.latitude);
   const lng = typeof property.longitude === 'number' ? property.longitude : Number(property.longitude);
