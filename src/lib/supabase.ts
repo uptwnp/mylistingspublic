@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { unstable_cache } from 'next/cache';
 import { getFallbackUnit } from './utils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -184,40 +185,45 @@ export async function getProperties(
 
 /**
  * Optimized Batch Fetch for Homepage
+ * Cached at the edge for 60 seconds to ensure high TTFB for all users.
  */
-export async function getHomepageData(city = 'Panipat') {
-  if (!supabase) return null;
+export const getHomepageData = unstable_cache(
+  async (city = 'Panipat') => {
+    if (!supabase) return null;
 
-  try {
-    const { data, error } = await supabase.rpc('get_homepage_listings_v1', {
-      p_city: city,
-      p_limit: 6
-    });
+    try {
+      const { data, error } = await supabase.rpc('get_homepage_listings_v1', {
+        p_city: city,
+        p_limit: 6
+      });
 
-    if (error) {
-      console.error('Batch RPC failed, falling back to sequential:', error);
+      if (error) {
+        console.error('Batch RPC failed, falling back to sequential:', error);
+        return null;
+      }
+
+      const batch = data as any;
+      
+      // Format each section
+      const formatSection = (section: any) => ({
+        data: (section?.data || []).map(formatPropertyData),
+        count: section?.count || 0
+      });
+
+      return {
+        plots: formatSection(batch.plots),
+        apartments: formatSection(batch.apartments),
+        villas: formatSection(batch.villas),
+        commercial: formatSection(batch.commercial)
+      };
+    } catch (err) {
+      console.error('Error in getHomepageData:', err);
       return null;
     }
-
-    const batch = data as any;
-    
-    // Format each section
-    const formatSection = (section: any) => ({
-      data: (section?.data || []).map(formatPropertyData),
-      count: section?.count || 0
-    });
-
-    return {
-      plots: formatSection(batch.plots),
-      apartments: formatSection(batch.apartments),
-      villas: formatSection(batch.villas),
-      commercial: formatSection(batch.commercial)
-    };
-  } catch (err) {
-    console.error('Error in getHomepageData:', err);
-    return null;
-  }
-}
+  },
+  ['homepage-listings'],
+  { revalidate: 60, tags: ['listings'] }
+);
 
 
 
