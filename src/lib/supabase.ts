@@ -182,6 +182,43 @@ export async function getProperties(
   }
 }
 
+/**
+ * Optimized Batch Fetch for Homepage
+ */
+export async function getHomepageData(city = 'Panipat') {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase.rpc('get_homepage_listings_v1', {
+      p_city: city,
+      p_limit: 6
+    });
+
+    if (error) {
+      console.error('Batch RPC failed, falling back to sequential:', error);
+      return null;
+    }
+
+    const batch = data as any;
+    
+    // Format each section
+    const formatSection = (section: any) => ({
+      data: (section?.data || []).map(formatPropertyData),
+      count: section?.count || 0
+    });
+
+    return {
+      plots: formatSection(batch.plots),
+      apartments: formatSection(batch.apartments),
+      villas: formatSection(batch.villas),
+      commercial: formatSection(batch.commercial)
+    };
+  } catch (err) {
+    console.error('Error in getHomepageData:', err);
+    return null;
+  }
+}
+
 
 
 export async function getPropertyById(id: string | number) {

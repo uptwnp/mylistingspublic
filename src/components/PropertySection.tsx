@@ -44,7 +44,11 @@ export function PropertySection({ title, city, type, initialData }: PropertySect
     
     // Skip fetching if we already have initial properties for THIS city and type
     // This prevents the redundant client-side fetch on hydrate
-    if (initialData && properties.length > 0 && initialData.data === properties) {
+    // Use stringify to compare data content instead of reference (references break on SSR/Hydration)
+    const initialDataJson = initialData ? JSON.stringify(initialData.data) : null;
+    const currentDataJson = JSON.stringify(properties);
+    
+    if (initialData && properties.length > 0 && initialDataJson === currentDataJson) {
       return;
     }
 

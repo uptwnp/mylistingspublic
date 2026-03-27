@@ -91,14 +91,14 @@ export function HomeClientWrapper({
         <PropertySection 
           title={`Apartments for sale`} 
           city={selectedCity}
-          type="Flat" 
+          type="Flat,Penthouse,Floor" 
           initialData={selectedCity === serverCity ? initialApartments : undefined}
         />
 
         <PropertySection 
-          title={`Villas for sale`} 
+          title={`Houses & Villas for sale`} 
           city={selectedCity}
-          type="House" 
+          type="House,Villa" 
           initialData={selectedCity === serverCity ? initialVillas : undefined}
         />
 

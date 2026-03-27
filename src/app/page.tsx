@@ -1,6 +1,8 @@
-import { getProperties } from "@/lib/supabase";
+import { getProperties, getHomepageData } from "@/lib/supabase";
 import { HomeClientWrapper } from "@/components/HomeClientWrapper";
 import { cookies } from "next/headers";
+import { Suspense } from "react";
+import RootLoading from "./loading";
 
 export const runtime = 'edge';
 export const revalidate = 3600; // Cache page for 1 hour (ISR)
@@ -8,30 +10,32 @@ export const revalidate = 3600; // Cache page for 1 hour (ISR)
 const CITY_KEY = 'dealer_network_selected_city';
 
 export default async function Home() {
-  // Read previous city selection from cookie for Server-Side Pre-fetching
+  // Use cookies to determine the city, but wrap the heavy fetching in Suspense
+  // to prevent the entire page from being blocked.
   const cookieStore = await cookies();
   const serverCity = cookieStore.get(CITY_KEY)?.value || 'Panipat';
 
-  // Pre-fetch all main sections for the homepage to eliminate client-side loading flickering
-  // This significantly improves perceived speed and LCP as listings are ready on first paint
-  const [plotData, apartmentData, villaData, commercialData] = await Promise.all([
-    getProperties(0, 6, false, serverCity, 'Residential Plot'),
-    getProperties(0, 6, false, serverCity, 'Flat'),
-    getProperties(0, 6, false, serverCity, 'House'),
-    getProperties(0, 6, false, serverCity, 'Commercial Built-up')
-  ]);
+  return (
+    <Suspense fallback={<RootLoading />}>
+      <HomeContent serverCity={serverCity} />
+    </Suspense>
+  );
+}
 
-  const processForSection = (results: any) => ({
-    data: results.data || [],
-    count: results.count || 0
-  });
-
+// Separate component for data fetching to allow streaming
+async function HomeContent({ serverCity }: { serverCity: string }) {
+  // Batched fetch for ALL homepage data in ONE RPC call.
+  // This reduces TTFB by eliminating multiple round-trips and connection overhead.
+  const batch = await getHomepageData(serverCity);
+  
+  const fallbackData = { data: [], count: 0 };
+  
   return (
     <HomeClientWrapper 
-       initialPlots={processForSection(plotData)}
-       initialApartments={processForSection(apartmentData)}
-       initialVillas={processForSection(villaData)}
-       initialCommercial={processForSection(commercialData)}
+       initialPlots={batch?.plots || fallbackData}
+       initialApartments={batch?.apartments || fallbackData}
+       initialVillas={batch?.villas || fallbackData}
+       initialCommercial={batch?.commercial || fallbackData}
        serverCity={serverCity}
     />
   );

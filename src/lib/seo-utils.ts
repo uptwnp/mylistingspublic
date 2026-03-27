@@ -11,22 +11,16 @@ export const SEO_CITIES = [
 
 export const SEO_PROPERTY_TYPES = [
   { slug: 'plot', value: 'Residential Plot', synonyms: ['plots', 'land', 'residential-plot'] },
-  { slug: 'house', value: 'House', synonyms: ['houses', 'residential-house'] },
-  { slug: 'villa', value: 'Villa', synonyms: ['villas', 'house-villa', 'House / Villa'] },
-  { slug: 'flat', value: 'Flat', synonyms: ['flats', 'apartment', 'apartments', 'flat-apartment', 'Flat / Apt'] },
-  { slug: 'penthouse', value: 'Penthouse', synonyms: ['penthouses'] },
-  { slug: 'floor', value: 'Floor', synonyms: ['floors'] },
-  { slug: 'shop', value: 'Shop', synonyms: ['shops', 'commercial-shop', 'Shop / Showroom'] },
-  { slug: 'showroom', value: 'Showroom', synonyms: ['showrooms'] },
+  // 'house' slug covers both House & Villa since they're the same category in the DB
+  { slug: 'house', value: 'House,Villa', synonyms: ['houses', 'house-villa', 'residential-house', 'villa', 'villas', 'House / Villa'] },
+  { slug: 'flat', value: 'Flat,Penthouse,Floor', synonyms: ['flats', 'apartment', 'apartments', 'flat-apartment', 'Flat / Apt', 'penthouse', 'penthouses', 'floor', 'floors'] },
+  { slug: 'shop', value: 'Shop,Showroom', synonyms: ['shops', 'commercial-shop', 'Shop / Showroom', 'showroom', 'showrooms'] },
   { slug: 'office', value: 'Office', synonyms: ['offices', 'workspace'] },
-  { slug: 'warehouse', value: 'Warehouse', synonyms: ['warehouses', 'godown', 'Whouse / Factory'] },
-  { slug: 'factory', value: 'Factory', synonyms: ['factories'] },
+  { slug: 'warehouse', value: 'Warehouse,Factory', synonyms: ['warehouses', 'godown', 'Whouse / Factory', 'factory', 'factories'] },
   { slug: 'industrial-plot', value: 'Industrial Plot', synonyms: ['industrial-plots', 'Indus. Plot'] },
-  { slug: 'agriculture', value: 'Agriculture Land', synonyms: ['farm', 'farmland', 'agriculture-land', 'Farm Land'] },
+  { slug: 'agriculture', value: 'Agriculture Land,Farm Land', synonyms: ['farm', 'farmland', 'agriculture-land'] },
   { slug: 'farmhouse', value: 'Farm House', synonyms: ['farm-house'] },
-  { slug: 'hotel', value: 'Hotel', synonyms: ['hotels', 'Hotel / PG / Qtr'] },
-  { slug: 'pg', value: 'PG', synonyms: ['paying-guest'] },
-  { slug: 'labour-quarter', value: 'Labour Quarter', synonyms: ['staff-quarter'] },
+  { slug: 'hotel', value: 'Hotel,PG,Labour Quarter', synonyms: ['hotels', 'Hotel / PG / Qtr', 'pg', 'paying-guest', 'labour-quarter', 'staff-quarter'] },
 ];
 
 export const BUDGET_MAPPINGS = [
