@@ -530,10 +530,13 @@ export function SellClient() {
                                     <div className="flex items-center gap-4">
                                       {(() => {
                                         const config = getPropertyConfig(type.label);
-                                        const Icon = config.icon;
                                         return (
                                           <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors", isActive ? "bg-brand-primary/10 text-brand-primary" : config.bgColor)}>
-                                            <Icon className={cn("h-5 w-5", isActive ? "text-brand-primary" : config.color)} />
+                                            <img 
+                                              src={config.iconUrl} 
+                                              alt={type.label} 
+                                              className={cn("h-5 w-5 object-contain", isActive ? "grayscale brightness-0" : "")} 
+                                            />
                                           </div>
                                         );
                                       })()}

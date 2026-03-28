@@ -17,6 +17,7 @@ import { useShortlist } from '@/context/ShortlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PropertyCard } from './PropertyCard';
 import { X } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 import { useRouter } from 'next/navigation';
 
 // Simple debounce utility
@@ -42,7 +43,7 @@ const createCustomIcon = (property: Property, isSelected: boolean, zoom: number,
 
   const price = formatPrice(property.price_min);
   const config = getPropertyConfig(property.type);
-  const IconComponent = config.icon;
+  const iconUrl = config.iconUrl;
 
   // All sizes in explicit pixels — never use width/height:100% inside DivIcon
   // because it depends on Leaflet's wrapper box-model which can be unreliable.
@@ -72,7 +73,16 @@ const createCustomIcon = (property: Property, isSelected: boolean, zoom: number,
     : '0 2px 8px rgba(0,0,0,0.16),inset 0 0 0 1px rgba(0,0,0,0.06)';
 
   const iconSvg = ReactDOMServer.renderToStaticMarkup(
-    <IconComponent size={Math.round(14 * scale)} strokeWidth={2.5} color={isSelected ? 'white' : iconColor} />
+    <img 
+      src={iconUrl} 
+      alt="" 
+      style={{ 
+        width: Math.round(16 * scale), 
+        height: Math.round(16 * scale),
+        objectFit: 'contain',
+        filter: isSelected ? 'brightness(0) invert(1)' : 'none'
+      }} 
+    />
   );
 
   // Build as a string — explicit pixel dimensions anchored to W×H box.
@@ -226,6 +236,8 @@ function MapControls({
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          trackEvent('location_allowed', { method: 'gps' });
+          trackEvent('used_nearMe');
           map.flyTo([position.coords.latitude, position.coords.longitude], 16, {
             animate: true,
             duration: 1.5
@@ -284,7 +296,11 @@ function MapControls({
         hasSelectedProperty ? "bottom-48 sm:bottom-12" : "bottom-5 sm:bottom-8"
       )}>
         <button 
-          onClick={() => setIsSatellite(!isSatellite)}
+          onClick={() => {
+            const next = !isSatellite;
+            trackEvent(next ? 'switched_to_satellite_view' : 'switched_to_terrain_view');
+            setIsSatellite(next);
+          }}
           title={isSatellite ? "Show Map" : "Show Satellite"}
           className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-[12px] sm:rounded-[20px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all hover:scale-110 active:scale-[0.98]"
         >
@@ -726,6 +742,7 @@ export default function MapComponent({
               onClick={() => {
                 const map = (window as any).leafletMap;
                 if (map && onBoundsChange) {
+                  trackEvent('searched_in_area');
                   const b = map.getBounds();
                   const bounds = {
                     minLat: b.getSouthWest().lat,

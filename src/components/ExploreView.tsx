@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Property } from '@/types';
+import { trackEvent } from '@/lib/analytics';
 import { getProperties } from '@/lib/supabase';
 import { PropertyCard, PropertyCardSkeleton } from '@/components/PropertyCard';
 import { SlidersHorizontal, Map as MapIcon, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, ChevronDown, ArrowUpDown } from 'lucide-react';
@@ -65,8 +66,10 @@ export function ExploreView({
     
     if (viewParam === 'map') {
       setViewMode('map');
+      trackEvent('map_view_full_triggered');
     } else if (viewParam === 'list') {
       setViewMode('list');
+      trackEvent('list_view_full_triggered');
     } else if (viewParam === 'split') {
       setViewMode('split');
     } else if (window.innerWidth < 1024) {
@@ -332,7 +335,10 @@ export function ExploreView({
                 <div className="flex items-center gap-2 sm:gap-3">
                   {viewMode === 'list' && (
                     <button 
-                      onClick={() => setViewMode(window.innerWidth >= 1024 ? 'split' : 'map')}
+                      onClick={() => {
+                        trackEvent('map_view_full_triggered');
+                        setViewMode(window.innerWidth >= 1024 ? 'split' : 'map');
+                      }}
                       className="hidden lg:flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 ty-caption font-bold text-zinc-600 transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.98]"
                     >
                       <MapIcon className="h-3.5 w-3.5" />
@@ -452,11 +458,14 @@ export function ExploreView({
           {/* Controls: top-right — Minimize (desktop only) + Close */}
           <div className="absolute top-4 right-4 z-[1001] flex gap-2">
             {/* Minimize to split — desktop only */}
-            <button
-              onClick={() => setViewMode('split')}
-              className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-600 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]"
-              title="Split view"
-            >
+              <button
+                onClick={() => {
+                  trackEvent('list_view_full_triggered');
+                  setViewMode('split');
+                }}
+                className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-600 shadow-xl backdrop-blur-md hover:bg-white hover:text-zinc-900 active:scale-[0.98]"
+                title="Split view"
+              >
               <Minimize2 className="h-5 w-5" />
             </button>
             {/* Close to list — all screens */}
@@ -484,7 +493,10 @@ export function ExploreView({
       {/* Floating 'Show Map' pill — only shown in list mode on mobile */}
       {properties.length > 0 && viewMode === 'list' && (
         <button
-          onClick={() => setViewMode(window.innerWidth >= 1024 ? 'split' : 'map')}
+          onClick={() => {
+            trackEvent('map_view_full_triggered');
+            setViewMode(window.innerWidth >= 1024 ? 'split' : 'map');
+          }}
           className="fixed bottom-8 sm:bottom-12 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-zinc-900 px-6 py-3 text-sm font-bold text-white shadow-2xl active:scale-[0.98] lg:hidden"
         >
           <MapIcon className="h-4 w-4" />

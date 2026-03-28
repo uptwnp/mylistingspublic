@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { trackEvent } from '@/lib/analytics';
 import { Search, X, MapPin, Wallet, Home as HomeIcon, Trees, LandPlot, Locate } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -63,10 +64,6 @@ export function HomeSearch() {
   }, []);
 
   const handleSearch = (overrides?: { area?: string; budget?: { label: string; value: number }; type?: string; keywords?: string }) => {
-    const params = new URLSearchParams();
-    
-    // Distinguish between areas and keywords
-    // Only treat finalArea as an actual area if it's in the suggestions or was an override
     const rawInput = overrides?.area ?? query;
     const isKnownArea = allAreas.some(a => a.toLowerCase() === rawInput.toLowerCase()) || rawInput.toLowerCase() === 'near me' || !!overrides?.area;
     
@@ -75,6 +72,22 @@ export function HomeSearch() {
     const finalBudget = overrides?.budget ?? budget;
     const finalType = overrides?.type ?? propertyType;
 
+    trackEvent('searched', {
+      city: selectedCity,
+      area: finalArea || 'Anywhere',
+      type: finalType,
+      budget: finalBudget.label
+    });
+    
+    if (finalKeywords) {
+      trackEvent('keyword_searched', {
+        keyword: finalKeywords,
+        city: selectedCity
+      });
+    }
+
+    const params = new URLSearchParams();
+    
     if (finalArea) params.set('area', finalArea);
     if (finalKeywords) params.set('q', finalKeywords);
     if (finalBudget.value > 0) params.set('budget', finalBudget.label);
@@ -83,7 +96,6 @@ export function HomeSearch() {
     const seoUrl = getSeoUrl(selectedCity, finalType, finalArea, finalBudget.label);
     if (seoUrl) {
       const queryString = params.toString();
-      // Only keep the q param if we had keywords
       const finalParams = new URLSearchParams();
       if (finalKeywords) finalParams.set('q', finalKeywords);
       const qStr = finalParams.toString();
@@ -158,6 +170,10 @@ export function HomeSearch() {
                               if ('geolocation' in navigator) {
                                 navigator.geolocation.getCurrentPosition(
                                   (position) => {
+                                    trackEvent('location_allowed', {
+                                      method: 'gps'
+                                    });
+                                    trackEvent('used_nearMe');
                                     setUserLocation({
                                       lat: position.coords.latitude,
                                       lng: position.coords.longitude,

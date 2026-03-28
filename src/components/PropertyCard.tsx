@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Heart, Plus, Minus, MapPin, Ruler, ChevronRight, Share2, ExternalLink, Check, Locate, MessageCircleQuestion } from 'lucide-react';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
+import { trackEvent } from '@/lib/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatPrice, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
@@ -16,9 +17,10 @@ interface PropertyCardProps {
   onToggle?: () => void;
   isNearMeFallback?: boolean;
   showDistance?: boolean;
+  isSimilar?: boolean;
 }
 
-export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeFallback, showDistance }: PropertyCardProps) {
+export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeFallback, showDistance, isSimilar }: PropertyCardProps) {
   const router = useRouter();
   const { isInShortlist, addToShortlist, removeFromShortlist, isSaved, toggleSave } = useShortlist();
   const [isAskModalOpen, setIsAskModalOpen] = useState(false);
@@ -27,6 +29,13 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
   const saved = isSaved(property.property_id);
 
   const handleCardToggle = (e: React.MouseEvent) => {
+    if (isSimilar) {
+      trackEvent('used_similar_properties', {
+        property_id: property.property_id,
+        type: property.type
+      });
+    }
+    
     if (onToggle) {
       onToggle();
     } else {
@@ -45,7 +54,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
   };
 
   const config = getPropertyConfig(property.type);
-  const Icon = config.icon;
+  const iconUrl = config.iconUrl;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
 
   return (
@@ -64,7 +73,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
       <div className="flex gap-4">
         {/* Left Image/Icon Box - Larger and more defined */}
         <motion.div 
-          className="group/image relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-[18px] sm:rounded-[22px] shadow-sm ring-1 ring-black/5"
+          className="group/image group relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-[18px] sm:rounded-[22px] shadow-sm ring-1 ring-black/5"
         >
           {hasImage ? (
             <Image
@@ -99,13 +108,13 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
           </AnimatePresence>
 
           {/* Open in New Tab Overlay */}
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 opacity-0 group-hover/image:opacity-100 transition-all duration-300 backdrop-blur-[1px]">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 backdrop-blur-[2px] pointer-events-none">
             <a 
               href={`/property/${property.property_id}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="bg-white text-zinc-900 p-2.5 rounded-full shadow-2xl transform scale-50 group-hover/image:scale-100 transition-all duration-300"
+              className="bg-white text-zinc-900 p-2.5 rounded-full shadow-2xl transform scale-50 group-hover/image:scale-100 transition-all duration-300 pointer-events-auto"
               title="View property details"
             >
               <ExternalLink className="h-[18px] w-[18px]" strokeWidth={3} />
@@ -266,6 +275,10 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                             await navigator.share({
                               title: `${property.type} in ${property.area}`,
                               url: window.location.origin + `/property/${property.property_id}`
+                            });
+                            trackEvent('shared', {
+                                property_id: property.property_id,
+                                method: 'web_share'
                             });
                           } catch (err) {
                             if (err instanceof Error && err.name !== 'AbortError') {

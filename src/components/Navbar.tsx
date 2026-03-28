@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useShortlist } from '@/context/ShortlistContext';
+import { trackEvent } from '@/lib/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
@@ -123,6 +124,27 @@ export default function Navbar() {
     const finalMaxSize = overrides?.maxSize !== undefined ? overrides.maxSize : maxSize;
     const finalHighlights = overrides?.highlights !== undefined ? overrides.highlights : selectedHighlights;
     
+    trackEvent('searched', {
+      city: finalCity,
+      area: finalArea || 'Anywhere',
+      type: finalType,
+      budget: finalBudget.label
+    });
+    
+    if (finalArea) {
+      trackEvent('searched_in_area', {
+        area: finalArea,
+        city: finalCity
+      });
+    }
+
+    if (finalKeywords) {
+      trackEvent('keyword_searched', {
+        keyword: finalKeywords,
+        city: finalCity
+      });
+    }
+
     // Create query params for extra filters
     const params = new URLSearchParams();
     if (finalKeywords) params.set('q', finalKeywords);
@@ -457,8 +479,12 @@ export default function Navbar() {
               </Link>
 
               <div className="relative" ref={menuRef}>
-                <div 
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                 <div 
+                  onClick={() => {
+                    const nextState = !isMenuOpen;
+                    if (nextState) trackEvent('hamburger_used');
+                    setIsMenuOpen(nextState);
+                  }}
                   className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1.5 pr-3 transition-all hover:shadow-md cursor-pointer ml-1 "
                 >
                   <AnimatePresence mode="wait" initial={false}>

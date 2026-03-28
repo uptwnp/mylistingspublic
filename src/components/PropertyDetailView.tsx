@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
+import { trackEvent } from '@/lib/analytics';
 import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink, MessageCircleQuestion } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -63,6 +64,10 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
 
   useEffect(() => {
     addRecentlyVisited(property.property_id);
+    trackEvent('viewed_pricing_card', {
+        property_id: property.property_id,
+        price: formatPriceRange(property.price_min, property.price_max)
+    });
 
     const fetchSimilar = async () => {
       setLoadingSimilar(true);
@@ -119,7 +124,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
   const inCart = isInShortlist(property.property_id);
   const saved = isSaved(property.property_id);
   const config = getPropertyConfig(property.type);
-  const Icon = config.icon;
+  const iconUrl = config.iconUrl;
   const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
   const [lat, lng] = getPropertyCoords(property, similarProperties);
   // Stable array ref so MapComponent doesn't re-render on every keystroke
@@ -300,7 +305,11 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                   className="flex h-full w-full flex-col items-center justify-center p-6 sm:p-8 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   <div className="flex flex-col items-center scale-90 sm:scale-100">
-                    <Icon className={cn("h-20 w-20 md:h-32 md:w-32", config.color)} />
+                    <img 
+                      src={iconUrl} 
+                      alt={property.type} 
+                      className="h-20 w-20 md:h-32 md:w-32 object-contain" 
+                    />
                     <div className="text-center mt-3 md:mt-4">
                       <p className="ty-subtitle md:ty-title font-normal text-zinc-400 mb-4">No photos available</p>
                       <button className="rounded-full bg-black px-6 py-2 md:px-8 md:py-3 ty-caption font-bold text-white shadow-xl shadow-black/10 transition-all active:scale-[0.98]">
@@ -321,6 +330,10 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                       await navigator.share({
                         title: `${property.type} in ${property.area}, ${property.city}`,
                         url: window.location.href
+                      });
+                      trackEvent('shared', {
+                          property_id: property.property_id,
+                          method: 'web_share'
                       });
                     } catch (err) {}
                   }
@@ -442,7 +455,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                     </div>
                   ))
                 ) : (
-                  similarProperties.map((p) => <PropertyCard key={p.property_id} property={p} />)
+                  similarProperties.map((p) => <PropertyCard key={p.property_id} property={p} isSimilar />)
                 )}
               </div>
 

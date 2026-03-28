@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Ruler, Sparkles, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics';
 import { useState, useEffect } from 'react';
 
 const AMENITIES = [
@@ -57,6 +58,19 @@ export function FilterModal({
   };
 
   const handleApply = () => {
+    if (localMinSize !== minSize || localMaxSize !== maxSize) {
+      trackEvent('size_filtered', {
+        min_size: localMinSize,
+        max_size: localMaxSize
+      });
+    }
+    
+    if (JSON.stringify(localHighlights) !== JSON.stringify(selectedHighlights)) {
+      trackEvent('highlight_filtered', {
+        highlights: localHighlights.join(',')
+      });
+    }
+
     setKeywords(localKeywords);
     setMinSize(localMinSize);
     setMaxSize(localMaxSize);

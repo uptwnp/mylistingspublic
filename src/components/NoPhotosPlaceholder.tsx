@@ -24,7 +24,7 @@ export function NoPhotosPlaceholder({
   buttonText = "Request Photos"
 }: NoPhotosPlaceholderProps) {
   const config = getPropertyConfig(propertyType);
-  const Icon = config.icon;
+  const iconUrl = config.iconUrl;
 
   // Extract HEX color from tailwind class text-[#HEX]
   const hexColor = config.color.match(/\[#(.*?)\]/)?.[1] || '3B82F6';
@@ -38,9 +38,11 @@ export function NoPhotosPlaceholder({
         className={cn("flex h-full w-full items-center justify-center transition-all duration-300 relative overflow-hidden", className)}
         style={{ backgroundColor: secondaryColor }}
       >
-         <div className="relative z-40">
-             <Icon 
-               className="h-10 w-10 sm:h-12 sm:w-12" 
+         <div className="relative z-10">
+             <img 
+               src={iconUrl} 
+               alt={propertyType}
+               className="h-10 w-10 sm:h-12 sm:w-12 object-contain" 
              />
          </div>
       </div>
@@ -105,10 +107,10 @@ export function NoPhotosPlaceholder({
               className="relative flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-[20px] shadow-xl p-4 sm:p-5 border border-white/50 backdrop-blur-sm"
               style={{ background: `linear-gradient(135deg, white 0%, ${secondaryColor} 100%)` }}
             >
-               <Icon 
-                 className="h-full w-full drop-shadow-lg" 
-                 style={{ color: primaryColor }}
-                 strokeWidth={2} 
+               <img 
+                 src={iconUrl} 
+                 alt={propertyType}
+                 className="h-full w-full object-contain drop-shadow-lg" 
                />
             </div>
           </div>

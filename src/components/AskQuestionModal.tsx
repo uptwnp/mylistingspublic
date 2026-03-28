@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { trackEvent } from '@/lib/analytics';
 import { X, MessageCircleQuestion, Check, ArrowRight, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -74,6 +75,11 @@ export function AskQuestionModal({ property, isOpen, onClose }: AskQuestionModal
       interestedInPurchase: false,
       haveQuestion: true,
       question: note,
+    });
+    trackEvent('ask_question', {
+      property_id: property.property_id,
+      city: property.city,
+      area: property.area
     });
     setSubmitted(true);
   };

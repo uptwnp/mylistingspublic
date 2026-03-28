@@ -4,6 +4,7 @@ import { useState, useEffect, KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Phone, MapPin, Check, ArrowRight, ArrowLeft, Building2, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics';
 import { useShortlist } from '@/context/ShortlistContext';
 
 export function ContactDetailForm() {
@@ -40,6 +41,7 @@ export function ContactDetailForm() {
 
   useEffect(() => {
     if (isContactFormOpen) {
+      trackEvent('identify_form_opened');
       // If user holds confirmed details, load those
       if (contactDetails && Object.values(contactDetails).some(v => v)) {
         setFormData({
@@ -95,6 +97,10 @@ export function ContactDetailForm() {
       localStorage.removeItem('contactFormDraft');
     } catch (e) {}
     
+    trackEvent('identity_success', {
+        name: formData.fullName,
+        budget: formData.budget
+    });
     setIsContactFormOpen(false);
   };
 

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getAreaCenters } from '@/lib/supabase';
 import { syncShortlistAction, submitConsultationRequestAction } from '@/app/actions/leads';
+import { trackEvent } from '@/lib/analytics';
 import { Property } from '@/types';
 
 import { SelectionBottomSheet } from '@/components/SelectionBottomSheet';
@@ -451,8 +452,10 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const toggleSave = (id: string) => {
     setSavedIds(prev => {
       if (prev.includes(id)) {
+        trackEvent('unsaved', { property_id: id });
         return prev.filter(item => item !== id);
       }
+      trackEvent('saved', { property_id: id });
       return [...prev, id];
     });
   };
@@ -530,10 +533,18 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
       id: Math.random().toString(36).substring(2, 11),
       timestamp: Date.now(),
     };
+    trackEvent('get_call_back_triggered', {
+        type: request.type,
+        property_count: request.propertyIds.length
+    });
     setConsultationRequests([newRequest]);
 
     // Also sync to Supabase (Lead generation) via Server Action
-    submitConsultationRequestAction({ ...newRequest, inquiries }).catch(e => console.error('Supabase lead sync failed', e));
+    submitConsultationRequestAction({ ...newRequest, inquiries })
+      .then(() => {
+        trackEvent('get_call_back_success', { type: request.type });
+      })
+      .catch(e => console.error('Supabase lead sync failed', e));
   };
 
   const updateConsultationRequest = (id: string, updates: Partial<ConsultationRequest>) => {

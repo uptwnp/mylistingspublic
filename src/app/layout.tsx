@@ -10,6 +10,7 @@ import { ShortlistProvider } from "@/context/ShortlistContext";
 import { BrandProvider } from "@/context/BrandContext";
 import { ContactDetailForm } from "@/components/ContactDetailForm";
 import { InquiryModal } from "@/components/InquiryModal";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { Suspense } from "react";
 
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://lcfhvhhexidtbzcxwryx.supabase.co" />
         <link rel="dns-prefetch" href="https://lcfhvhhexidtbzcxwryx.supabase.co" />
+        <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_ID || ""} />
       </head>
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} antialiased`}

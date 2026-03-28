@@ -3,6 +3,7 @@
 import { useShortlist } from '@/context/ShortlistContext';
 import { Property } from '@/types';
 import { getPropertiesByIds } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 import { useEffect, useState } from 'react';
 import { Trash2, Phone, Home, ArrowLeft, Building2, MapPin, CheckCircle2, Share2, Pencil, Plus, Check, X, Calendar, Zap } from 'lucide-react';
 import Link from 'next/link';
@@ -36,7 +37,11 @@ export default function ShortlistPage() {
   // Load pricing card preference
   useEffect(() => {
     const hidden = localStorage.getItem('hide_pricing_card_shortlist');
-    if (hidden === 'true') setShowPricingCard(false);
+    if (hidden === 'true') {
+      setShowPricingCard(false);
+    } else {
+      trackEvent('viewed_pricing_card', { page: 'shortlist' });
+    }
   }, []);
 
   // Lock body scroll when mobile desk/modals are open
@@ -105,6 +110,7 @@ export default function ShortlistPage() {
           )}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent('proceed_to_whatsapp', { property_count: properties.length })}
           className="group flex w-full items-center gap-3 sm:gap-4 rounded-xl bg-[#128C7E] px-4 sm:px-5 py-4 text-white hover:bg-[#0e7268] active:scale-[0.99] transition-all shadow-xl shadow-[#128C7E]/20"
         >
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-2xl bg-white/20">
@@ -421,7 +427,7 @@ export default function ShortlistPage() {
                       <div className="flex gap-3 sm:gap-4">
                         {(() => {
                           const config = getPropertyConfig(property.type);
-                          const Icon = config.icon;
+                          const iconUrl = config.iconUrl;
                           const hasImage = Array.isArray(property.image_urls) && property.image_urls.length > 0;
                           return (
                             <div className="flex flex-1 gap-3 sm:gap-4 overflow-hidden">
@@ -437,7 +443,11 @@ export default function ShortlistPage() {
                                     onClick={() => router.push(`/property/${property.property_id}`)}
                                     className={cn("flex h-full w-full items-center justify-center transition-colors cursor-pointer", config.bgColor)}
                                   >
-                                    <Icon className={cn("h-8 w-8 sm:h-10 sm:w-10 opacity-100", config.color)} />
+                                    <img 
+                                      src={iconUrl} 
+                                      alt={property.type} 
+                                      className="h-8 w-8 sm:h-10 sm:w-10 object-contain" 
+                                    />
                                   </div>
                                 )}
                               </div>
@@ -598,10 +608,11 @@ export default function ShortlistPage() {
                              </p>
                           </div>
                           <button 
-                            onClick={() => {
-                              setShowPricingCard(false);
-                              localStorage.setItem('hide_pricing_card_shortlist', 'true');
-                            }}
+                          onClick={() => {
+                            trackEvent('dismissed_pricing_card', { page: 'shortlist' });
+                            setShowPricingCard(false);
+                            localStorage.setItem('hide_pricing_card_shortlist', 'true');
+                          }}
                             className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[20] p-2 sm:p-3 rounded-xl bg-zinc-100/50 hover:bg-zinc-100 transition-all border border-zinc-200/50 active:scale-95 group/close"
                           >
                             <X className="h-3.5 w-3.5 sm:h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" strokeWidth={2.5} />
@@ -1001,7 +1012,6 @@ export default function ShortlistPage() {
                         {properties.map(p => {
                           const pConfig = getPropertyConfig(p.type);
                           const hasImage = Array.isArray(p.image_urls) && p.image_urls.length > 0;
-                          const PIcon = pConfig.icon;
                           return (
                             <div key={p.property_id} className="group relative">
                               <div className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 shadow-sm border border-zinc-100/50">
@@ -1010,7 +1020,11 @@ export default function ShortlistPage() {
                                     <Image src={p.image_urls[0]} alt="" width={12} height={12} className="object-cover" />
                                   ) : (
                                     <div className={cn("flex h-full w-full items-center justify-center", pConfig.bgColor)}>
-                                      <PIcon className={cn("h-full w-full p-[1px] opacity-100", pConfig.color)} />
+                                      <img 
+                                        src={pConfig.iconUrl} 
+                                        alt={p.type} 
+                                        className="h-full w-full p-[1px] object-contain" 
+                                      />
                                     </div>
                                   )}
                                 </div>
