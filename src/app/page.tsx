@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import RootLoading from "./loading";
 
 export const runtime = 'edge';
-export const revalidate = 21600; // Cache page for 6 hours (ISR)
+export const revalidate = 2592000; // 30 days
 
 const CITY_KEY = 'dealer_network_selected_city';
 

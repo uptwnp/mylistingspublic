@@ -223,7 +223,7 @@ export const getHomepageData = unstable_cache(
     }
   },
   ['homepage-listings'],
-  { revalidate: 21600, tags: ['listings'] } // 6 hours
+  { revalidate: 2592000, tags: ['listings'] } // 30 days (Infinite with auto-purge)
 );
 
 
