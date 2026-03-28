@@ -223,7 +223,7 @@ export const getHomepageData = unstable_cache(
     }
   },
   ['homepage-listings'],
-  { revalidate: 60, tags: ['listings'] }
+  { revalidate: 21600, tags: ['listings'] } // 6 hours
 );
 
 
