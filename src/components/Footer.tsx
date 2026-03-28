@@ -1,8 +1,44 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
-import { Home, Trash2 } from 'lucide-react';
+import { Home, Trash2, RefreshCw } from 'lucide-react';
 import { useBrand } from '@/context/BrandContext';
+import { refreshGlobalCache } from '@/app/actions/cache';
+
+function RefreshCacheButton() {
+  const [isPending, setIsPending] = React.useState(false);
+
+  const handleRefresh = async () => {
+    const ok = window.confirm('Clear site-wide cache? This will push fresh data live to ALL users instantly.');
+    if (!ok) return;
+    
+    setIsPending(true);
+    try {
+      const result = await refreshGlobalCache();
+      if (result.success) {
+        alert('Site-wide cache cleared successfully! Data is now live.');
+        window.location.reload();
+      } else {
+        alert('Failed to clear cache. Please try again.');
+      }
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleRefresh}
+      disabled={isPending}
+      className={`ty-caption font-bold transition-colors flex items-center gap-1.5 ${isPending ? 'text-zinc-300' : 'text-zinc-500 hover:text-blue-600'}`}
+    >
+      <RefreshCw className={`h-3.5 w-3.5 ${isPending ? 'animate-spin' : ''}`} />
+      {isPending ? 'Refreshing...' : 'Refresh Site'}
+    </button>
+  );
+}
 
 function ClearDataButton() {
   const handleClearData = () => {
@@ -72,6 +108,7 @@ export default function Footer() {
               <li><Link href="/agent" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Agent Portal</Link></li>
               <li><Link href="/sell" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Sale Property</Link></li>
               <li><Link href="/refer" className="ty-caption font-bold text-zinc-500 hover:text-zinc-900 transition-colors">Partner Program</Link></li>
+              <li><RefreshCacheButton /></li>
               <li><ClearDataButton /></li>
             </ul>
           </div>
