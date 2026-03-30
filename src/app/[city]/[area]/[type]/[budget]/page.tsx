@@ -3,8 +3,6 @@ import { SeoExploreView, generateSeoMetadata } from '../../../../seo-view-shared
 import { Metadata } from 'next';
 
 // Cache deep search filters for 1 hour
-export const revalidate = 3600;
-export const runtime = 'edge';
 
 type Props = { params: Promise<{ city: string; area: string; type: string; budget: string }> };
 

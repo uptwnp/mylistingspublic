@@ -9,7 +9,7 @@ import { revalidateTag, revalidatePath } from 'next/cache';
 export async function refreshGlobalCache() {
   try {
     // Purge the specific listing data tag used in unstable_cache
-    revalidateTag('listings');
+    revalidateTag('listings', 'max');
     
     // Purge the homepage (ISR)
     revalidatePath('/', 'layout');

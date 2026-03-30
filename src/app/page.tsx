@@ -3,9 +3,6 @@ import { cookies } from "next/headers";
 import { Suspense } from "react";
 import RootLoading from "./loading";
 
-export const runtime = 'edge';
-export const revalidate = 2592000; // 30 days
-export const ppr = true; // Use Partial Prerendering for instant shell
 
 const CITY_KEY = 'dealer_network_selected_city';
 

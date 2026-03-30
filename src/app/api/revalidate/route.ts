@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Purge the listing data tag
-    revalidateTag('listings');
+    revalidateTag('listings', 'max');
     
     // Purge the homepage shell
     revalidatePath('/', 'layout');

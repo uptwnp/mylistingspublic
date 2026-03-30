@@ -2,10 +2,8 @@ import React from 'react';
 import { SellClient } from '@/components/SellClient';
 
 // Enable ISR: Cache the marketing content of this page for 1 hour
-export const revalidate = 3600;
 
 // Use Edge runtime for global speed
-export const runtime = 'edge';
 
 export const metadata = {
   title: 'Sale your property faster | Verified Property Network',

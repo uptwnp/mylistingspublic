@@ -4,10 +4,8 @@ import { PropertyDetailView } from '@/components/PropertyDetailView';
 import { notFound } from 'next/navigation';
 
 // Enable ISR: Cache this page on the Edge for 1 hour
-export const revalidate = 3600;
 
 // Force edge runtime for global performance
-export const runtime = 'edge';
 
 interface PageProps {
   params: Promise<{ id: string }>;

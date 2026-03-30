@@ -2,8 +2,6 @@ import { FileText, ChevronRight, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 // Static legal page: Cache for 1 hour
-export const revalidate = 3600;
-export const runtime = 'edge';
 
 const sections = [
   { id: 'acceptance', title: 'Acceptance of Terms' },

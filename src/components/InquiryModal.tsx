@@ -67,7 +67,7 @@ export function InquiryModal() {
   const property = typeof inquiryProperty === 'string' ? null : inquiryProperty as Property;
   const isEdit = isInShortlist(property?.property_id ?? String(inquiryProperty));
   const config = property ? getPropertyConfig(property.type) : null;
-  const Icon = config?.icon;
+  const iconUrl = config?.iconUrl;
   const hasImage = Array.isArray(property?.image_urls) && property!.image_urls.length > 0;
 
   return (
@@ -172,9 +172,13 @@ export function InquiryModal() {
                           fill
                           className="object-cover"
                         />
-                      ) : Icon ? (
-                        <div className={cn("flex h-full w-full items-center justify-center", config?.bgColor)}>
-                          <Icon className={cn("h-6 w-6 opacity-50", config?.color)} />
+                      ) : iconUrl ? (
+                        <div className={cn("flex h-full w-full items-center justify-center p-2.5", config?.bgColor)}>
+                          <img 
+                            src={iconUrl} 
+                            alt={property.type}
+                            className={cn("h-full w-full object-contain opacity-60 transition-opacity")} 
+                          />
                         </div>
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-zinc-400 text-[8px] font-bold uppercase p-1 text-center">No Image</div>

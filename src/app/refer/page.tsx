@@ -2,10 +2,8 @@ import React from 'react';
 import { ReferClient } from '@/components/ReferClient';
 
 // Enable ISR: Cache the Referral marketing for 1 hour
-export const revalidate = 3600;
 
 // Use Edge runtime for global speed
-export const runtime = 'edge';
 
 export default function ReferAndEarnPage() {
   return (
