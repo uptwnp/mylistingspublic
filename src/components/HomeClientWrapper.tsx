@@ -1,14 +1,16 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { PropertySection } from "@/components/PropertySection";
 import { PropertyListSection } from "@/components/PropertyListSection";
 import { ContinueExploringBanner } from "@/components/ContinueExploringBanner";
 import { useShortlist } from "@/context/ShortlistContext";
 import { Property } from "@/types";
+import { getHomepageDataAction } from "@/app/actions/property-actions";
 
 interface HomeClientWrapperProps {
-  initialPlots: { data: Property[], count: number };
+  initialPlots?: { data: Property[], count: number };
   initialApartments?: { data: Property[], count: number };
   initialVillas?: { data: Property[], count: number };
   initialCommercial?: { data: Property[], count: number };
@@ -16,13 +18,44 @@ interface HomeClientWrapperProps {
 }
 
 export function HomeClientWrapper({
-  initialPlots,
-  initialApartments,
-  initialVillas,
-  initialCommercial,
+  initialPlots: serverPlots,
+  initialApartments: serverApartments,
+  initialVillas: serverVillas,
+  initialCommercial: serverCommercial,
   serverCity
 }: HomeClientWrapperProps) {
   const { selectedCity, setIsMobileSearchOpen, recentlyVisitedIds, shortlistItems, savedIds } = useShortlist();
+  
+  // Data states for "After Load" discovery
+  const [plots, setPlots] = useState(serverPlots);
+  const [apartments, setApartments] = useState(serverApartments);
+  const [villas, setVillas] = useState(serverVillas);
+  const [commercial, setCommercial] = useState(serverCommercial);
+  const [isLoading, setIsLoading] = useState(!serverPlots);
+
+  useEffect(() => {
+    // If we have server data and the city hasn't changed, don't re-fetch
+    if (serverPlots && selectedCity === serverCity) return;
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const batch = await getHomepageDataAction(selectedCity);
+        if (batch) {
+          setPlots(batch.plots);
+          setApartments(batch.apartments);
+          setVillas(batch.villas);
+          setCommercial(batch.commercial);
+        }
+      } catch (err) {
+        console.error('Failed to load homepage data after-load:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [selectedCity, serverCity, serverPlots]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -63,7 +96,8 @@ export function HomeClientWrapper({
           title={`Residential Plots for sale`} 
           city={selectedCity}
           type="Residential Plot" 
-          initialData={selectedCity === serverCity ? initialPlots : undefined}
+          initialData={plots}
+          isLoading={isLoading}
         />
 
         {recentlyVisitedIds.length > 0 && (
@@ -92,21 +126,24 @@ export function HomeClientWrapper({
           title={`Apartments for sale`} 
           city={selectedCity}
           type="Flat,Penthouse,Floor" 
-          initialData={selectedCity === serverCity ? initialApartments : undefined}
+          initialData={apartments}
+          isLoading={isLoading}
         />
 
         <PropertySection 
           title={`Houses & Villas for sale`} 
           city={selectedCity}
           type="House,Villa" 
-          initialData={selectedCity === serverCity ? initialVillas : undefined}
+          initialData={villas}
+          isLoading={isLoading}
         />
 
         <PropertySection 
           title={`Commercial Space`} 
           city={selectedCity}
           type="Commercial Built-up" 
-          initialData={selectedCity === serverCity ? initialCommercial : undefined}
+          initialData={commercial}
+          isLoading={isLoading}
         />
       </section>
     </div>

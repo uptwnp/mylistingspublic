@@ -66,8 +66,7 @@ export default function Navbar() {
     setAllAreas([]);
   }, [selectedCity]);
 
-  const isSearchPage = pathname === '/explore' || pathname === '/map' || !!parseSeoSlug(pathname.slice(1));
-  const shouldShowCompact = (isScrolled || isSearchPage) && !isForceExpanded;
+  const shouldShowCompact = (isScrolled || !isHomePage) && !isForceExpanded;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -294,7 +293,7 @@ export default function Navbar() {
         className={cn(
         "fixed top-0 z-[70] w-full transition-all duration-700 ease-in-out",
         shouldShowCompact 
-          ? "border-b border-zinc-200/50 bg-[#fafafa]/80 backdrop-blur-xl py-3.5 sm:py-4 shadow-sm" 
+          ? "border-b border-zinc-200/50 bg-[#fafafa]/80 backdrop-blur-xl py-3 shadow-sm" 
           : "bg-white/40 backdrop-blur-xl py-4 sm:py-6"
       )}>
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12">

@@ -1,4 +1,3 @@
-import { getHomepageData } from "@/lib/supabase";
 import { HomeClientWrapper } from "@/components/HomeClientWrapper";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
@@ -6,13 +5,13 @@ import RootLoading from "./loading";
 
 export const runtime = 'edge';
 export const revalidate = 2592000; // 30 days
+export const ppr = true; // Use Partial Prerendering for instant shell
 
 const CITY_KEY = 'dealer_network_selected_city';
 
-// CRITICAL: Homepage is now a direct shell.
-// By NOT making the main Home function async and NOT awaiting cookies at the top level,
-// we allow the RootLayout (Navbar/Footer) and the <RootLoading /> shimmers
-// to appear on the user's screen in <100ms.
+// CRITICAL: Homepage is now a fully static shell.
+// By NOT awaiting the database at the top level, we ensure the 
+// address bar finishes loading in <100ms on all mobile devices.
 export default function Home() {
   return (
     <Suspense fallback={<RootLoading />}>
@@ -21,25 +20,13 @@ export default function Home() {
   );
 }
 
-// Data fetching and dynamic header logic (cookies) is now isolated inside 
-// this sub-component, which is Suspended. This ensures the rest of the 
-// page (and the shell) can stream without waiting for the database.
 async function HomeContent() {
   const cookieStore = await cookies();
   const serverCity = cookieStore.get(CITY_KEY)?.value || 'Panipat';
 
-  // Batched fetch for ALL homepage data in ONE RPC call.
-  // This reduces TTFB by eliminating multiple round-trips and connection overhead.
-  const batch = await getHomepageData(serverCity);
-  
-  const fallbackData = { data: [], count: 0 };
-  
+  // We passed undefined for data initially so the client takes over "After Load"
   return (
     <HomeClientWrapper 
-       initialPlots={batch?.plots || fallbackData}
-       initialApartments={batch?.apartments || fallbackData}
-       initialVillas={batch?.villas || fallbackData}
-       initialCommercial={batch?.commercial || fallbackData}
        serverCity={serverCity}
     />
   );

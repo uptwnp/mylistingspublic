@@ -91,7 +91,7 @@ export function MiniImageCarousel({ images, alt, onTap }: MiniImageCarouselProps
             alt={`${alt} - Image ${index + 1}`}
             fill
             className="object-cover select-none pointer-events-none"
-            unoptimized
+            sizes="(max-width: 640px) 100vw, 400px"
           />
         </motion.div>
       </AnimatePresence>

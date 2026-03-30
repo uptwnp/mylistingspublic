@@ -71,3 +71,12 @@ export async function getLocationSuggestionsAction(
     return [];
   }
 }
+
+/**
+ * High-Performance Client-Side Home Data Fetcher.
+ * Allows the shell to load instantly while the DB connection happens "after load".
+ */
+export async function getHomepageDataAction(city: string = 'Panipat') {
+  const { getHomepageData } = await import('@/lib/supabase');
+  return getHomepageData(city);
+}

@@ -13,13 +13,28 @@ interface PropertySectionProps {
   city: string;
   type: string;
   initialData?: { data: Property[], count: number };
+  isLoading?: boolean;
 }
 
-export function PropertySection({ title, city, type, initialData }: PropertySectionProps) {
+export function PropertySection({ title, city, type, initialData, isLoading: parentLoading }: PropertySectionProps) {
   const [properties, setProperties] = useState<Property[]>(initialData?.data || []);
-  const [loading, setLoading] = useState(!initialData);
+  const [loading, setLoading] = useState(parentLoading ?? !initialData);
   const [hasEntered, setHasEntered] = useState(!!initialData);
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Sync loading state if parent overrides it
+  useEffect(() => {
+    if (parentLoading !== undefined) {
+      setLoading(parentLoading);
+    }
+  }, [parentLoading]);
+
+  // Sync properties if initialData changes (e.g. after Load)
+  useEffect(() => {
+    if (initialData?.data) {
+      setProperties(initialData.data);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
 import { trackEvent } from '@/lib/analytics';
-import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink, MessageCircleQuestion, Plus } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink, MessageCircleQuestion } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -520,34 +520,21 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
       </section>
 
       {/* Mobile Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 px-4 pt-4 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsAskModalOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2.5 rounded-2xl border border-zinc-200 bg-white py-4 ty-body font-bold text-zinc-900 shadow-sm transition-all active:scale-[0.98]"
-          >
-            <MessageCircleQuestion className="h-5 w-5 text-zinc-400" />
-            <span>Ask Question</span>
-          </button>
+      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 px-6 pt-5 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col shrink-0">
+            <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-0.5">Price</span>
+            <p className="ty-subtitle font-black text-zinc-900 leading-none">{formatPriceRange(property.price_min, property.price_max)}</p>
+          </div>
           
           <button 
              onClick={() => {
               if (!inCart) addToShortlist(property);
-              else router.push('/shortlist');
+              router.push('/shortlist');
             }}
-            className="flex-[1.5] flex items-center justify-center gap-3 rounded-2xl bg-brand-primary py-4.5 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all shimmer-premium"
+            className="flex-1 flex items-center justify-center gap-3 rounded-[20px] bg-brand-primary py-4.5 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all shimmer-premium"
           >
-            {inCart ? (
-              <>
-                <span>Proceed with it</span>
-                <ChevronRight className="h-5 w-5" />
-              </>
-            ) : (
-              <>
-                <Plus className="h-5 w-5" />
-                <span>Shortlist</span>
-              </>
-            )}
+            {inCart ? 'Go to Shortlist' : 'Proceed with it'}
           </button>
         </div>
       </div>
