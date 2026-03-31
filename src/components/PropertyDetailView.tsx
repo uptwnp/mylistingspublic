@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
 import { trackEvent } from '@/lib/analytics';
-import { ArrowLeft, Heart, ShoppingCart, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink, MessageCircleQuestion } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, Plus, Check, MapPin, Ruler, Calendar, CheckCircle2, ShieldCheck, Share2, Locate, Map as MapIcon, X, ChevronLeft, ChevronRight, ExternalLink, MessageCircleQuestion } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -499,7 +499,8 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                   }}
                   className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand-primary py-4 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all shimmer-premium"
                 >
-                  {inCart ? 'Go to Shortlist' : 'Proceed with it'}
+                  {inCart ? <ShoppingCart className="h-5 w-5" /> : <Plus className="h-5 w-5" strokeWidth={3} />}
+                  {inCart ? 'Go to Shortlist' : 'Add to Shortlist'}
                 </button>
                 <button
                   onClick={() => setIsAskModalOpen(true)}
@@ -526,36 +527,41 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
 
       {/* Mobile Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 px-6 pt-5 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col shrink-0 max-w-[100px]">
-            <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-0.5 leading-none">Price Range</span>
-            <p className="ty-body font-black text-zinc-900 leading-none truncate">{formatPriceRange(property.price_min, property.price_max)}</p>
-          </div>
-          
-          <div className="flex flex-1 items-center gap-2 min-w-0">
-            {!inCart && (
-              <button 
-                onClick={() => setIsAskModalOpen(true)}
-                className="flex items-center justify-center gap-1.5 rounded-2xl border border-zinc-200 bg-white px-3 py-4 ty-caption font-bold text-zinc-900 active:scale-[0.98] transition-all"
-              >
-                <MessageCircleQuestion className="h-4 w-4 text-zinc-400" />
-                Ask
-              </button>
-            )}
-            <button 
-               onClick={() => {
-                if (!inCart) addToShortlist(property);
-                router.push('/shortlist');
-              }}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 rounded-2xl py-4 ty-caption font-black text-white shadow-2xl active:scale-[0.98] transition-all shimmer-premium",
-                inCart ? "bg-zinc-900 shadow-zinc-900/10" : "bg-brand-primary shadow-blue-500/20"
+        <div className="relative">
+          <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-1 px-1">
+            {/* Price Section - Now Scrolls with Buttons */}
+            <div className="flex flex-col shrink-0 border-r border-zinc-100 pr-6">
+              <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-1 leading-none">Price Range</span>
+              <p className="ty-subtitle font-black text-zinc-900 leading-none whitespace-nowrap">{formatPriceRange(property.price_min, property.price_max)}</p>
+            </div>
+            
+            <div className="flex items-center gap-2 shrink-0">
+              {!inCart && (
+                <button 
+                  onClick={() => setIsAskModalOpen(true)}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-4 ty-caption font-bold text-zinc-900 active:scale-[0.98] transition-all shrink-0 whitespace-nowrap"
+                >
+                  <MessageCircleQuestion className="h-4 w-4 text-zinc-400" />
+                  Ask Question
+                </button>
               )}
-            >
-              <ShoppingCart className="h-4 w-4" />
-              <span>{inCart ? 'View Shortlist' : 'Add to Shortlist'}</span>
-            </button>
+              <button 
+                 onClick={() => {
+                  if (!inCart) addToShortlist(property);
+                  router.push('/shortlist');
+                }}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-2xl py-4 ty-caption font-black text-white shadow-2xl active:scale-[0.98] transition-all shimmer-premium whitespace-nowrap px-6 shrink-0",
+                  inCart ? "bg-zinc-900 shadow-zinc-900/10" : "bg-brand-primary shadow-blue-500/20"
+                )}
+              >
+                {inCart ? <ShoppingCart className="h-4 w-4" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
+                <span>{inCart ? 'View Shortlist' : 'Add to Shortlist'}</span>
+              </button>
+            </div>
           </div>
+          {/* Enhanced Scroll Hint Fade */}
+          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none" />
         </div>
       </div>
 
