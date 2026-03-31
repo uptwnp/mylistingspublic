@@ -528,9 +528,9 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
       {/* Mobile Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 px-6 pt-5 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
         <div className="relative">
-          <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-1 px-1">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
             {/* Price Section - Now Scrolls with Buttons */}
-            <div className="flex flex-col shrink-0 border-r border-zinc-100 pr-6">
+            <div className="flex flex-col shrink-0 border-r border-zinc-100">
               <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-1 leading-none">Price Range</span>
               <p className="ty-subtitle font-black text-zinc-900 leading-none whitespace-nowrap">{formatPriceRange(property.price_min, property.price_max)}</p>
             </div>
