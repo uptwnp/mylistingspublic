@@ -326,6 +326,30 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
 
             {/* Actions */}
             <div className="flex items-center gap-4 py-6 border-b border-zinc-100 overflow-x-auto no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0">
+              <button
+                onClick={() => setIsAskModalOpen(true)}
+                className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm"
+              >
+                <MessageCircleQuestion className="h-4 w-4 text-zinc-400" />
+                Ask Question
+              </button>
+              <button 
+                onClick={() => toggleSave(property.property_id)}
+                className={cn(
+                    "flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm",
+                    saved && "bg-rose-50 border-rose-100 text-rose-600 font-black"
+                )}
+              >
+                <Heart className={cn("h-4 w-4", saved && "fill-rose-500 text-rose-500")} />
+                {saved ? 'Saved' : 'Save'}
+              </button>
+              <button 
+                onClick={scrollToMap} 
+                className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm"
+              >
+                <MapIcon className="h-4 w-4 text-zinc-400" />
+                See on Map
+              </button>
               <button 
                 onClick={async () => {
                   if (navigator.share) {
@@ -345,27 +369,6 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               >
                 <Share2 className="h-4 w-4 text-zinc-400" />
                 Share
-              </button>
-              <button 
-                onClick={() => toggleSave(property.property_id)}
-                className={cn(
-                    "flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm",
-                    saved && "bg-rose-50 border-rose-100 text-rose-600"
-                )}
-              >
-                <Heart className={cn("h-4 w-4", saved && "fill-rose-500 text-rose-500")} />
-                {saved ? 'Saved' : 'Save'}
-              </button>
-              <button onClick={scrollToMap} className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm">
-                <MapIcon className="h-4 w-4 text-zinc-400" />
-                Map
-              </button>
-              <button
-                onClick={() => setIsAskModalOpen(true)}
-                className="flex items-center gap-2.5 rounded-2xl px-5 py-3 ty-caption font-bold border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 transition-all hover:border-zinc-300 active:scale-95 whitespace-nowrap shadow-sm"
-              >
-                <MessageCircleQuestion className="h-4 w-4 text-zinc-400" />
-                Ask Question
               </button>
             </div>
 
@@ -405,9 +408,6 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                         { label: 'Area', value: property.area },
                         { label: 'Size', value: formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min) },
                         { label: 'Price Range', value: formatPriceRange(property.price_min, property.price_max) },
-                        { label: 'Status', value: (property.status || 'Active').charAt(0).toUpperCase() + (property.status || 'Active').slice(1) },
-                        { label: 'Approved On', value: formatDate(property.approved_on) },
-                        { label: 'Landmark', value: property.landmark_location || 'Not specified' },
                     ].map((item, i) => (
                         <div key={i} className={cn("flex items-center justify-between p-4 border-b border-zinc-100 md:odd:border-r")}>
                             <span className="ty-caption font-medium text-zinc-500 uppercase tracking-wider">{item.label}</span>
@@ -560,8 +560,6 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
               </button>
             </div>
           </div>
-          {/* Enhanced Scroll Hint Fade */}
-          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none" />
         </div>
       </div>
 
