@@ -105,8 +105,15 @@ export default function ShortlistPage() {
             `Hi! I'd like to discuss my shortlist.\n\n` +
             (contactDetails ? `*My Details:*\nName: ${contactDetails.fullName}\nPhone: ${contactDetails.phoneNumber}\nAddress: ${contactDetails.address}\n\n` : '') +
             `*My Shortlist (${properties.length} ${properties.length === 1 ? 'property' : 'properties'}):*\n` +
-            properties.map((p, i) => `${i + 1}. ${p.type} – ${p.area}${p.city ? `, ${p.city}` : ''} (#${p.property_id})`).join('\n') +
-            `\n\n*View Shortlist:* ${typeof window !== 'undefined' ? window.location.origin : ''}/shortlist?shortlist=${shortlistItems.join(',')}`
+            properties.map((p, i) => {
+              const note = inquiries[p.property_id]?.question;
+              return `${i + 1}. ${p.type} – ${p.area}${p.city ? `, ${p.city}` : ''} (#${p.property_id})${note ? `\n   Note: ${note}` : ''}`;
+            }).join('\n') +
+            `\n\n*View Shortlist:* ${typeof window !== 'undefined' ? window.location.origin : ''}/shortlist?shortlist=${shortlistItems.join(',')}${(() => {
+                const notesToShare: Record<string, string> = {};
+                shortlistItems.forEach(id => { if (inquiries[id]?.question) notesToShare[id] = inquiries[id].question; });
+                return Object.keys(notesToShare).length > 0 ? `&notes=${encodeURIComponent(JSON.stringify(notesToShare))}` : '';
+            })()}`
           )}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -202,7 +209,19 @@ export default function ShortlistPage() {
     if (shortlistItems.length === 0) return;
 
     const baseUrl = window.location.origin + window.location.pathname;
-    const shareUrl = `${baseUrl}?shortlist=${shortlistItems.join(',')}`;
+    
+    // Encode notes for sharing
+    const notesToShare: Record<string, string> = {};
+    shortlistItems.forEach(id => {
+      if (inquiries[id]?.question) {
+        notesToShare[id] = inquiries[id].question;
+      }
+    });
+    
+    let shareUrl = `${baseUrl}?shortlist=${shortlistItems.join(',')}`;
+    if (Object.keys(notesToShare).length > 0) {
+      shareUrl += `&notes=${encodeURIComponent(JSON.stringify(notesToShare))}`;
+    }
 
     if (navigator.share) {
       try {

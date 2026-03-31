@@ -215,11 +215,35 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     // Check for shared shortlist in URL
     const searchParams = new URLSearchParams(window.location.search);
     const sharedShortlist = searchParams.get('shortlist');
+    const sharedNotes = searchParams.get('notes');
+
     if (sharedShortlist) {
       try {
         const ids = sharedShortlist.split(',').filter(id => id.trim() !== '');
         if (ids.length > 0) {
           setShortlistItems(ids);
+
+          // If notes are also shared, parse and add them
+          if (sharedNotes) {
+            try {
+              const notesObj = JSON.parse(sharedNotes);
+              setInquiries(prev => {
+                const updated = { ...prev };
+                Object.entries(notesObj).forEach(([id, note]) => {
+                  updated[id] = {
+                    wantSiteVisit: false,
+                    interestedInPurchase: false,
+                    haveQuestion: true,
+                    question: note as string
+                  };
+                });
+                return updated;
+              });
+            } catch (err) {
+              console.error('Failed to parse shared notes', err);
+            }
+          }
+
           const newRelativePathQuery = window.location.pathname;
           window.history.replaceState(null, '', newRelativePathQuery);
         }
