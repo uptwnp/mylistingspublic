@@ -163,7 +163,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 </span>
             </div>
             {/* Photo Gallery Area */}
-            <div className="relative overflow-hidden rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border border-zinc-200 bg-zinc-50 shadow-inner-sm">
+            <div className="relative overflow-hidden rounded-3xl aspect-[16/12] md:aspect-auto md:h-[500px] border border-zinc-200 bg-zinc-50 shadow-inner-sm">
               {hasImage ? (
                 <div className="h-full relative group">
                   {/* ... rest unchanged ... */}
