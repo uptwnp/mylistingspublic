@@ -732,7 +732,7 @@ export default function Navbar() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-sm font-bold", budget.label === "Any Budget" ? "text-zinc-400" : "text-zinc-900")}>
-                      {budget.label === "Any Budget" ? "Select your price range" : budget.label}
+                      {budget.label === "Any Budget" ? "Select your budget range" : budget.label}
                     </span>
                     <div className="h-4 w-px bg-zinc-200" />
                     <Icons.ChevronDown className="h-3 w-3 text-zinc-400" />

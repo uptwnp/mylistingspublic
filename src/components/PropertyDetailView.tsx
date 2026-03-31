@@ -132,7 +132,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
   const mapProperties = React.useMemo(() => [property], [property.property_id]);
 
   return (
-    <div className="min-h-screen bg-white pb-32">
+    <div className="min-h-screen bg-white pb-32 overflow-x-hidden max-w-full">
       {/* Top Section: Only for Heading on Desktop, everything for Mobile */}
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 pt-28 sm:pt-32 pb-4 sm:pb-6 lg:px-12">
         <div className="flex items-center gap-2 ty-micro font-bold tracking-widest text-zinc-500 mb-3 sm:mb-4 uppercase">
@@ -391,7 +391,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
 
             {/* Description */}
             <div className="space-y-4 pt-4 break-words">
-              <h2 className="ty-title font-bold">About this listing</h2>
+              <h2 className="ty-title font-bold">Descrption</h2>
               <div className="ty-body leading-relaxed text-zinc-600">
                 <ClickableText text={property.description} />
               </div>
@@ -402,14 +402,13 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 <h2 className="ty-title font-bold">Listing Details</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/50">
                     {[
+                        { label: 'Price', value: formatPriceRange(property.price_min, property.price_max) },
+                        { label: 'Size', value: formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min) },
+                        { label: 'Location', value: `${property.area}, ${property.city}` },
                         { label: 'Property Type', value: property.type },
                         { label: 'Listing ID', value: property.public_id },
-                        { label: 'City', value: property.city },
-                        { label: 'Area', value: property.area },
-                        { label: 'Size', value: formatSizeRange(property.size_min, property.size_max, property.size_unit, property.price_min) },
-                        { label: 'Price Range', value: formatPriceRange(property.price_min, property.price_max) },
                     ].map((item, i) => (
-                        <div key={i} className={cn("flex items-center justify-between p-4 border-b border-zinc-100 md:odd:border-r")}>
+                        <div key={i} className={cn("flex items-center justify-between p-4 border-b border-zinc-100 last:border-b-0 md:odd:border-r")}>
                             <span className="ty-caption font-medium text-zinc-500 uppercase tracking-wider">{item.label}</span>
                             <span className="ty-caption font-bold text-zinc-900">{item.value}</span>
                         </div>
@@ -481,33 +480,46 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
           <aside className="lg:col-span-4 lg:sticky lg:top-24 h-fit">
             <div className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-2xl shadow-black/5 space-y-6">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Price Range</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Price</span>
                 <p className="text-2xl font-bold">{formatPriceRange(property.price_min, property.price_max)}</p>
               </div>
               <div className="space-y-4">
+                {/* 1. Ask Question */}
+                <button
+                  onClick={() => setIsAskModalOpen(true)}
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-zinc-200 bg-white py-4 ty-body font-black text-zinc-900 hover:bg-zinc-50 transition-all active:scale-[0.98] shadow-sm"
+                >
+                  <MessageCircleQuestion className="h-5 w-5 text-zinc-900" />
+                  Ask Question
+                </button>
+
+                {/* 2. Add to Shortlist (Toggle only) */}
                 <button 
                   onClick={() => inCart ? removeFromShortlist(property.property_id) : addToShortlist(property)}
-                  className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 ty-body font-black transition-all active:scale-[0.98] ${inCart ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-zinc-900 text-white shadow-xl shadow-zinc-900/10'}`}
+                  className={cn(
+                    "flex w-full items-center justify-center gap-3 rounded-2xl py-4 ty-body font-black transition-all active:scale-[0.98] shadow-lg",
+                    inCart ? 'bg-brand-primary text-white shadow-brand-primary/20' : 'bg-zinc-900 text-white hover:bg-zinc-800 shadow-black/10'
+                  )}
                 >
-                  <ShoppingCart className="h-5 w-5" />
-                  {inCart ? 'Remove from Shortlist' : 'Add to Shortlist'}
+                  {inCart ? <Check className="h-5 w-5" strokeWidth={3} /> : <Plus className="h-5 w-5" strokeWidth={3} />}
+                  {inCart ? 'Shortlisted' : 'Add to Shortlist'}
                 </button>
+
+                {/* 3. Proceed or View (Navigates) */}
                 <button 
-                  onClick={() => {
+                   onClick={() => {
                     if (!inCart) addToShortlist(property);
                     router.push('/shortlist');
                   }}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-brand-primary py-4 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all shimmer-premium"
+                  className={cn(
+                    "flex w-full items-center justify-center gap-3 rounded-2xl py-4 ty-body font-black transition-all active:scale-[0.98]",
+                    inCart 
+                      ? "bg-zinc-900 text-white shadow-black/10" 
+                      : "bg-brand-primary text-white shadow-2xl shadow-blue-500/20 hover:bg-blue-700 shimmer-premium"
+                  )}
                 >
-                  {inCart ? <ShoppingCart className="h-5 w-5" /> : <Plus className="h-5 w-5" strokeWidth={3} />}
-                  {inCart ? 'Go to Shortlist' : 'Add to Shortlist'}
-                </button>
-                <button
-                  onClick={() => setIsAskModalOpen(true)}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-zinc-100 bg-zinc-50 py-4 ty-body font-bold text-zinc-700 hover:bg-zinc-100 transition-all active:scale-[0.98]"
-                >
-                  <MessageCircleQuestion className="h-5 w-5 text-zinc-400" />
-                  Ask a Question
+                  <ShoppingCart className="h-5 w-5" />
+                  {inCart ? 'View Shortlist' : 'Proceed with it'}
                 </button>
               </div>
               <div className="h-px bg-zinc-100" />
@@ -526,37 +538,58 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
       </section>
 
       {/* Mobile Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 px-6 pt-5 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
+      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 pt-5 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
         <div className="relative">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
-            {/* Price Section - Now Scrolls with Buttons */}
-            <div className="flex flex-col shrink-0 border-r border-zinc-100">
-              <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-1 leading-none">Price Range</span>
+            {/* Price Section */}
+            <div className="flex flex-col shrink-0 border-r border-zinc-100 pl-4 mr-3">
+              <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-1 leading-none">Price</span>
               <p className="ty-subtitle font-black text-zinc-900 leading-none whitespace-nowrap">{formatPriceRange(property.price_min, property.price_max)}</p>
             </div>
             
-            <div className="flex items-center gap-2 shrink-0">
-              {!inCart && (
-                <button 
-                  onClick={() => setIsAskModalOpen(true)}
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-4 ty-caption font-bold text-zinc-900 active:scale-[0.98] transition-all shrink-0 whitespace-nowrap"
-                >
-                  <MessageCircleQuestion className="h-4 w-4 text-zinc-400" />
-                  Ask Question
-                </button>
-              )}
+            <div className="flex items-center gap-2 shrink-0 pr-6">
+              {/* 1. Ask Question */}
+              <button 
+                onClick={() => setIsAskModalOpen(true)}
+                className="flex items-center justify-center gap-2 rounded-2xl border-2 border-zinc-200 bg-white px-5 py-4 ty-caption font-black text-zinc-900 active:scale-[0.98] transition-all shrink-0 whitespace-nowrap shadow-sm"
+              >
+                <MessageCircleQuestion className="h-4 w-4 text-zinc-900" />
+                Ask Question
+              </button>
+
+              {/* 2. Add to Shortlist (Toggle only) */}
               <button 
                  onClick={() => {
+                  if (inCart) {
+                    removeFromShortlist(property.property_id);
+                  } else {
+                    addToShortlist(property);
+                  }
+                }}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-2xl py-4 ty-caption font-black active:scale-[0.98] transition-all whitespace-nowrap px-6 shrink-0 shadow-md",
+                  inCart ? "bg-brand-primary text-white shadow-brand-primary/10" : "bg-zinc-900 text-white shadow-zinc-900/10"
+                )}
+              >
+                {inCart ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-4 w-4" strokeWidth={3} />}
+                <span>{inCart ? 'Shortlisted' : 'Add to Shortlist'}</span>
+              </button>
+
+              {/* 3. Proceed or View (Navigates) */}
+              <button 
+                onClick={() => {
                   if (!inCart) addToShortlist(property);
                   router.push('/shortlist');
                 }}
                 className={cn(
-                  "flex items-center justify-center gap-2 rounded-2xl py-4 ty-caption font-black text-white shadow-2xl active:scale-[0.98] transition-all shimmer-premium whitespace-nowrap px-6 shrink-0",
-                  inCart ? "bg-zinc-900 shadow-zinc-900/10" : "bg-brand-primary shadow-blue-500/20"
+                  "flex items-center justify-center gap-2 rounded-2xl py-4 ty-caption font-black active:scale-[0.98] transition-all whitespace-nowrap px-6 shrink-0",
+                  inCart 
+                    ? "bg-zinc-900 text-white shadow-zinc-900/10" 
+                    : "bg-brand-primary text-white shadow-2xl shadow-blue-500/20 shimmer-premium"
                 )}
               >
-                {inCart ? <ShoppingCart className="h-4 w-4" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
-                <span>{inCart ? 'View Shortlist' : 'Add to Shortlist'}</span>
+                <ShoppingCart className="h-4 w-4" />
+                <span>{inCart ? 'View Shortlist' : 'Proceed with it'}</span>
               </button>
             </div>
           </div>
@@ -590,7 +623,6 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                         question: 'I need photos and video and I am ready to pay the token amount.'
                     });
                     setIsPhotoModalOpen(false);
-                    router.push('/shortlist');
                   }} className="bg-zinc-900 text-white rounded-2xl py-3.5 ty-caption font-bold">Request Photos</button>
                   <button onClick={() => setIsPhotoModalOpen(false)} className="ty-caption font-bold text-zinc-400">Maybe later</button>
                 </div>
@@ -605,13 +637,37 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
         {isGalleryOpen && (
           <div className="fixed inset-0 z-[200] flex flex-col bg-black">
             <div className="flex items-center justify-between p-6">
-              <div className="bg-white/10 px-4 py-2 rounded-full text-white text-xs font-black">{activePhotoIndex + 1} / {property.image_urls.length}</div>
-              <button onClick={() => setIsGalleryOpen(false)} className="h-12 w-12 rounded-full bg-white/10 text-white flex items-center justify-center"><X className="h-6 w-6" /></button>
+              <div className="flex items-center gap-4">
+                <div className="bg-white/10 px-4 py-2 rounded-full text-white text-xs font-black">{activePhotoIndex + 1} / {property.image_urls.length}</div>
+                <a 
+                  href={property.image_urls[activePhotoIndex]} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 h-10 px-4 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View Full
+                </a>
+              </div>
+              <button 
+                onClick={() => setIsGalleryOpen(false)} 
+                className="h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
             <div className="relative flex-1 flex items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.div key={activePhotoIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative h-full w-full max-w-5xl">
-                  <Image src={property.image_urls[activePhotoIndex]} alt="Gallery" fill className="object-contain" />
+                  <a 
+                    href={property.image_urls[activePhotoIndex]} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block w-full h-full cursor-zoom-in"
+                    title="View full image in new tab"
+                  >
+                    <Image src={property.image_urls[activePhotoIndex]} alt="Gallery" fill className="object-contain" />
+                  </a>
                 </motion.div>
               </AnimatePresence>
               <button onClick={prevPhoto} className="absolute left-6 h-14 w-14 rounded-full bg-white/10 text-white flex items-center justify-center"><ChevronLeft className="h-6 w-6" /></button>

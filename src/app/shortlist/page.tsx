@@ -5,7 +5,7 @@ import { Property } from '@/types';
 import { getPropertiesByIds } from '@/lib/supabase';
 import { trackEvent } from '@/lib/analytics';
 import { useEffect, useState } from 'react';
-import { Trash2, Phone, Home, ArrowLeft, Building2, MapPin, CheckCircle2, Share2, Pencil, Plus, Check, X, Calendar, Zap } from 'lucide-react';
+import { Trash2, Phone, Home, ArrowLeft, ArrowRight, Building2, MapPin, CheckCircle2, Share2, Pencil, Plus, Check, X, Calendar, Zap } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -596,78 +596,7 @@ export default function ShortlistPage() {
                </AnimatePresence>
 
                <AnimatePresence>
-                 {showPricingCard && (
-                    <motion.div 
-                      key="pricing-card"
-                      layout
-                      initial={{ opacity: 0, scale: 0.98, y: 15 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 1, y: 15 }}
-                      whileHover={{ scale: 1.002 }}
-                      transition={{ type: 'spring', damping: 25, stiffness: 120 }}
-                      className="relative w-full overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] bg-white p-5 sm:p-7 text-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.05)] my-6 group border border-zinc-100"
-                    >
-                      {/* Premium Accent Glow (Light) */}
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.04),transparent_75%)] pointer-events-none" />
-                      
-                      <div className="relative z-10">
-                        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 pr-8 sm:pr-0">
-                          <div className="space-y-2 min-w-0 flex-1">
-                             <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-100 px-3 py-1 backdrop-blur-3xl mb-0.5">
-                                <Zap className="h-2.5 w-2.5 text-blue-500 fill-blue-500/10" />
-                                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-blue-600">
-                                   Pricing Structure
-                                </span>
-                             </div>
-                             <h2 className="text-lg sm:text-xl font-black leading-tight text-zinc-900 tracking-tight">
-                                Zero Upfront Fees ⚡
-                             </h2>
-                             <p className="text-xs sm:text-sm font-medium text-zinc-500 leading-relaxed max-w-md">
-                                Pay only <span className="text-zinc-900 font-black underline underline-offset-4 decoration-blue-200">1% brokerage</span> — payable after booking. No upfront costs. 🤝
-                             </p>
-                          </div>
-                          <button 
-                          onClick={() => {
-                            trackEvent('dismissed_pricing_card', { page: 'shortlist' });
-                            setShowPricingCard(false);
-                            localStorage.setItem('hide_pricing_card_shortlist', 'true');
-                          }}
-                            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[20] p-2 sm:p-3 rounded-xl bg-zinc-100/50 hover:bg-zinc-100 transition-all border border-zinc-200/50 active:scale-95 group/close"
-                          >
-                            <X className="h-3.5 w-3.5 sm:h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" strokeWidth={2.5} />
-                          </button>
-                        </div>
-
-                        <div className="flex items-center gap-6 pt-6 mt-6 border-t border-zinc-100 overflow-x-auto no-scrollbar pb-2 w-full">
-                           <div className="flex items-center gap-3 group/item shrink-0">
-                              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-100 shrink-0 group-hover/item:bg-blue-100 transition-all">
-                                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
-                              </div>
-                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors whitespace-nowrap">Free Site Visits</p>
-                           </div>
-                           <div className="flex items-center gap-3 group/item shrink-0">
-                              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-100 shrink-0 group-hover/item:bg-blue-100 transition-all">
-                                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
-                              </div>
-                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors whitespace-nowrap">Legal Support</p>
-                           </div>
-                           <div className="flex items-center gap-3 group/item shrink-0">
-                              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-100 shrink-0 group-hover/item:bg-blue-100 transition-all">
-                                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
-                              </div>
-                              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover/item:text-zinc-900 transition-colors whitespace-nowrap">Loan Support</p>
-                           </div>
-                        </div>
-                      </div>
-
-                      {/* Premium Accent */}
-                      <div className="absolute -right-16 -bottom-16 h-64 w-64 rounded-full bg-blue-500/5 blur-[90px] pointer-events-none" />
-                      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/10 to-transparent pointer-events-none" />
-                      <div className="absolute right-4 bottom-4 opacity-[0.03] rotate-[15deg] pointer-events-none group-hover:opacity-[0.05] transition-all">
-                         <Zap className="h-32 w-32 fill-zinc-900" />
-                      </div>
-                    </motion.div>
-                  )}
+                 {/* Temporarily hidden pricing card */}
                </AnimatePresence>
 
                <AnimatePresence>
@@ -705,28 +634,26 @@ export default function ShortlistPage() {
            </div>
          )}
 
-         {/* Mobile Sticky CTA */}
-            <div className="fixed bottom-0 left-0 right-0 z-[60] block p-4 lg:hidden">
-              <div className="mx-auto max-w-lg">
-                <button
-                  onClick={() => setIsMobileDeskOpen(true)}
-                  className="flex w-full items-center justify-between rounded-3xl border border-[#88aaff] bg-white px-6 py-5 text-zinc-900 shadow-[0_15px_45px_rgba(37,99,235,0.08)] transition-all active:scale-[0.98] shimmer-premium-loop relative"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50">
-                      <Zap className="h-5 w-5 text-blue-600 fill-blue-600/10" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-zinc-400 leading-none mb-1.5">Call/Whatsapp/Meeting</p>
-                      <p className="text-sm font-black leading-none text-zinc-900">Proceed Next Step</p>
-                    </div>
-                  </div>
-                  <div className="rounded-full bg-blue-50 p-2">
-                    <ArrowLeft className="h-4 w-4 rotate-180 text-blue-600" />
-                  </div>
-                </button>
-              </div>
+          {/* Mobile Sticky CTA */}
+          <div className="fixed bottom-0 left-0 right-0 z-[60] block p-4 lg:hidden">
+            <div className="mx-auto max-w-lg">
+              <button
+                onClick={() => setIsMobileDeskOpen(true)}
+                className="flex w-full items-center gap-4 rounded-3xl bg-zinc-900 px-6 py-5 text-white shadow-2xl shadow-black/20 transition-all active:scale-[0.98] shimmer-premium-loop relative group overflow-hidden"
+              >
+                {/* Content */}
+                <div className="flex-1 flex flex-col items-start min-w-0 text-left">
+                  <span className="text-base font-black leading-tight text-white mb-1">Proceed to next step</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">Call / Whatsapp / Meeting</span>
+                </div>
+
+                {/* Right Arrow */}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-800 group-active:bg-zinc-700 transition-colors">
+                  <ArrowRight className="h-5 w-5 text-white" />
+                </div>
+              </button>
             </div>
+          </div>
 
         {/* Mobile Consultation Desk Overlay */}
         <AnimatePresence>
