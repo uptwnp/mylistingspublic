@@ -58,7 +58,7 @@ const formatPropertyData = (property: Record<string, unknown>): Property => {
   return formatted as unknown as Property;
 };
 
-const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status,created_at,updated_at';
+const PUBLIC_FIELDS = 'public_id,property_id,city,area,type,description,size_min,size_max,size_unit,price_min,price_max,formatted_price,highlights,image_urls,is_photos_public,landmark_location,latitude,longitude,loc_fallback,landmark_location_distance,search_text,approved_on,status,created_on,updated_on';
 
 export async function getProperties(
   page = 0, 

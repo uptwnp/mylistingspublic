@@ -159,7 +159,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
                 <Calendar className="h-4 w-4" />
                 <span>Last Updated:</span>
                 <span className="text-zinc-600">
-                  {formatDate(property.approved_on || property.updated_at || property.created_at)}
+                  {formatDate(property.approved_on || property.updated_on || property.created_on)}
                 </span>
             </div>
             {/* Photo Gallery Area */}

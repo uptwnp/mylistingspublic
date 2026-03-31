@@ -23,8 +23,8 @@ export type Property = {
   search_text?: string;
   status: string;
   approved_on: string;
-  created_at?: string;
-  updated_at?: string;
+  created_on?: string;
+  updated_on?: string;
 };
 
 export type ShortlistItem = {
