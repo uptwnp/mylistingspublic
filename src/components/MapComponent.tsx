@@ -605,6 +605,18 @@ export default function MapComponent({
   const [zoom, setZoom] = useState(13);
   const [showSearchArea, setShowSearchArea] = useState(false);
   const [lastSearchBounds, setLastSearchBounds] = useState<string>('');
+  const [isMounted, setIsMounted] = useState(false);
+  const mapId = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      // Clear global reference on unmount to prevent legacy access
+      if (typeof window !== 'undefined' && (window as any).leafletMap) {
+        (window as any).leafletMap = null;
+      }
+    };
+  }, []);
 
   const rawCenter = selectedProperty 
     ? getCoords(selectedProperty, properties, areaCenters)
@@ -648,15 +660,19 @@ export default function MapComponent({
     propertyCoords?.[0], propertyCoords?.[1]
   ]);
 
+  if (!isMounted) return null;
+
   return (
     <div className="relative h-full w-full">
       <MapContainer 
+        key={mapId.current}
         center={selectedProperty ? getCoords(selectedProperty, properties, areaCenters) : [29.3909, 76.9635]} 
         zoom={13} 
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
         markerZoomAnimation={false}
         fadeAnimation={false}
+        preferCanvas={true}
       >
         <MapReady onReady={(map) => { (window as any).leafletMap = map; }} />
         <MapEvents 

@@ -439,6 +439,7 @@ export function ExploreView({
                   </button>
                 </div>
                 <MapComponent 
+                  key="map-split-view"
                   properties={properties} 
                   selectedProperty={selectedProperty}
                   onSelectProperty={setSelectedProperty}
@@ -479,6 +480,7 @@ export function ExploreView({
           </div>
 
           <MapComponent
+            key="map-full-view"
             properties={properties}
             selectedProperty={selectedProperty}
             onSelectProperty={setSelectedProperty}

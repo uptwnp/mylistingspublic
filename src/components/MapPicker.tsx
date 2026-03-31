@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MapPin } from 'lucide-react';
 
@@ -70,10 +70,17 @@ function CityFetcher({ city }: { city?: string }) {
 
 export default function MapPicker({ center, onPick, city }: MapPickerProps) {
   const initialCenter: [number, number] = center ? [center.lat, center.lng] : [29.3909, 76.9635];
+  const [isMounted, setIsMounted] = useState(false);
+  const mapId = useRef(`map-picker-${Math.random().toString(36).substring(2, 9)}`);
+  
+  useEffect(() => { setIsMounted(true); }, []);
+
+  if (!isMounted) return <div className="h-[400px] w-full bg-zinc-50" />;
 
   return (
     <div className="h-[400px] w-full">
       <MapContainer 
+        key={mapId.current}
         center={initialCenter} 
         zoom={13} 
         style={{ height: '100%', width: '100%' }}
