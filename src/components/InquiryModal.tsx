@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, CheckCircle2, MapPin, ArrowRight, LayoutGrid, ChevronDown, ChevronUp, Bookmark } from 'lucide-react';
-import { cn, formatPrice } from '@/lib/utils';
+import { cn, formatPrice, formatPriceRange } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useShortlist } from '@/context/ShortlistContext';
 import Image from 'next/image';
@@ -197,7 +197,7 @@ export function InquiryModal() {
                         <MapPin className="h-2.5 w-2.5 text-zinc-400 shrink-0" />
                         <span className="text-[10px] font-medium text-zinc-500 truncate">{property.area}, {property.city}</span>
                       </div>
-                      <p className="text-xs font-black text-zinc-900 mt-1">{formatPrice(property.price_min)}</p>
+                      <p className="text-xs font-black text-zinc-900 mt-1">{formatPriceRange(property.price_min, property.price_max)}</p>
                     </div>
                     {isAdded && (
                       <div className="flex flex-col items-end shrink-0">

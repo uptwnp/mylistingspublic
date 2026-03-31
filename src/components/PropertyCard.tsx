@@ -5,11 +5,12 @@ import { Property } from '@/types';
 import { useShortlist } from '@/context/ShortlistContext';
 import { trackEvent } from '@/lib/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn, formatPrice, formatSizeRange } from '@/lib/utils';
+import { cn, formatPrice, formatPriceRange, formatSizeRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import { useRouter } from 'next/navigation';
 import { NoPhotosPlaceholder } from './NoPhotosPlaceholder';
 import { AskQuestionModal } from './AskQuestionModal';
+import { ClickableText } from './ClickableText';
 
 interface PropertyCardProps {
   property: Property;
@@ -131,7 +132,7 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
             </h3>
             <div className="shrink-0">
                <span className="ty-subtitle font-black text-brand-primary whitespace-nowrap">
-                {property.formatted_price || formatPrice(property.price_min)}
+                {formatPriceRange(property.price_min, property.price_max)}
               </span>
             </div>
           </div>
@@ -161,9 +162,9 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
                 </span>
                 ))
               ) : property.description && (
-                <p className="ty-caption text-zinc-400 truncate italic opacity-80">
-                  {property.description}
-                </p>
+                <div className="ty-caption text-zinc-400 truncate italic opacity-80 break-words">
+                  <ClickableText text={property.description} />
+                </div>
               )}
             </div>
 
@@ -201,9 +202,9 @@ export function PropertyCard({ property, isExpanded = false, onToggle, isNearMeF
 
               {/* Full description */}
               {property.description && (
-                <p className="ty-caption text-zinc-600 leading-relaxed bg-zinc-50/50 p-3 rounded-2xl border border-zinc-100/50">
-                  {property.description}
-                </p>
+                <div className="ty-caption text-zinc-600 leading-relaxed bg-zinc-50/50 p-3 rounded-2xl border border-zinc-100/50 break-words">
+                  <ClickableText text={property.description} />
+                </div>
               )}
 
               {/* Action Grid */}

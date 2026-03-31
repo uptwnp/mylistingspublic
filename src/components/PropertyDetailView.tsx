@@ -15,6 +15,7 @@ import { getProperties } from '@/lib/supabase';
 import { PropertyCard } from '@/components/PropertyCard';
 import dynamic from 'next/dynamic';
 import { AskQuestionModal } from '@/components/AskQuestionModal';
+import { ClickableText } from './ClickableText';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { 
   ssr: false,
@@ -384,9 +385,11 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
             )}
 
             {/* Description */}
-            <div className="space-y-4 pt-4">
+            <div className="space-y-4 pt-4 break-words">
               <h2 className="ty-title font-bold">About this listing</h2>
-              <p className="ty-body leading-relaxed text-zinc-600">{property.description}</p>
+              <div className="ty-body leading-relaxed text-zinc-600">
+                <ClickableText text={property.description} />
+              </div>
             </div>
 
             {/* Details Table */}

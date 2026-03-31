@@ -9,7 +9,7 @@ import { Trash2, Phone, Home, ArrowLeft, Building2, MapPin, CheckCircle2, Share2
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn, formatPrice } from '@/lib/utils';
+import { cn, formatPrice, formatPriceRange } from '@/lib/utils';
 import { getPropertyConfig } from '@/lib/property-icons';
 import { MiniImageCarousel } from '@/components/MiniImageCarousel';
 import { useRouter } from 'next/navigation';
@@ -475,7 +475,7 @@ export default function ShortlistPage() {
                                   {property.type}
                                 </h3>
                                 <p className="text-[9px] sm:text-[10px] font-bold text-zinc-400 truncate mt-0.5">{property.area}{property.city ? `, ${property.city}` : ''}</p>
-                                <p className="ty-caption font-bold text-black mt-0.5 sm:mt-1">{formatPrice(property.price_min)}</p>
+                                <p className="ty-caption font-bold text-black mt-0.5 sm:mt-1">{formatPriceRange(property.price_min, property.price_max)}</p>
                                 <span className="mt-1 inline-block rounded bg-zinc-100 px-1.5 py-0.5 text-[7px] sm:text-[8px] font-bold uppercase tracking-wider text-zinc-500 w-fit">
                                   ID: {property.property_id}
                                 </span>
