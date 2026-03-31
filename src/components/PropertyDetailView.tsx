@@ -139,7 +139,7 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
           <Link href={`/explore?city=${property.city}`} className="hover:text-brand-primary transition-colors">
             {property.city}
           </Link>
-          <span className="text-zinc-300 font-normal scale-125 px-1 opacity-50">&gt;</span>
+          <ChevronRight className="h-3 w-3 text-zinc-300" />
           <Link href={`/explore?city=${property.city}&area=${property.area}`} className="hover:text-brand-primary transition-colors">
             {property.area}
           </Link>
@@ -155,10 +155,12 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
           
           {/* COLUMN 1: Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            <div className="flex items-center gap-2 text-zinc-600 ty-micro font-black uppercase tracking-widest bg-zinc-50/80 w-fit px-4 py-2 rounded-xl border border-zinc-200/50 shadow-sm">
-                <Calendar className="h-4 w-4 text-zinc-400" />
-                <span className="text-zinc-400">Last Updated:</span>
-                <span className="text-zinc-900">{formatDate(property.approved_on)}</span>
+            <div className="flex items-center gap-2 text-zinc-400 ty-micro font-black uppercase tracking-widest">
+                <Calendar className="h-4 w-4" />
+                <span>Last Updated:</span>
+                <span className="text-zinc-600">
+                  {formatDate(property.approved_on || property.updated_at || property.created_at)}
+                </span>
             </div>
             {/* Photo Gallery Area */}
             <div className="relative overflow-hidden rounded-3xl aspect-[16/9] md:aspect-auto md:h-[500px] border border-zinc-200 bg-zinc-50 shadow-inner-sm">
@@ -524,21 +526,36 @@ export function PropertyDetailView({ initialProperty }: PropertyDetailViewProps)
 
       {/* Mobile Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-zinc-100 px-6 pt-5 pb-10 shadow-[0_-20px_60px_rgba(0,0,0,0.1)] md:hidden rounded-t-[32px]">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-col shrink-0">
-            <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-0.5">Price</span>
-            <p className="ty-subtitle font-black text-zinc-900 leading-none">{formatPriceRange(property.price_min, property.price_max)}</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col shrink-0 max-w-[100px]">
+            <span className="ty-micro font-black text-zinc-400 uppercase tracking-widest mb-0.5 leading-none">Price Range</span>
+            <p className="ty-body font-black text-zinc-900 leading-none truncate">{formatPriceRange(property.price_min, property.price_max)}</p>
           </div>
           
-          <button 
-             onClick={() => {
-              if (!inCart) addToShortlist(property);
-              router.push('/shortlist');
-            }}
-            className="flex-1 flex items-center justify-center gap-3 rounded-[20px] bg-brand-primary py-4.5 ty-body font-black text-white shadow-2xl shadow-blue-500/20 active:scale-[0.98] transition-all shimmer-premium"
-          >
-            {inCart ? 'Go to Shortlist' : 'Proceed with it'}
-          </button>
+          <div className="flex flex-1 items-center gap-2 min-w-0">
+            {!inCart && (
+              <button 
+                onClick={() => setIsAskModalOpen(true)}
+                className="flex items-center justify-center gap-1.5 rounded-2xl border border-zinc-200 bg-white px-3 py-4 ty-caption font-bold text-zinc-900 active:scale-[0.98] transition-all"
+              >
+                <MessageCircleQuestion className="h-4 w-4 text-zinc-400" />
+                Ask
+              </button>
+            )}
+            <button 
+               onClick={() => {
+                if (!inCart) addToShortlist(property);
+                router.push('/shortlist');
+              }}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 rounded-2xl py-4 ty-caption font-black text-white shadow-2xl active:scale-[0.98] transition-all shimmer-premium",
+                inCart ? "bg-zinc-900 shadow-zinc-900/10" : "bg-brand-primary shadow-blue-500/20"
+              )}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              <span>{inCart ? 'View Shortlist' : 'Add to Shortlist'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
