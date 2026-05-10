@@ -93,6 +93,13 @@ export function HomeClientWrapper({
 
       <section className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-12 pt-8 pb-32 space-y-10 sm:space-y-16">
         <PropertySection 
+          title={`Recently Added`} 
+          city={selectedCity}
+          type="All" 
+          isLoading={isLoading}
+        />
+
+        <PropertySection 
           title={`Residential Plots for sale`} 
           city={selectedCity}
           type="Residential Plot" 
